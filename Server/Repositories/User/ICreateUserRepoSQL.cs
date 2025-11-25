@@ -2,10 +2,10 @@
 using System.Collections.Generic;
 namespace Server.Repositories.User
 {
-    public interface ICreateUserRepo
+    public interface ICreateUserRepoSQL
     {
-        List<User> GetAll();
-        void Add(User user);
+        List<Users> GetAll();
+        void Add(Users user);
         void Delete(int id);
     }
 }

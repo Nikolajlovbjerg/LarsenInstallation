@@ -1,8 +1,24 @@
+using Server.Repositories.User;
+
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
 
+builder.Services.AddSingleton<ICreateUserRepoSQL, CreateUserRepoSQL>();
+
 builder.Services.AddControllers();
+
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("policy",
+        policy =>
+        {
+            policy.AllowAnyOrigin();
+            policy.AllowAnyMethod();
+            policy.AllowAnyHeader();
+        });
+});
+
 // Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
 builder.Services.AddOpenApi();
 
@@ -14,7 +30,9 @@ if (app.Environment.IsDevelopment())
     app.MapOpenApi();
 }
 
-app.UseHttpsRedirection();
+app.UseCors("policy");
+
+//app.UseHttpsRedirection();
 
 app.UseAuthorization();
 

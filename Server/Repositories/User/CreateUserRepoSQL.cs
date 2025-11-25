@@ -1,30 +1,27 @@
-﻿using System;
-using System.Xml.Linq;
-using Core;
+﻿using Core;
 using Npgsql;
 using Server.PW1;
 
 namespace Server.Repositories.User
 {
-    public class CreateUserRepo : ICreateUserRepo
+    public class CreateUserRepoSQL : ICreateUserRepoSQL
     {
         private const string conString =
-        "Host=ep-spring-unit-a2y1k0pd-pooler.eu-central-1.aws.neon.tech;" +
-        "Port=5432;" +
-        "Username=neondb_owner;" +
-        $"Password={PASSWORD.PW1};" +
-        "Database=LarsensInstallation;" +
-        "Ssl Mode=Require;" +
-        "Trust Server Certificate=true;" +
-        "Channel Binding=Require;";
+    "Host=ep-spring-unit-a2y1k0pd.eu-central-1.aws.neon.tech;" +
+    "Port=5432;" +
+    "Database=LarsenInstallation;" +
+    "Username=neondb_owner;" +
+    $"Password={PASSWORD.PW1};" +
+    "Ssl Mode=Require;" +
+    "Trust Server Certificate=true;";
 
-        public CreateUserRepoPostgres()
+        public CreateUserRepoSQL()
         {
 
         }
-        public List<User> GetAll()
+        public List<Users> GetAll()
         {
-            var result = new List<User>();
+            var result = new List<Users>();
 
 
             using (var mConnection = new NpgsqlConnection(conString))
@@ -42,7 +39,7 @@ namespace Server.Repositories.User
                         var password = reader.GetString(2);
                         var role = reader.GetString(3);
 
-                        User u = new User
+                        Users u = new Users
                         {
                             UserId = userid,
                             UserName = username,
@@ -54,10 +51,10 @@ namespace Server.Repositories.User
                 }
             }
 
-            return result.ToList();
+            return result;
         }
 
-        public void Add(User user)
+        public void Add(Users user)
         {
             using (var mConnection = new NpgsqlConnection(conString))
             {
@@ -71,7 +68,7 @@ namespace Server.Repositories.User
                 var paramName = command.CreateParameter();
                 paramName.ParameterName = "username";
                 command.Parameters.Add(paramName);
-                paramName.Value = user.Username;
+                paramName.Value = user.UserName;
 
                 var paramPassword = command.CreateParameter();
                 paramPassword.ParameterName = "password";
@@ -81,7 +78,7 @@ namespace Server.Repositories.User
                 var paramRole = command.CreateParameter();
                 paramRole.ParameterName = "role";
                 command.Parameters.Add(paramRole);
-                paramRole.Value = user.Description;
+                paramRole.Value = user.Role;
 
                 command.ExecuteNonQuery();
             }
