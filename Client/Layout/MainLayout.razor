@@ -1,4 +1,6 @@
-﻿@inherits LayoutComponentBase
+﻿@inject Blazored.LocalStorage.ILocalStorageService localStorage
+@inject NavigationManager navManager
+@inherits LayoutComponentBase
 <div class="page">
     <div class="sidebar">
         <NavMenu/>
@@ -19,3 +21,12 @@
         </article>
     </main>
 </div>
+
+@code
+{
+    private async Task Logout()
+    {
+        await localStorage.RemoveItemAsync("user");
+        navManager.NavigateTo("/", true);
+    }
+}

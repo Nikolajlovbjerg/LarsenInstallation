@@ -1,0 +1,81 @@
+@using Core
+@using Blazored.LocalStorage
+@using Client.Service
+@inject ILocalStorageService LocalStorage
+@inject NavigationManager Nav
+@page "/login"
+<PageTitle>Log ind</PageTitle>
+
+<div class="login-page-background">
+    <div class="login-container">
+        
+        <h3>Log ind</h3>
+
+        <!-- Formular til login-->
+        <EditForm Model="@user" OnValidSubmit="OnClickLogin">
+
+            <div class="form-floating-group">
+                <InputText id="un" class="form-control" @bind-Value="user.Username" placeholder="Username"/>
+                <label for="un">Username</label>
+            </div>
+
+            <div class="form-floating-group">
+                <InputText id="pwd"
+                           type="@PasswordType"
+                           class="form-control"
+                           @bind-Value="user.Password"
+                           placeholder="Password"/>
+                <label for="pwd">Password</label>
+                <i class="bi bi-eye" @onclick="TogglePasswordVisibility">
+                    
+                </i>
+            </div>
+
+            <div style="text-align: center">
+                <button type="submit" class="btn btn-primary">Login</button>
+            </div>
+        </EditForm>
+
+        @if (!string.IsNullOrEmpty(errorText))
+        {
+            <div class="error-message">
+                <span class="error-icon">⚠️</span>
+                <span class="error-text">@errorText</span>
+            </div>
+        }
+    </div>
+</div>
+
+@code {
+    User user = new();
+    
+    //Bruges til at vise errortext hvis relevant - ellers er den tom
+    string errorText = "";
+    //Bruges til at skjule visningen af adgangskoden i vores TogglePasswordVisibility 
+    bool visPassword = false;
+
+    string PasswordType => visPassword ? "text" : "password";
+    
+    //Skifter mellem visning og skjul af adgangskodefeltet
+    void TogglePasswordVisibility()
+    {
+        visPassword = !visPassword;
+    }
+    
+    private async Task OnClickLogin()
+    {
+        UserRepository userRepo = new();
+        User? userObject = userRepo.ValidLogin(user.Username, user.Password);
+        
+        
+        if (userObject == null)
+        {
+            errorText = "Wrong email or password - try again...";
+        }
+        else
+        {
+            await LocalStorage.SetItemAsync("user", userObject);
+            Nav.NavigateTo("projects", forceLoad: true); 
+        }
+    }
+}
