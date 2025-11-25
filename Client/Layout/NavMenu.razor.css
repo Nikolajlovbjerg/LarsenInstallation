@@ -11,6 +11,11 @@
     font-size: 1.1rem;
 }
 
+.logo-larsen {
+    width: 150px;
+    height: 80px;
+}
+
 .bi {
     display: inline-block;
     position: relative;

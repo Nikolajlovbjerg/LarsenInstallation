@@ -1,11 +1,11 @@
 ﻿@using Core
-@inject Blazored.LocalStorage.ILocalStorageService localStorage
+@inject Blazored.LocalStorage.ILocalStorageService LocalStorage
 @inject NavigationManager navManager
 
 
-<div class="top-row ps-3 navbar navbar-dark">
-    <div class="container-fluid">
-        <a class="navbar-brand" href="">Mini projekt</a>
+<div class="top-row ps-4 navbar navbar-dark">
+    <div class="container">
+        <img src="Assets/Larsen-logo_2021hvid.png" class="logo-larsen"/>
         <button title="Navigation menu" class="navbar-toggler" @onclick="ToggleNavMenu">
             <span class="navbar-toggler-icon"></span>
         </button>
@@ -64,7 +64,7 @@
 
     private async Task Logout()
     { 
-        await localStorage.RemoveItemAsync("user");
+        await LocalStorage.RemoveItemAsync("user");
         navManager.NavigateTo("/", true);
     }
 }
