@@ -16,5 +16,4 @@ public class Users
     public string Password { get; set; } = String.Empty;
 
     public string Role { get; set; } = "none";
-    
-  
+}

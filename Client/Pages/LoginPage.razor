@@ -15,7 +15,7 @@
         <EditForm Model="@user" OnValidSubmit="OnClickLogin">
 
             <div class="form-floating-group">
-                <InputText id="un" class="form-control" @bind-Value="user.Username" placeholder="Username"/>
+                <InputText id="un" class="form-control" @bind-Value="user.UserName" placeholder="Username"/>
                 <label for="un">Username</label>
             </div>
 
@@ -47,7 +47,7 @@
 </div>
 
 @code {
-    User user = new();
+    Users user = new();
     
     //Bruges til at vise errortext hvis relevant - ellers er den tom
     string errorText = "";
@@ -65,7 +65,7 @@
     private async Task OnClickLogin()
     {
         UserRepository userRepo = new();
-        User? userObject = userRepo.ValidLogin(user.Username, user.Password);
+        Users? userObject = userRepo.ValidLogin(user.UserName, user.Password);
         
         
         if (userObject == null)
