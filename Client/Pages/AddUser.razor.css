@@ -1,0 +1,6 @@
+﻿
+
+/* Hvis containeren klipper menuen */
+.container {
+    overflow: visible;
+}

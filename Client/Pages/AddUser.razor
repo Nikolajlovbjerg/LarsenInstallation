@@ -23,7 +23,13 @@
 
     <div class="col-md-12 mb-3">
         <label for="Role">Role</label>
-        <InputText id="Role" @bind-Value="_user.Role" class="form-control" />
+        <InputSelect id="Role" @bind-Value="_user.Role" class="form-select" >
+
+            @foreach (var r in roles)
+            {
+                <option value="@r">@r</option>
+            }
+        </InputSelect>
     </div>
 
     <div class="col-12 mb-3">
@@ -33,6 +39,8 @@
 
 @code {
     private Users _user = new();
+
+    private string[] roles = ["Bruger", "Admin"];
 
     private async Task HandleValidSubmit()
     {
