@@ -7,5 +7,6 @@ namespace Server.Repositories.User
         List<Users> GetAll();
         void Add(Users user);
         void Delete(int id);
+        Users? ValidateUser(string username, string password);
     }
 }
