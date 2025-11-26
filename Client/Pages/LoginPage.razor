@@ -3,19 +3,17 @@
 @using Client.Service
 @inject ILocalStorageService LocalStorage
 @inject NavigationManager Nav
+@inject Client.Service.UserRepository UserRepo
 @page "/login"
 <PageTitle>Log ind</PageTitle>
 
 <div class="login-page-back">
     <div class="login-con">
-        
         <h3>Log ind</h3>
 
-        <!-- Formular til login-->
         <EditForm Model="@user" OnValidSubmit="OnClickLogin">
-
             <div class="form-floating-group">
-                <InputText id="un" class="form-control" @bind-Value="user.UserName" placeholder="Username"/>
+                <InputText id="un" class="form-control" @bind-Value="user.UserName" placeholder="Username" />
                 <label for="un">Username</label>
             </div>
 
@@ -24,15 +22,27 @@
                            type="@PasswordType"
                            class="form-control"
                            @bind-Value="user.Password"
-                           placeholder="Password"/>
+                           placeholder="Password" />
                 <label for="pwd">Password</label>
-                <i class="bi bi-eye" @onclick="TogglePasswordVisibility">
-                    
-                </i>
+
+                <!-- Brug en button type="button" så vi ikke utilsigtet submitter formen -->
+                <button type="button" class="btn btn-link p-0" @onclick="TogglePasswordVisibility" aria-label="Toggle password visibility">
+                    <i class="bi @(visPassword ? "bi-eye-slash" : "bi-eye")"></i>
+                </button>
             </div>
 
             <div style="text-align: center">
-                <button type="submit" class="btn btn-primary">Login</button>
+                <button type="submit" class="btn btn-primary" disabled="@isLoading">
+                    @if (isLoading)
+                    {
+                        <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+                        <span class="visually-hidden"> Logging in...</span>
+                    }
+                    else
+                    {
+                        <span>Login</span>
+                    }
+                </button>
             </div>
         </EditForm>
 
@@ -48,34 +58,62 @@
 
 @code {
     Users user = new();
-    
-    //Bruges til at vise errortext hvis relevant - ellers er den tom
     string errorText = "";
-    //Bruges til at skjule visningen af adgangskoden i vores TogglePasswordVisibility 
     bool visPassword = false;
+    bool isLoading = false;
 
     string PasswordType => visPassword ? "text" : "password";
-    
-    //Skifter mellem visning og skjul af adgangskodefeltet
+
     void TogglePasswordVisibility()
     {
         visPassword = !visPassword;
     }
-    
+
     private async Task OnClickLogin()
     {
-        UserRepository userRepo = new();
-        Users? userObject = userRepo.ValidLogin(user.UserName, user.Password);
-        
-        
-        if (userObject == null)
+        errorText = "";
+        isLoading = true;
+
+        try
         {
-            errorText = "Wrong email or password - try again...";
-        }
-        else
-        {
+            // Kald den asynkrone metode i din UserRepository (som bruger HttpClient)
+            Users? userObject = await UserRepo.ValidLoginAsync(user.UserName, user.Password);
+
+            if (userObject == null)
+            {
+                errorText = "Forkert brugernavn eller adgangskode — prøv igen.";
+                isLoading = false;
+                return;
+            }
+
+            // Fjern adgangskoden før vi gemmer i localStorage (GEM ALDRIG password i klartekst)
+            try
+            {
+                userObject.Password = string.Empty; // eller null afhængig af modellen
+            }
+            catch
+            {
+                // Hvis Users.Password er readonly eller lign., lav et lille DTO i stedet:
+                var safeUser = new { userObject.UserName, userObject.Role, /* evt. Id = userObject.Id */ };
+                await LocalStorage.SetItemAsync("user", safeUser);
+                Nav.NavigateTo("projects", forceLoad: true);
+                return;
+            }
+
             await LocalStorage.SetItemAsync("user", userObject);
-            Nav.NavigateTo("projects", forceLoad: true); 
+            Nav.NavigateTo("projects", forceLoad: true);
+        }
+        catch (HttpRequestException)
+        {
+            errorText = "Netværksfejl — kunne ikke kontakte serveren. Tjek at serveren kører og CORS er korrekt sat op.";
+        }
+        catch (Exception ex)
+        {
+            errorText = $"Der skete en fejl: {ex.Message}";
+        }
+        finally
+        {
+            isLoading = false;
         }
     }
 }

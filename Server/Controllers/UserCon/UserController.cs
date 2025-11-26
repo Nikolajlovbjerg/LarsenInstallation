@@ -27,6 +27,15 @@ namespace ServerApp.Controllers
         {
             userRepo.Add(user);
         }
+        
+        [HttpPost("login")]
+        public ActionResult<Users> Login([FromBody] Login dto)
+        {
+            var user = userRepo.ValidateUser(dto.UserName, dto.Password); // vi tilføjer denne metode til repo
+            if (user == null)
+                return Unauthorized(); // 401
+            return Ok(user);
+        }
 
         [HttpDelete]
         [Route("delete/{id:int}")]

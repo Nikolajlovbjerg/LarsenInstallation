@@ -1,27 +1,40 @@
 using Core;
-namespace Client.Service;
+using System.Net.Http;
+using System.Net.Http.Json;
+using System.Threading.Tasks;
 
-public class UserRepository
+namespace Client.Service
 {
-    private List<Users> mUsers;
-    
-    public UserRepository()
+    public class UserRepository
     {
-        mUsers =
-        [
-            new Users { UserName = "admin", Password = "admin", Role = "admin" },
-            new Users { UserName = "rip", Password = "1234", Role = "Normal" }
-        ];
-    }
+        private readonly HttpClient _http;
 
-    public Users? ValidLogin(string name, string password)
-    {
-        foreach (Users u in mUsers)
-            if (u.UserName == name && u.Password == password)
+        public UserRepository(HttpClient http)
+        {
+            _http = http;
+        }
+        
+        public async Task<Users?> ValidLoginAsync(string name, string password)
+        {
+            var login = new { UserName = name, Password = password };
+            HttpResponseMessage response;
+
+            try
             {
-                return u;
+                response = await _http.PostAsJsonAsync("/api/user/login", login);
+            }
+            catch (Exception)
+            {
+                return null;
             }
 
-        return null;
+            if (response.IsSuccessStatusCode)
+            {
+                var user = await response.Content.ReadFromJsonAsync<Users>();
+                return user;
+            }
+            
+            return null;
+        }
     }
 }

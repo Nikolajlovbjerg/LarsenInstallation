@@ -83,6 +83,11 @@ namespace Server.Repositories.User
                 command.ExecuteNonQuery();
             }
         }
+        
+        public Users? ValidateUser(string username, string password)
+        {
+            return GetAll().FirstOrDefault(u => u.UserName == username && u.Password == password);
+        }
 
         public void Delete(int id)
         {

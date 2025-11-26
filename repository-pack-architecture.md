@@ -49,6 +49,7 @@ Client/
     MainLayout.razor
     NavMenu.razor
   Pages/
+    AddUser.razor
     Home.razor
     LoginPage.razor
   Service/
@@ -57,13 +58,16 @@ Client/
   App.razor
   Program.cs
 Core/
-  Class1.cs
+  Login.cs
   User.cs
 Server/
   Controllers/
-    WeatherForecastController.cs
+    UserCon/
+      UserController.cs
   Repositories/
-    CreateUserRepo.cs
+    User/
+      CreateUserRepoSQL.cs
+      ICreateUserRepoSQL.cs
   appsettings.Development.json
   appsettings.json
   Program.cs
@@ -71,6 +75,15 @@ Server/
 
 <files>
 This section contains the contents of the repository's files.
+
+<file path="Core/Login.cs">
+namespace Core;
+public class Login
+{
+    public string UserName { get; set; }
+    public string Password { get; set; }
+}
+</file>
 
 <file path="Client/Pages/Home.razor">
 @page "/"
@@ -80,32 +93,6 @@ This section contains the contents of the repository's files.
 <h1>Hello, world!</h1>
 
 Welcome to your new app.
-</file>
-
-<file path="Client/Service/UserRepository.cs">
-using Core;
-namespace Client.Service;
-public class UserRepository
-{
-    private List<User> mUsers;
-    public UserRepository()
-    {
-        mUsers =
-        [
-            new User { Username = "admin", Password = "admin", Role = "admin" },
-            new User { Username = "rip", Password = "1234", Role = "Normal" }
-        ];
-    }
-    public User? ValidLogin(string name, string password)
-    {
-        foreach (User u in mUsers)
-            if (u.Username == name && u.Password == password)
-            {
-                return u;
-            }
-        return null;
-    }
-}
 </file>
 
 <file path="Client/_Imports.razor">
@@ -121,48 +108,156 @@ public class UserRepository
 @using Client.Layout
 </file>
 
-<file path="Core/Class1.cs">
-namespace Core;
-public class Class1
-{
-}
-</file>
-
-<file path="Server/Controllers/WeatherForecastController.cs">
+<file path="Server/Controllers/UserCon/UserController.cs">
+using Core;
 using Microsoft.AspNetCore.Mvc;
-namespace Server.Controllers;
-[ApiController]
-[Route("[controller]")]
-public class WeatherForecastController : ControllerBase
+using Server.Repositories.User;
+namespace ServerApp.Controllers
 {
-    private static readonly string[] Summaries = new[]
+    [ApiController]
+    [Route("api/user")]
+    public class UserController : ControllerBase
     {
-        "Freezing", "Bracing", "Chilly", "Cool", "Mild", "Warm", "Balmy", "Hot", "Sweltering", "Scorching"
-    };
-    private readonly ILogger<WeatherForecastController> _logger;
-    public WeatherForecastController(ILogger<WeatherForecastController> logger)
-    {
-        _logger = logger;
-    }
-    [HttpGet(Name = "GetWeatherForecast")]
-    public IEnumerable<WeatherForecast> Get()
-    {
-        return Enumerable.Range(1, 5).Select(index => new WeatherForecast
-            {
-                Date = DateOnly.FromDateTime(DateTime.Now.AddDays(index)),
-                TemperatureC = Random.Shared.Next(-20, 55),
-                Summary = Summaries[Random.Shared.Next(Summaries.Length)]
-            })
-            .ToArray();
+        private ICreateUserRepoSQL userRepo;
+        public UserController(ICreateUserRepoSQL userRepo)
+        {
+            this.userRepo = userRepo;
+        }
+        [HttpGet]
+        public IEnumerable<Users> Get()
+        {
+            return userRepo.GetAll();
+        }
+        [HttpPost]
+        public void Add(Users user)
+        {
+            userRepo.Add(user);
+        }
+        [HttpPost("login")]
+        public ActionResult<Users> Login([FromBody] Login dto)
+        {
+            var user = userRepo.ValidateUser(dto.UserName, dto.Password); // vi tilføjer denne metode til repo
+            if (user == null)
+                return Unauthorized(); // 401
+            return Ok(user);
+        }
+        [HttpDelete]
+        [Route("delete/{id:int}")]
+        public void Delete(int id)
+        {
+            userRepo.Delete(id);
+        }
+        [HttpDelete]
+        [Route("delete")]
+        public void DeleteByQuery([FromQuery] int id)
+        {
+            userRepo.Delete(id);
+        }
     }
 }
 </file>
 
-<file path="Server/Repositories/CreateUserRepo.cs">
-namespace Server.Repositories
+<file path="Server/Repositories/User/CreateUserRepoSQL.cs">
+using Core;
+using Npgsql;
+using Server.PW1;
+namespace Server.Repositories.User
 {
-    public class CreateUserRepo
+    public class CreateUserRepoSQL : ICreateUserRepoSQL
     {
+        private const string conString =
+    "Host=ep-spring-unit-a2y1k0pd.eu-central-1.aws.neon.tech;" +
+    "Port=5432;" +
+    "Database=LarsenInstallation;" +
+    "Username=neondb_owner;" +
+    $"Password={PASSWORD.PW1};" +
+    "Ssl Mode=Require;" +
+    "Trust Server Certificate=true;";
+        public CreateUserRepoSQL()
+        {
+        }
+        public List<Users> GetAll()
+        {
+            var result = new List<Users>();
+            using (var mConnection = new NpgsqlConnection(conString))
+            {
+                mConnection.Open();
+                var command = mConnection.CreateCommand();
+                command.CommandText = @"SELECT * FROM Users";
+                using (var reader = command.ExecuteReader())
+                {
+                    while (reader.Read())
+                    {
+                        var userid = reader.GetInt32(0);
+                        var username = reader.GetString(1);
+                        var password = reader.GetString(2);
+                        var role = reader.GetString(3);
+                        Users u = new Users
+                        {
+                            UserId = userid,
+                            UserName = username,
+                            Password = password,
+                            Role = role
+                        };
+                        result.Add(u);
+                    }
+                }
+            }
+            return result;
+        }
+        public void Add(Users user)
+        {
+            using (var mConnection = new NpgsqlConnection(conString))
+            {
+                mConnection.Open();
+                var command = mConnection.CreateCommand();
+                command.CommandText =
+                    "INSERT INTO Users (username, password, role) VALUES (@username, @password, @role)";
+                Console.WriteLine(command.CommandText);
+                var paramName = command.CreateParameter();
+                paramName.ParameterName = "username";
+                command.Parameters.Add(paramName);
+                paramName.Value = user.UserName;
+                var paramPassword = command.CreateParameter();
+                paramPassword.ParameterName = "password";
+                command.Parameters.Add(paramPassword);
+                paramPassword.Value = user.Password;
+                var paramRole = command.CreateParameter();
+                paramRole.ParameterName = "role";
+                command.Parameters.Add(paramRole);
+                paramRole.Value = user.Role;
+                command.ExecuteNonQuery();
+            }
+        }
+        public Users? ValidateUser(string username, string password)
+        {
+            return GetAll().FirstOrDefault(u => u.UserName == username && u.Password == password);
+        }
+        public void Delete(int id)
+        {
+            using (var mConnection = new NpgsqlConnection(conString))
+            {
+                mConnection.Open();
+                var command = mConnection.CreateCommand();
+                command.CommandText = $"DELETE FROM users WHERE userid={id}";
+                command.ExecuteNonQuery();
+            }
+        }
+    }
+}
+</file>
+
+<file path="Server/Repositories/User/ICreateUserRepoSQL.cs">
+using Core;
+using System.Collections.Generic;
+namespace Server.Repositories.User
+{
+    public interface ICreateUserRepoSQL
+    {
+        List<Users> GetAll();
+        void Add(Users user);
+        void Delete(int id);
+        Users? ValidateUser(string username, string password);
     }
 }
 </file>
@@ -190,103 +285,98 @@ namespace Server.Repositories
 }
 </file>
 
-<file path="Server/Program.cs">
-var builder = WebApplication.CreateBuilder(args);
-// Add services to the container.
-builder.Services.AddControllers();
-// Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
-builder.Services.AddOpenApi();
-var app = builder.Build();
-// Configure the HTTP request pipeline.
-if (app.Environment.IsDevelopment())
-{
-    app.MapOpenApi();
-}
-app.UseHttpsRedirection();
-app.UseAuthorization();
-app.MapControllers();
-app.Run();
-</file>
-
-<file path="Client/Pages/LoginPage.razor">
+<file path="Client/Pages/AddUser.razor">
+@page "/adduser"
 @using Core
-@using Blazored.LocalStorage
-@using Client.Service
-@inject ILocalStorageService LocalStorage
-@inject NavigationManager Nav
-@page "/login"
-<PageTitle>Log ind</PageTitle>
+@inject HttpClient http
+@inject NavigationManager navMan
 
-<div class="login-page-back">
-    <div class="login-con">
-        
-        <h3>Log ind</h3>
+<PageTitle>Add User</PageTitle>
 
-        <!-- Formular til login-->
-        <EditForm Model="@user" OnValidSubmit="OnClickLogin">
+<h3>Add User</h3>
 
-            <div class="form-floating-group">
-                <InputText id="un" class="form-control" @bind-Value="user.Username" placeholder="Username"/>
-                <label for="un">Username</label>
-            </div>
+<EditForm Model="@_user" OnValidSubmit="@HandleValidSubmit" class="row p-3">
+    <DataAnnotationsValidator />
+    <ValidationSummary />
 
-            <div class="form-floating-group">
-                <InputText id="pwd"
-                           type="@PasswordType"
-                           class="form-control"
-                           @bind-Value="user.Password"
-                           placeholder="Password"/>
-                <label for="pwd">Password</label>
-                <i class="bi bi-eye" @onclick="TogglePasswordVisibility">
-                    
-                </i>
-            </div>
-
-            <div style="text-align: center">
-                <button type="submit" class="btn btn-primary">Login</button>
-            </div>
-        </EditForm>
-
-        @if (!string.IsNullOrEmpty(errorText))
-        {
-            <div class="error-message">
-                <span class="error-icon">⚠️</span>
-                <span class="error-text">@errorText</span>
-            </div>
-        }
+    <div class="col-md-12 mb-3">
+        <label for="UserName">User Name</label>
+        <InputText id="UserName" @bind-Value="_user.UserName" class="form-control" />
     </div>
-</div>
+
+    <div class="col-md-12 mb-3">
+        <label for="Password">Password</label>
+        <InputText id="Password" @bind-Value="_user.Password" class="form-control" type="password" />
+    </div>
+
+    <div class="col-md-12 mb-3">
+        <label for="Role">Role</label>
+        <InputText id="Role" @bind-Value="_user.Role" class="form-control" />
+    </div>
+
+    <div class="col-12 mb-3">
+        <button type="submit" class="btn btn-primary">Add User</button>
+    </div>
+</EditForm>
 
 @code {
-    User user = new();
-    
-    //Bruges til at vise errortext hvis relevant - ellers er den tom
-    string errorText = "";
-    //Bruges til at skjule visningen af adgangskoden i vores TogglePasswordVisibility 
-    bool visPassword = false;
+    private Users _user = new();
 
-    string PasswordType => visPassword ? "text" : "password";
-    
-    //Skifter mellem visning og skjul af adgangskodefeltet
-    void TogglePasswordVisibility()
+    private async Task HandleValidSubmit()
     {
-        visPassword = !visPassword;
-    }
-    
-    private async Task OnClickLogin()
-    {
-        UserRepository userRepo = new();
-        User? userObject = userRepo.ValidLogin(user.Username, user.Password);
-        
-        
-        if (userObject == null)
+        // Sender POST request direkte til API'et
+        var response = await http.PostAsJsonAsync("http://localhost:5028/api/user", _user);
+
+        if (response.IsSuccessStatusCode)
         {
-            errorText = "Wrong email or password - try again...";
+            // Clear form
+            _user = new Users();
+            // Naviger tilbage til brugersiden (juster route som ønsket)
+            navMan.NavigateTo("/users");
         }
         else
         {
-            await LocalStorage.SetItemAsync("user", userObject);
-            Nav.NavigateTo("projects", forceLoad: true); 
+            Console.WriteLine($"Fejl: {response.StatusCode}");
+        }
+    }
+}
+</file>
+
+<file path="Client/Service/UserRepository.cs">
+using Core;
+using System.Net.Http;
+using System.Net.Http.Json;
+using System.Threading.Tasks;
+namespace Client.Service
+{
+    public class UserRepository
+    {
+        private readonly HttpClient _http;
+        public UserRepository(HttpClient http)
+        {
+            _http = http;
+        }
+        // Async validering mod server
+        public async Task<Users?> ValidLoginAsync(string name, string password)
+        {
+            var login = new { UserName = name, Password = password };
+            HttpResponseMessage response;
+            try
+            {
+                response = await _http.PostAsJsonAsync("https://localhost:5028/api/user/login", login);
+            }
+            catch (Exception)
+            {
+                // Netværksfejl eller CORS fejl — returner null eller kast efter ønske
+                return null;
+            }
+            if (response.IsSuccessStatusCode)
+            {
+                var user = await response.Content.ReadFromJsonAsync<Users>();
+                return user;
+            }
+            // ikke autoriseret eller anden fejl
+            return null;
         }
     }
 }
@@ -344,62 +434,174 @@ else
 }
 </file>
 
+<file path="Server/Program.cs">
+using Server.Repositories.User;
+var builder = WebApplication.CreateBuilder(args);
+// Add services to the container.
+builder.Services.AddSingleton<ICreateUserRepoSQL, CreateUserRepoSQL>();
+builder.Services.AddControllers();
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("policy",
+        policy =>
+        {
+            policy.AllowAnyOrigin();
+            policy.AllowAnyMethod();
+            policy.AllowAnyHeader();
+        });
+});
+// Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
+builder.Services.AddOpenApi();
+var app = builder.Build();
+// Configure the HTTP request pipeline.
+if (app.Environment.IsDevelopment())
+{
+    app.MapOpenApi();
+}
+app.UseCors("policy");
+//app.UseHttpsRedirection();
+app.UseAuthorization();
+app.MapControllers();
+app.Run();
+</file>
+
+<file path="Client/Pages/LoginPage.razor">
+@using Core
+@using Blazored.LocalStorage
+@using Client.Service
+@inject ILocalStorageService LocalStorage
+@inject NavigationManager Nav
+@inject Client.Service.UserRepository UserRepo
+@page "/login"
+<PageTitle>Log ind</PageTitle>
+
+<div class="login-page-back">
+    <div class="login-con">
+        <h3>Log ind</h3>
+
+        <EditForm Model="@user" OnValidSubmit="OnClickLogin">
+            <div class="form-floating-group">
+                <InputText id="un" class="form-control" @bind-Value="user.UserName" placeholder="Username" />
+                <label for="un">Username</label>
+            </div>
+
+            <div class="form-floating-group">
+                <InputText id="pwd"
+                           type="@PasswordType"
+                           class="form-control"
+                           @bind-Value="user.Password"
+                           placeholder="Password" />
+                <label for="pwd">Password</label>
+
+                <!-- Brug en button type="button" så vi ikke utilsigtet submitter formen -->
+                <button type="button" class="btn btn-link p-0" @onclick="TogglePasswordVisibility" aria-label="Toggle password visibility">
+                    <i class="bi @(visPassword ? "bi-eye-slash" : "bi-eye")"></i>
+                </button>
+            </div>
+
+            <div style="text-align: center">
+                <button type="submit" class="btn btn-primary" disabled="@isLoading">
+                    @if (isLoading)
+                    {
+                        <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+                        <span class="visually-hidden"> Logging in...</span>
+                    }
+                    else
+                    {
+                        <span>Login</span>
+                    }
+                </button>
+            </div>
+        </EditForm>
+
+        @if (!string.IsNullOrEmpty(errorText))
+        {
+            <div class="error-message">
+                <span class="error-icon">⚠️</span>
+                <span class="error-text">@errorText</span>
+            </div>
+        }
+    </div>
+</div>
+
+@code {
+    Users user = new();
+    string errorText = "";
+    bool visPassword = false;
+    bool isLoading = false;
+
+    string PasswordType => visPassword ? "text" : "password";
+
+    void TogglePasswordVisibility()
+    {
+        visPassword = !visPassword;
+    }
+
+    private async Task OnClickLogin()
+    {
+        errorText = "";
+        isLoading = true;
+
+        try
+        {
+            // Kald den asynkrone metode i din UserRepository (som bruger HttpClient)
+            Users? userObject = await UserRepo.ValidLoginAsync(user.UserName, user.Password);
+
+            if (userObject == null)
+            {
+                errorText = "Forkert brugernavn eller adgangskode — prøv igen.";
+                isLoading = false;
+                return;
+            }
+
+            // Fjern adgangskoden før vi gemmer i localStorage (GEM ALDRIG password i klartekst)
+            try
+            {
+                userObject.Password = string.Empty; // eller null afhængig af modellen
+            }
+            catch
+            {
+                // Hvis Users.Password er readonly eller lign., lav et lille DTO i stedet:
+                var safeUser = new { userObject.UserName, userObject.Role, /* evt. Id = userObject.Id */ };
+                await LocalStorage.SetItemAsync("user", safeUser);
+                Nav.NavigateTo("projects", forceLoad: true);
+                return;
+            }
+
+            await LocalStorage.SetItemAsync("user", userObject);
+            Nav.NavigateTo("projects", forceLoad: true);
+        }
+        catch (HttpRequestException)
+        {
+            errorText = "Netværksfejl — kunne ikke kontakte serveren. Tjek at serveren kører og CORS er korrekt sat op.";
+        }
+        catch (Exception ex)
+        {
+            errorText = $"Der skete en fejl: {ex.Message}";
+        }
+        finally
+        {
+            isLoading = false;
+        }
+    }
+}
+</file>
+
 <file path="Client/Program.cs">
 using Microsoft.AspNetCore.Components.Web;
 using Microsoft.AspNetCore.Components.WebAssembly.Hosting;
 using Client;
 using Blazored.LocalStorage;
+using Client.Service;
+using Microsoft.Extensions.DependencyInjection;
 var builder = WebAssemblyHostBuilder.CreateDefault(args);
 builder.RootComponents.Add<App>("#app");
 builder.RootComponents.Add<HeadOutlet>("head::after");
-builder.Services.AddScoped(sp => new HttpClient { BaseAddress = new Uri(builder.HostEnvironment.BaseAddress) });
+builder.Services.AddScoped(sp =>
+    new HttpClient { BaseAddress = new Uri(builder.HostEnvironment.BaseAddress) });
 builder.Services.AddBlazoredLocalStorage();
+builder.Services.AddScoped<UserRepository>();
 await builder.Build().RunAsync();
-</file>
-
-<file path="Core/User.cs">
-namespace Core;
-public class User
-{
-    public int UserId { get; set; }
-    public string Username { get; set; } = String.Empty;
-    public string Password { get; set; } = String.Empty;
-    public string Role { get; set; } = "none";
-}
-</file>
-
-<file path="Client/Layout/MainLayout.razor">
-@inject Blazored.LocalStorage.ILocalStorageService LocalStorage
-@using Core
-@inherits LayoutComponentBase
-<div class="page">
-    @if (isLoggedIn)
-    {
-        <div class="sidebar">
-            <NavMenu/>
-        </div>
-
-        <main>
-            <div class="top-row px-4 btn-primary" style="color: black">
-            </div>
-
-            <article class="content px-4">
-                @Body
-            </article>
-        </main>
-    }
-</div>
-
-@code
-{
-    bool isLoggedIn = false;
-
-    protected override async Task OnInitializedAsync()
-    {
-        var user = await LocalStorage.GetItemAsync<User>("user");
-        isLoggedIn = user != null;
-    }
-}
 </file>
 
 <file path="Client/Layout/NavMenu.razor">
@@ -408,8 +610,8 @@ public class User
 @inject NavigationManager navManager
 
 
-<div class="ps-5">
-    <div class="container">
+<div class="logo-con">
+    <div class="m-4">
         <img src="Assets/Larsen-logo_2021hvid.png" class="logo-larsen"/>
         <button title="Navigation menu" class="navbar-toggler" @onclick="ToggleNavMenu">
             <span class="navbar-toggler-icon"></span>
@@ -441,15 +643,6 @@ public class User
                 </svg> Mine indkøb
             </NavLink>
         </div>
-        
-        <div class="nav-item px-3 mt-auto">
-            <NavLink class="nav-link" href="logout" @onclick="Logout">
-                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-door-closed" viewBox="0 0 16 16">
-                    <path d="M3 2a1 1 0 0 1 1-1h8a1 1 0 0 1 1 1v13h1.5a.5.5 0 0 1 0 1h-13a.5.5 0 0 1 0-1H3zm1 13h8V2H4z"/>
-                    <path d="M9 9a1 1 0 1 0 2 0 1 1 0 0 0-2 0"/>
-                </svg> Log out
-            </NavLink>
-        </div>
     </nav>
 </div>
 
@@ -465,8 +658,63 @@ public class User
     {
         collapseNavMenu = !collapseNavMenu;
     }
-    
+}
+</file>
 
+<file path="Core/User.cs">
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+namespace Core;
+public class Users
+{
+    public int UserId { get; set; }
+    public string UserName { get; set; } = String.Empty;
+    public string Password { get; set; } = String.Empty;
+    public string Role { get; set; } = "none";
+}
+</file>
+
+<file path="Client/Layout/MainLayout.razor">
+@inject Blazored.LocalStorage.ILocalStorageService LocalStorage
+@using Core
+@inject NavigationManager navManager
+@inherits LayoutComponentBase
+<div class="page">
+    @if (isLoggedIn)
+    {
+        <div class="sidebar">
+            <NavMenu/>
+        </div>
+
+        <main>
+            <div class="top-row px-2 btn-primary" style="color: white">
+            <NavLink class="nav-link" href="logout" @onclick="Logout">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-door-closed" viewBox="0 0 16 16">
+                    <path d="M3 2a1 1 0 0 1 1-1h8a1 1 0 0 1 1 1v13h1.5a.5.5 0 0 1 0 1h-13a.5.5 0 0 1 0-1H3zm1 13h8V2H4z"/>
+                    <path d="M9 9a1 1 0 1 0 2 0 1 1 0 0 0-2 0"/>
+                </svg> Log out
+            </NavLink>
+            </div>
+            <article class="content px-4">
+                @Body
+            </article>
+        </main>
+    }
+</div>
+
+@code
+{
+    bool isLoggedIn = false;
+
+    protected override async Task OnInitializedAsync()
+    {
+        var user = await LocalStorage.GetItemAsync<Users>("user");
+        isLoggedIn = user != null;
+    }
+    
     private async Task Logout()
     { 
         await LocalStorage.RemoveItemAsync("user");
