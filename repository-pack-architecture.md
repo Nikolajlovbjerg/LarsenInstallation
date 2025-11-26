@@ -82,90 +82,6 @@ This section contains the contents of the repository's files.
 Welcome to your new app.
 </file>
 
-<file path="Client/Pages/LoginPage.razor">
-@using Core
-@using Blazored.LocalStorage
-@using Client.Service
-@inject ILocalStorageService LocalStorage
-@inject NavigationManager Nav
-@page "/login"
-<PageTitle>Log ind</PageTitle>
-
-<div class="login-page-background">
-    <div class="login-container">
-        
-        <h3>Log ind</h3>
-
-        <!-- Formular til login-->
-        <EditForm Model="@user" OnValidSubmit="OnClickLogin">
-
-            <div class="form-floating-group">
-                <InputText id="un" class="form-control" @bind-Value="user.Username" placeholder="Username"/>
-                <label for="un">Username</label>
-            </div>
-
-            <div class="form-floating-group">
-                <InputText id="pwd"
-                           type="@PasswordType"
-                           class="form-control"
-                           @bind-Value="user.Password"
-                           placeholder="Password"/>
-                <label for="pwd">Password</label>
-                <i class="bi bi-eye" @onclick="TogglePasswordVisibility">
-                    
-                </i>
-            </div>
-
-            <div style="text-align: center">
-                <button type="submit" class="btn btn-primary">Login</button>
-            </div>
-        </EditForm>
-
-        @if (!string.IsNullOrEmpty(errorText))
-        {
-            <div class="error-message">
-                <span class="error-icon">⚠️</span>
-                <span class="error-text">@errorText</span>
-            </div>
-        }
-    </div>
-</div>
-
-@code {
-    User user = new();
-    
-    //Bruges til at vise errortext hvis relevant - ellers er den tom
-    string errorText = "";
-    //Bruges til at skjule visningen af adgangskoden i vores TogglePasswordVisibility 
-    bool visPassword = false;
-
-    string PasswordType => visPassword ? "text" : "password";
-    
-    //Skifter mellem visning og skjul af adgangskodefeltet
-    void TogglePasswordVisibility()
-    {
-        visPassword = !visPassword;
-    }
-    
-    private async Task OnClickLogin()
-    {
-        UserRepository userRepo = new();
-        User? userObject = userRepo.ValidLogin(user.Username, user.Password);
-        
-        
-        if (userObject == null)
-        {
-            errorText = "Wrong email or password - try again...";
-        }
-        else
-        {
-            await LocalStorage.SetItemAsync("user", userObject);
-            Nav.NavigateTo("projects", forceLoad: true); 
-        }
-    }
-}
-</file>
-
 <file path="Client/Service/UserRepository.cs">
 using Core;
 namespace Client.Service;
@@ -205,36 +121,10 @@ public class UserRepository
 @using Client.Layout
 </file>
 
-<file path="Client/App.razor">
-<Router AppAssembly="@typeof(App).Assembly">
-    <Found Context="routeData">
-        <RouteView RouteData="@routeData" DefaultLayout="@typeof(MainLayout)"/>
-        <FocusOnNavigate RouteData="@routeData" Selector="h1"/>
-    </Found>
-    <NotFound>
-        <PageTitle>Not found</PageTitle>
-        <LayoutView Layout="@typeof(MainLayout)">
-            <p role="alert">Sorry, there's nothing at this address.</p>
-        </LayoutView>
-    </NotFound>
-</Router>
-</file>
-
 <file path="Core/Class1.cs">
 namespace Core;
 public class Class1
 {
-}
-</file>
-
-<file path="Core/User.cs">
-namespace Core;
-public class User
-{
-    public int UserId { get; set; }
-    public string Username { get; set; }
-    public string Password { get; set; }
-    public string Role { get; set; } = "none";
 }
 </file>
 
@@ -318,15 +208,209 @@ app.MapControllers();
 app.Run();
 </file>
 
+<file path="Client/Pages/LoginPage.razor">
+@using Core
+@using Blazored.LocalStorage
+@using Client.Service
+@inject ILocalStorageService LocalStorage
+@inject NavigationManager Nav
+@page "/login"
+<PageTitle>Log ind</PageTitle>
+
+<div class="login-page-back">
+    <div class="login-con">
+        
+        <h3>Log ind</h3>
+
+        <!-- Formular til login-->
+        <EditForm Model="@user" OnValidSubmit="OnClickLogin">
+
+            <div class="form-floating-group">
+                <InputText id="un" class="form-control" @bind-Value="user.Username" placeholder="Username"/>
+                <label for="un">Username</label>
+            </div>
+
+            <div class="form-floating-group">
+                <InputText id="pwd"
+                           type="@PasswordType"
+                           class="form-control"
+                           @bind-Value="user.Password"
+                           placeholder="Password"/>
+                <label for="pwd">Password</label>
+                <i class="bi bi-eye" @onclick="TogglePasswordVisibility">
+                    
+                </i>
+            </div>
+
+            <div style="text-align: center">
+                <button type="submit" class="btn btn-primary">Login</button>
+            </div>
+        </EditForm>
+
+        @if (!string.IsNullOrEmpty(errorText))
+        {
+            <div class="error-message">
+                <span class="error-icon">⚠️</span>
+                <span class="error-text">@errorText</span>
+            </div>
+        }
+    </div>
+</div>
+
+@code {
+    User user = new();
+    
+    //Bruges til at vise errortext hvis relevant - ellers er den tom
+    string errorText = "";
+    //Bruges til at skjule visningen af adgangskoden i vores TogglePasswordVisibility 
+    bool visPassword = false;
+
+    string PasswordType => visPassword ? "text" : "password";
+    
+    //Skifter mellem visning og skjul af adgangskodefeltet
+    void TogglePasswordVisibility()
+    {
+        visPassword = !visPassword;
+    }
+    
+    private async Task OnClickLogin()
+    {
+        UserRepository userRepo = new();
+        User? userObject = userRepo.ValidLogin(user.Username, user.Password);
+        
+        
+        if (userObject == null)
+        {
+            errorText = "Wrong email or password - try again...";
+        }
+        else
+        {
+            await LocalStorage.SetItemAsync("user", userObject);
+            Nav.NavigateTo("projects", forceLoad: true); 
+        }
+    }
+}
+</file>
+
+<file path="Client/App.razor">
+@inject Blazored.LocalStorage.ILocalStorageService LocalStorage
+@inject NavigationManager Nav
+@using Client.Pages
+
+@if (!initialized)
+{
+    <!-- small placeholder while we read local storage -->
+    <div></div>
+}
+else if (!isLoggedIn)
+{
+    <!-- Render the LoginPage component directly if not logged in -->
+    <LoginPage/>
+}
+else
+{
+    <Router AppAssembly="@typeof(App).Assembly">
+        <Found Context="routeData">
+            <RouteView RouteData="@routeData" DefaultLayout="@typeof(Client.Layout.MainLayout)" />
+            <FocusOnNavigate RouteData="@routeData" Selector="h1" />
+        </Found>
+        <NotFound>
+            <LayoutView Layout="@typeof(Client.Layout.MainLayout)">
+                <p>Page not found.</p>
+            </LayoutView>
+        </NotFound>
+    </Router>
+}
+
+@code
+{
+    private bool initialized = false;
+    private bool isLoggedIn = false;
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            var user = await LocalStorage.GetItemAsync<object>("user");
+            isLoggedIn = user != null;
+        }
+        catch (Exception)
+        {
+            // If localStorage read fails, treat as not logged in
+            isLoggedIn = false;
+        }
+        initialized = true;
+    }
+}
+</file>
+
+<file path="Client/Program.cs">
+using Microsoft.AspNetCore.Components.Web;
+using Microsoft.AspNetCore.Components.WebAssembly.Hosting;
+using Client;
+using Blazored.LocalStorage;
+var builder = WebAssemblyHostBuilder.CreateDefault(args);
+builder.RootComponents.Add<App>("#app");
+builder.RootComponents.Add<HeadOutlet>("head::after");
+builder.Services.AddScoped(sp => new HttpClient { BaseAddress = new Uri(builder.HostEnvironment.BaseAddress) });
+builder.Services.AddBlazoredLocalStorage();
+await builder.Build().RunAsync();
+</file>
+
+<file path="Core/User.cs">
+namespace Core;
+public class User
+{
+    public int UserId { get; set; }
+    public string Username { get; set; } = String.Empty;
+    public string Password { get; set; } = String.Empty;
+    public string Role { get; set; } = "none";
+}
+</file>
+
+<file path="Client/Layout/MainLayout.razor">
+@inject Blazored.LocalStorage.ILocalStorageService LocalStorage
+@using Core
+@inherits LayoutComponentBase
+<div class="page">
+    @if (isLoggedIn)
+    {
+        <div class="sidebar">
+            <NavMenu/>
+        </div>
+
+        <main>
+            <div class="top-row px-4 btn-primary" style="color: black">
+            </div>
+
+            <article class="content px-4">
+                @Body
+            </article>
+        </main>
+    }
+</div>
+
+@code
+{
+    bool isLoggedIn = false;
+
+    protected override async Task OnInitializedAsync()
+    {
+        var user = await LocalStorage.GetItemAsync<User>("user");
+        isLoggedIn = user != null;
+    }
+}
+</file>
+
 <file path="Client/Layout/NavMenu.razor">
 @using Core
-@inject Blazored.LocalStorage.ILocalStorageService localStorage
+@inject Blazored.LocalStorage.ILocalStorageService LocalStorage
 @inject NavigationManager navManager
 
 
-<div class="top-row ps-3 navbar navbar-dark">
-    <div class="container-fluid">
-        <a class="navbar-brand" href="">Mini projekt</a>
+<div class="ps-5">
+    <div class="container">
+        <img src="Assets/Larsen-logo_2021hvid.png" class="logo-larsen"/>
         <button title="Navigation menu" class="navbar-toggler" @onclick="ToggleNavMenu">
             <span class="navbar-toggler-icon"></span>
         </button>
@@ -385,55 +469,7 @@ app.Run();
 
     private async Task Logout()
     { 
-        await localStorage.RemoveItemAsync("user");
-        navManager.NavigateTo("/", true);
-    }
-}
-</file>
-
-<file path="Client/Program.cs">
-using Microsoft.AspNetCore.Components.Web;
-using Microsoft.AspNetCore.Components.WebAssembly.Hosting;
-using Client;
-using Blazored.LocalStorage;
-var builder = WebAssemblyHostBuilder.CreateDefault(args);
-builder.RootComponents.Add<App>("#app");
-builder.RootComponents.Add<HeadOutlet>("head::after");
-builder.Services.AddScoped(sp => new HttpClient { BaseAddress = new Uri(builder.HostEnvironment.BaseAddress) });
-builder.Services.AddBlazoredLocalStorage();
-await builder.Build().RunAsync();
-</file>
-
-<file path="Client/Layout/MainLayout.razor">
-@inject Blazored.LocalStorage.ILocalStorageService localStorage
-@inject NavigationManager navManager
-@inherits LayoutComponentBase
-<div class="page">
-    <div class="sidebar">
-        <NavMenu/>
-    </div>
-
-    <main>
-        <div class="top-row px-4 btn-primary" style="color: black">
-            <NavLink class="nav-link" href="login">
-                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" class="bi bi-door-open" viewBox="0 0 16 16">
-                    <path d="M8.5 10c-.276 0-.5-.448-.5-1s.224-1 .5-1 .5.448.5 1-.224 1-.5 1"/>
-                    <path d="M10.828.122A.5.5 0 0 1 11 .5V1h.5A1.5 1.5 0 0 1 13 2.5V15h1.5a.5.5 0 0 1 0 1h-13a.5.5 0 0 1 0-1H3V1.5a.5.5 0 0 1 .43-.495l7-1a.5.5 0 0 1 .398.117M11.5 2H11v13h1V2.5a.5.5 0 0 0-.5-.5M4 1.934V15h6V1.077z"/>
-                </svg> Login
-            </NavLink>
-        </div>
-
-        <article class="content px-4">
-            @Body
-        </article>
-    </main>
-</div>
-
-@code
-{
-    private async Task Logout()
-    {
-        await localStorage.RemoveItemAsync("user");
+        await LocalStorage.RemoveItemAsync("user");
         navManager.NavigateTo("/", true);
     }
 }

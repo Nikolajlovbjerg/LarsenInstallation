@@ -1,3 +1,15 @@
+:root{
+    --glow: rgba(106,167,214,0.06);
+    --bg-start: #051026;
+    --bg-end:   #071226;
+}
+
+html, body {
+    background: #ff8100;
+    margin: 0;
+    height: 100%;
+}
+
 .page {
     position: relative;
     display: flex;
@@ -8,13 +20,24 @@ main {
     flex: 1;
 }
 
+
+
 .sidebar {
-    background-color: rgb(29, 30, 60);
+    background: radial-gradient(1200px 1200px at 10% 10%, rgba(106, 167, 214, 0.04), transparent),
+    linear-gradient(180deg, #051026 0%, #071226 60%);
+    box-shadow: rgba(2, 8, 23, 0.6) 0px 8px 30px;
+    border-radius: 10px;
+    position: sticky;
+    margin: 20px 20px 0px 20px;
 }
 
 .top-row {
-    background-color: #f7f7f7;
-    border-bottom: 1px solid #d6d5d5;
+    background: radial-gradient(1200px 1200px at 10% 10%, rgba(106, 167, 214, 0.04), transparent),
+    linear-gradient(180deg, #051026 0%, #071226 60%);
+    box-shadow: rgba(2, 8, 23, 0.6) 0px 8px 30px;
+    border-radius: 10px;
+    position: sticky;
+    margin: 20px 20px 20px 0;
     justify-content: flex-end;
     height: 3.5rem;
     display: flex;
@@ -59,7 +82,7 @@ main {
     }
 
     .top-row {
-        position: sticky;
+        position: relative;
         top: 0;
         z-index: 1;
     }
