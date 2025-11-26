@@ -1,0 +1,54 @@
+﻿@page "/adduser"
+@using Core
+@inject HttpClient http
+@inject NavigationManager navMan
+
+<PageTitle>Add User</PageTitle>
+
+<h3>Add User</h3>
+
+<EditForm Model="@_user" OnValidSubmit="@HandleValidSubmit" class="row p-3">
+    <DataAnnotationsValidator />
+    <ValidationSummary />
+
+    <div class="col-md-12 mb-3">
+        <label for="UserName">User Name</label>
+        <InputText id="UserName" @bind-Value="_user.UserName" class="form-control" />
+    </div>
+
+    <div class="col-md-12 mb-3">
+        <label for="Password">Password</label>
+        <InputText id="Password" @bind-Value="_user.Password" class="form-control" type="password" />
+    </div>
+
+    <div class="col-md-12 mb-3">
+        <label for="Role">Role</label>
+        <InputText id="Role" @bind-Value="_user.Role" class="form-control" />
+    </div>
+
+    <div class="col-12 mb-3">
+        <button type="submit" class="btn btn-primary">Add User</button>
+    </div>
+</EditForm>
+
+@code {
+    private Users _user = new();
+
+    private async Task HandleValidSubmit()
+    {
+        // Sender POST request direkte til API'et
+        var response = await http.PostAsJsonAsync("http://localhost:5028/api/user", _user);
+
+        if (response.IsSuccessStatusCode)
+        {
+            // Clear form
+            _user = new Users();
+            // Naviger tilbage til brugersiden (juster route som ønsket)
+            navMan.NavigateTo("/users");
+        }
+        else
+        {
+            Console.WriteLine($"Fejl: {response.StatusCode}");
+        }
+    }
+}
