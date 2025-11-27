@@ -33,7 +33,7 @@ The content is organized as follows:
 <notes>
 - Some files may have been excluded based on .gitignore rules and Repomix's configuration
 - Binary files are not included in this packed representation. Please refer to the Repository Structure section for a complete list of file paths, including binary files
-- Only files matching these patterns are included: Client/App.razor, Client/_Imports.razor, Client/Program.cs, Client/Components/**/*.razor, Client/Layout/**/*.razor, Client/Pages/**/*.razor, Client/Service/**/*.cs, Client/Services/**/*.cs, Core/**/*.cs, Server/Controllers/**/*.cs, Server/Repositories/**/*.cs, Server/Program.cs, Server/appsettings*.json
+- Only files matching these patterns are included: Client/App.razor, Client/_Imports.razor, Client/Program.cs, Client/Components/**/*.razor, Client/Layout/**/*.razor, Client/Pages/**/*.razor, Client/Service/**/*.cs, Client/Services/**/*.cs, Core/**/*.cs, Server/Controllers/**/*.cs, Server/Repositories/**/*.cs, Server/Service/**/*.cs, Server/Data/**/*.cs, Server/Program.cs, Server/appsettings*.json
 - Files matching these patterns are excluded: **/bin/**, **/obj/**, **/*.csproj, **/*.sln, **/*.css, **/*.map, **/*.min.js, **/wwwroot/**, ServerApp/ServerApp.http
 - Files matching patterns in .gitignore are excluded
 - Files matching default ignore patterns are excluded
@@ -45,11 +45,14 @@ The content is organized as follows:
 
 <directory_structure>
 Client/
+  Components/
+    CreateProjectComponent.razor
   Layout/
     MainLayout.razor
     NavMenu.razor
   Pages/
     AddUser.razor
+    CreateProjectPage.razor
     Home.razor
     LoginPage.razor
   Service/
@@ -59,6 +62,7 @@ Client/
   Program.cs
 Core/
   Login.cs
+  Project.cs
   User.cs
 Server/
   Controllers/
@@ -68,6 +72,9 @@ Server/
     User/
       CreateUserRepoSQL.cs
       ICreateUserRepoSQL.cs
+  Service/
+    ExcelFileHelper.cs
+    ExcelReader.cs
   appsettings.Development.json
   appsettings.json
   Program.cs
@@ -76,12 +83,184 @@ Server/
 <files>
 This section contains the contents of the repository's files.
 
-<file path="Core/Login.cs">
-namespace Core;
-public class Login
+<file path="Server/Service/ExcelFileHelper.cs">
+using ExcelDataReader;
+using System;
+using System.Collections.Generic;
+using System.IO;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+namespace Service;
+public class ExcelFileHelper
 {
-    public string UserName { get; set; }
-    public string Password { get; set; }
+    public static bool SaveAsCsv(string excelFilePath, string destinationCsvFilePath)
+    {
+        using (var stream = new FileStream(excelFilePath, FileMode.Open, FileAccess.Read, FileShare.ReadWrite))
+        {
+            Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
+            IExcelDataReader reader = null;
+            if (excelFilePath.EndsWith(".xls"))
+            {
+                reader = ExcelReaderFactory.CreateBinaryReader(stream);
+            }
+            else if (excelFilePath.EndsWith(".xlsx"))
+            {
+                reader = ExcelReaderFactory.CreateOpenXmlReader(stream);
+            }
+            if (reader == null)
+                return false;
+            var ds = reader.AsDataSet(new ExcelDataSetConfiguration()
+            {
+                ConfigureDataTable = (tableReader) => new ExcelDataTableConfiguration()
+                {
+                    UseHeaderRow = false
+                }
+            });
+            var csvContent = string.Empty;
+            int row_no = 0;
+            while (row_no < ds.Tables[0].Rows.Count)
+            {
+                var arr = new List<string>();
+                for (int i = 0; i < ds.Tables[0].Columns.Count; i++)
+                {
+                    arr.Add(ds.Tables[0].Rows[row_no][i].ToString());
+                }
+                row_no++;
+                csvContent += string.Join(",", arr) + "\n";
+            }
+            StreamWriter csv = new StreamWriter(destinationCsvFilePath, false);
+            csv.Write(csvContent);
+            csv.Close();
+            return true;
+        }
+    }
+}
+</file>
+
+<file path="Server/Service/ExcelReader.cs">
+using System.Data;
+using System.Text;
+using ExcelDataReader;
+namespace Service;
+public class ExcelReader
+{
+        string excelFilePath = "data.xlsx";
+        using (var stream = new FileStream(excelFilePath, FileMode.Open, FileAccess.Read, FileShare.ReadWrite))
+        {
+            Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
+            IExcelDataReader reader = null;
+            if (excelFilePath.EndsWith(".xls"))
+            {
+                reader = ExcelReaderFactory.CreateBinaryReader(stream);
+            }
+            else if (excelFilePath.EndsWith(".xlsx"))
+            {
+                reader = ExcelReaderFactory.CreateOpenXmlReader(stream);
+            }
+            if (reader == null)
+                throw new Exception("could not read excel-file");
+            var ds = reader.AsDataSet();
+            int row_no = 1;
+            DataRowCollection rows = ds.Tables[0].Rows;
+            while (row_no < rows.Count)
+            {
+                DataRow aRow = rows[row_no];
+                //dato in idx 0
+                string dato = aRow[0].ToString();
+                // timer in idx 2
+                string timer = aRow[2].ToString();
+                int timerAsInt = int.Parse(timer);
+                Console.WriteLine($"{row_no}: {dato}, {timerAsInt}");
+                row_no++;
+            }
+        }
+}
+</file>
+
+<file path="Client/Components/CreateProjectComponent.razor">
+@using Core
+
+<div class="create-page-back">
+    <div class="create-con">
+        <h3>Opret projekt</h3>
+
+        <EditForm Model="@_project" OnValidSubmit="OnClickCreate">
+            
+                <div class="upload-grid">
+                    <div class="upload-box">
+                        <label class="upload-title"><strong>Vælg time fil</strong></label>
+
+                        <div class="upload-area">
+                            <InputFile class="hidden-file-input" multiple="" />
+                        </div>
+                    </div>
+
+                    <div class="upload-box">
+                        <label class="upload-title"><strong>Vælg materiale fil</strong></label>
+
+                        <div class="upload-area">
+                            <InputFile class="hidden-file-input" multiple="" />
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-floating-group">
+                    <InputText id="name" class="form-control" @bind-Value="_project.Name"/>
+                    <label for="name">Navn</label>
+                </div>
+                
+                <div class="form-grid">
+                    <div class="form-floating-group">
+                        <InputNumber id="svend" class="form-control" @bind-Value="_project.SvendTimePris"/>
+                        <label for="svend">Svend sats</label>
+                    </div>
+                    <div class="form-floating-group">
+                        <InputNumber id="lærling" class="form-control" @bind-Value="_project.LærlingTimePris"/>
+                        <label for="lærling">Lærling sats</label>
+                    </div>
+                    <div class="form-floating-group">
+                        <InputNumber id="konsulent" class="form-control" @bind-Value="_project.KonsulentTimePris"/>
+                        <label for="konsulent">Konsulent sats</label>
+                    </div>
+                    <div class="form-floating-group">
+                        <InputNumber id="arbejdsmand" class="form-control" @bind-Value="_project.ArbjedsmandTimePris"/>
+                        <label for="konsulent">Arbejdsmand sats</label>
+                    </div>
+                </div>
+                
+                <div class="">
+                    <div class="">
+                        <button type="submit" class="opretbtn">Opret</button>
+                    </div>
+                </div>
+            
+        </EditForm>
+    </div>
+</div>
+
+
+
+@code {
+    Project _project = new();
+
+    private void OnClickCreate(EditContext obj)
+    {
+        throw new NotImplementedException();
+    }
+
+}
+</file>
+
+<file path="Client/Pages/CreateProjectPage.razor">
+@page "/CreateProjectPage"
+@using Client.Components
+
+
+<CreateProjectComponent></CreateProjectComponent>
+
+@code {
+    
 }
 </file>
 
@@ -106,6 +285,104 @@ Welcome to your new app.
 @using Microsoft.JSInterop
 @using Client
 @using Client.Layout
+</file>
+
+<file path="Core/Project.cs">
+namespace Core;
+public class Project
+{
+    public int ProjectId { get; set; }
+    public string Name { get; set; } = string.Empty;
+    public DateTime DateCreated { get; set; }
+    public int SvendTimePris { get; set; }
+    public int LærlingTimePris { get; set; }
+    public int KonsulentTimePris { get; set; }
+    public int ArbjedsmandTimePris { get; set; }
+}
+</file>
+
+<file path="Server/appsettings.Development.json">
+{
+  "Logging": {
+    "LogLevel": {
+      "Default": "Information",
+      "Microsoft.AspNetCore": "Warning"
+    }
+  }
+}
+</file>
+
+<file path="Server/appsettings.json">
+{
+  "Logging": {
+    "LogLevel": {
+      "Default": "Information",
+      "Microsoft.AspNetCore": "Warning"
+    }
+  },
+  "AllowedHosts": "*"
+}
+</file>
+
+<file path="Client/App.razor">
+@inject Blazored.LocalStorage.ILocalStorageService LocalStorage
+@inject NavigationManager Nav
+@using Client.Pages
+
+@if (!initialized)
+{
+    <!-- small placeholder while we read local storage -->
+    <div></div>
+}
+else if (!isLoggedIn)
+{
+    <!-- Render the LoginPage component directly if not logged in -->
+    <LoginPage/>
+}
+else
+{
+    <Router AppAssembly="@typeof(App).Assembly">
+        <Found Context="routeData">
+            <RouteView RouteData="@routeData" DefaultLayout="@typeof(Client.Layout.MainLayout)" />
+            <FocusOnNavigate RouteData="@routeData" Selector="h1" />
+        </Found>
+        <NotFound>
+            <LayoutView Layout="@typeof(Client.Layout.MainLayout)">
+                <p>Page not found.</p>
+            </LayoutView>
+        </NotFound>
+    </Router>
+}
+
+@code
+{
+    private bool initialized = false;
+    private bool isLoggedIn = false;
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            var user = await LocalStorage.GetItemAsync<object>("user");
+            isLoggedIn = user != null;
+        }
+        catch (Exception)
+        {
+            // If localStorage read fails, treat as not logged in
+            isLoggedIn = false;
+        }
+        initialized = true;
+    }
+}
+</file>
+
+<file path="Core/Login.cs">
+namespace Core;
+public class Login
+{
+    public string UserName { get; set; }
+    public string Password { get; set; }
+}
 </file>
 
 <file path="Server/Controllers/UserCon/UserController.cs">
@@ -262,178 +539,6 @@ namespace Server.Repositories.User
 }
 </file>
 
-<file path="Server/appsettings.Development.json">
-{
-  "Logging": {
-    "LogLevel": {
-      "Default": "Information",
-      "Microsoft.AspNetCore": "Warning"
-    }
-  }
-}
-</file>
-
-<file path="Server/appsettings.json">
-{
-  "Logging": {
-    "LogLevel": {
-      "Default": "Information",
-      "Microsoft.AspNetCore": "Warning"
-    }
-  },
-  "AllowedHosts": "*"
-}
-</file>
-
-<file path="Client/Pages/AddUser.razor">
-@page "/adduser"
-@using Core
-@inject HttpClient http
-@inject NavigationManager navMan
-
-<PageTitle>Add User</PageTitle>
-
-<h3>Add User</h3>
-
-<EditForm Model="@_user" OnValidSubmit="@HandleValidSubmit" class="row p-3">
-    <DataAnnotationsValidator />
-    <ValidationSummary />
-
-    <div class="col-md-12 mb-3">
-        <label for="UserName">User Name</label>
-        <InputText id="UserName" @bind-Value="_user.UserName" class="form-control" />
-    </div>
-
-    <div class="col-md-12 mb-3">
-        <label for="Password">Password</label>
-        <InputText id="Password" @bind-Value="_user.Password" class="form-control" type="password" />
-    </div>
-
-    <div class="col-md-12 mb-3">
-        <label for="Role">Role</label>
-        <InputText id="Role" @bind-Value="_user.Role" class="form-control" />
-    </div>
-
-    <div class="col-12 mb-3">
-        <button type="submit" class="btn btn-primary">Add User</button>
-    </div>
-</EditForm>
-
-@code {
-    private Users _user = new();
-
-    private async Task HandleValidSubmit()
-    {
-        // Sender POST request direkte til API'et
-        var response = await http.PostAsJsonAsync("http://localhost:5028/api/user", _user);
-
-        if (response.IsSuccessStatusCode)
-        {
-            // Clear form
-            _user = new Users();
-            // Naviger tilbage til brugersiden (juster route som ønsket)
-            navMan.NavigateTo("/users");
-        }
-        else
-        {
-            Console.WriteLine($"Fejl: {response.StatusCode}");
-        }
-    }
-}
-</file>
-
-<file path="Client/Service/UserRepository.cs">
-using Core;
-using System.Net.Http;
-using System.Net.Http.Json;
-using System.Threading.Tasks;
-namespace Client.Service
-{
-    public class UserRepository
-    {
-        private readonly HttpClient _http;
-        public UserRepository(HttpClient http)
-        {
-            _http = http;
-        }
-        // Async validering mod server
-        public async Task<Users?> ValidLoginAsync(string name, string password)
-        {
-            var login = new { UserName = name, Password = password };
-            HttpResponseMessage response;
-            try
-            {
-                response = await _http.PostAsJsonAsync("https://localhost:5028/api/user/login", login);
-            }
-            catch (Exception)
-            {
-                // Netværksfejl eller CORS fejl — returner null eller kast efter ønske
-                return null;
-            }
-            if (response.IsSuccessStatusCode)
-            {
-                var user = await response.Content.ReadFromJsonAsync<Users>();
-                return user;
-            }
-            // ikke autoriseret eller anden fejl
-            return null;
-        }
-    }
-}
-</file>
-
-<file path="Client/App.razor">
-@inject Blazored.LocalStorage.ILocalStorageService LocalStorage
-@inject NavigationManager Nav
-@using Client.Pages
-
-@if (!initialized)
-{
-    <!-- small placeholder while we read local storage -->
-    <div></div>
-}
-else if (!isLoggedIn)
-{
-    <!-- Render the LoginPage component directly if not logged in -->
-    <LoginPage/>
-}
-else
-{
-    <Router AppAssembly="@typeof(App).Assembly">
-        <Found Context="routeData">
-            <RouteView RouteData="@routeData" DefaultLayout="@typeof(Client.Layout.MainLayout)" />
-            <FocusOnNavigate RouteData="@routeData" Selector="h1" />
-        </Found>
-        <NotFound>
-            <LayoutView Layout="@typeof(Client.Layout.MainLayout)">
-                <p>Page not found.</p>
-            </LayoutView>
-        </NotFound>
-    </Router>
-}
-
-@code
-{
-    private bool initialized = false;
-    private bool isLoggedIn = false;
-
-    protected override async Task OnInitializedAsync()
-    {
-        try
-        {
-            var user = await LocalStorage.GetItemAsync<object>("user");
-            isLoggedIn = user != null;
-        }
-        catch (Exception)
-        {
-            // If localStorage read fails, treat as not logged in
-            isLoggedIn = false;
-        }
-        initialized = true;
-    }
-}
-</file>
-
 <file path="Server/Program.cs">
 using Server.Repositories.User;
 var builder = WebApplication.CreateBuilder(args);
@@ -463,6 +568,43 @@ app.UseCors("policy");
 app.UseAuthorization();
 app.MapControllers();
 app.Run();
+</file>
+
+<file path="Client/Service/UserRepository.cs">
+using Core;
+using System.Net.Http;
+using System.Net.Http.Json;
+using System.Threading.Tasks;
+namespace Client.Service
+{
+    public class UserRepository
+    {
+        private readonly HttpClient _http;
+        public UserRepository(HttpClient http)
+        {
+            _http = http;
+        }
+        public async Task<Users?> ValidLoginAsync(string name, string password)
+        {
+            var login = new { UserName = name, Password = password };
+            HttpResponseMessage response;
+            try
+            {
+                response = await _http.PostAsJsonAsync("/api/user/login", login);
+            }
+            catch (Exception)
+            {
+                return null;
+            }
+            if (response.IsSuccessStatusCode)
+            {
+                var user = await response.Content.ReadFromJsonAsync<Users>();
+                return user;
+            }
+            return null;
+        }
+    }
+}
 </file>
 
 <file path="Client/Pages/LoginPage.razor">
@@ -597,68 +739,10 @@ using Microsoft.Extensions.DependencyInjection;
 var builder = WebAssemblyHostBuilder.CreateDefault(args);
 builder.RootComponents.Add<App>("#app");
 builder.RootComponents.Add<HeadOutlet>("head::after");
-builder.Services.AddScoped(sp =>
-    new HttpClient { BaseAddress = new Uri(builder.HostEnvironment.BaseAddress) });
+builder.Services.AddScoped(sp => new HttpClient { BaseAddress = new Uri("http://localhost:5028/") });
 builder.Services.AddBlazoredLocalStorage();
 builder.Services.AddScoped<UserRepository>();
 await builder.Build().RunAsync();
-</file>
-
-<file path="Client/Layout/NavMenu.razor">
-@using Core
-@inject Blazored.LocalStorage.ILocalStorageService LocalStorage
-@inject NavigationManager navManager
-
-
-<div class="logo-con">
-    <div class="m-4">
-        <img src="Assets/Larsen-logo_2021hvid.png" class="logo-larsen"/>
-        <button title="Navigation menu" class="navbar-toggler" @onclick="ToggleNavMenu">
-            <span class="navbar-toggler-icon"></span>
-        </button>
-    </div>
-</div>
-
-<div class="@NavMenuCssClass nav-scrollable" @onclick="ToggleNavMenu">
-    <nav class="nav flex-column h-100">
-        <div class="nav-item px-3">
-            <NavLink class="nav-link" href="projects" Match="NavLinkMatch.All">
-                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-shop" viewBox="0 0 16 16">
-                    <path d="M2.97 1.35A1 1 0 0 1 3.73 1h8.54a1 1 0 0 1 .76.35l2.609 3.044A1.5 1.5 0 0 1 16 5.37v.255a2.375 2.375 0 0 1-4.25 1.458A2.37 2.37 0 0 1 9.875 8 2.37 2.37 0 0 1 8 7.083 2.37 2.37 0 0 1 6.125 8a2.37 2.37 0 0 1-1.875-.917A2.375 2.375 0 0 1 0 5.625V5.37a1.5 1.5 0 0 1 .361-.976zm1.78 4.275a1.375 1.375 0 0 0 2.75 0 .5.5 0 0 1 1 0 1.375 1.375 0 0 0 2.75 0 .5.5 0 0 1 1 0 1.375 1.375 0 1 0 2.75 0V5.37a.5.5 0 0 0-.12-.325L12.27 2H3.73L1.12 5.045A.5.5 0 0 0 1 5.37v.255a1.375 1.375 0 0 0 2.75 0 .5.5 0 0 1 1 0M1.5 8.5A.5.5 0 0 1 2 9v6h1v-5a1 1 0 0 1 1-1h3a1 1 0 0 1 1 1v5h6V9a.5.5 0 0 1 1 0v6h.5a.5.5 0 0 1 0 1H.5a.5.5 0 0 1 0-1H1V9a.5.5 0 0 1 .5-.5M4 15h3v-5H4zm5-5a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1v3a1 1 0 0 1-1 1h-2a1 1 0 0 1-1-1zm3 0h-2v3h2z"/>
-                </svg> Projects
-            </NavLink>
-        </div>
-        <div class="nav-item px-3">
-            <NavLink class="nav-link" href="annoncer">
-                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-view-list" viewBox="0 0 16 16">
-                    <path d="M3 4.5h10a2 2 0 0 1 2 2v3a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2v-3a2 2 0 0 1 2-2m0 1a1 1 0 0 0-1 1v3a1 1 0 0 0 1 1h10a1 1 0 0 0 1-1v-3a1 1 0 0 0-1-1zM1 2a.5.5 0 0 1 .5-.5h13a.5.5 0 0 1 0 1h-13A.5.5 0 0 1 1 2m0 12a.5.5 0 0 1 .5-.5h13a.5.5 0 0 1 0 1h-13A.5.5 0 0 1 1 14"/>
-                </svg> Mine annoncer
-            </NavLink>
-        </div>
-        <div class="nav-item px-3">
-            <NavLink class="nav-link" href="indkøb">
-                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-receipt-cutoff" viewBox="0 0 16 16">
-                    <path d="M3 4.5a.5.5 0 0 1 .5-.5h6a.5.5 0 1 1 0 1h-6a.5.5 0 0 1-.5-.5m0 2a.5.5 0 0 1 .5-.5h6a.5.5 0 1 1 0 1h-6a.5.5 0 0 1-.5-.5m0 2a.5.5 0 0 1 .5-.5h6a.5.5 0 1 1 0 1h-6a.5.5 0 0 1-.5-.5m0 2a.5.5 0 0 1 .5-.5h6a.5.5 0 0 1 0 1h-6a.5.5 0 0 1-.5-.5m0 2a.5.5 0 0 1 .5-.5h6a.5.5 0 0 1 0 1h-6a.5.5 0 0 1-.5-.5M11.5 4a.5.5 0 0 0 0 1h1a.5.5 0 0 0 0-1zm0 2a.5.5 0 0 0 0 1h1a.5.5 0 0 0 0-1zm0 2a.5.5 0 0 0 0 1h1a.5.5 0 0 0 0-1zm0 2a.5.5 0 0 0 0 1h1a.5.5 0 0 0 0-1zm0 2a.5.5 0 0 0 0 1h1a.5.5 0 0 0 0-1z"/>
-                    <path d="M2.354.646a.5.5 0 0 0-.801.13l-.5 1A.5.5 0 0 0 1 2v13H.5a.5.5 0 0 0 0 1h15a.5.5 0 0 0 0-1H15V2a.5.5 0 0 0-.053-.224l-.5-1a.5.5 0 0 0-.8-.13L13 1.293l-.646-.647a.5.5 0 0 0-.708 0L11 1.293l-.646-.647a.5.5 0 0 0-.708 0L9 1.293 8.354.646a.5.5 0 0 0-.708 0L7 1.293 6.354.646a.5.5 0 0 0-.708 0L5 1.293 4.354.646a.5.5 0 0 0-.708 0L3 1.293zm-.217 1.198.51.51a.5.5 0 0 0 .707 0L4 1.707l.646.647a.5.5 0 0 0 .708 0L6 1.707l.646.647a.5.5 0 0 0 .708 0L8 1.707l.646.647a.5.5 0 0 0 .708 0L10 1.707l.646.647a.5.5 0 0 0 .708 0L12 1.707l.646.647a.5.5 0 0 0 .708 0l.509-.51.137.274V15H2V2.118z"/>
-                </svg> Mine indkøb
-            </NavLink>
-        </div>
-    </nav>
-</div>
-
-
-
-
-@code {
-    private bool collapseNavMenu = true;
-
-    private string? NavMenuCssClass => collapseNavMenu ? "collapse" : null;
-
-    private void ToggleNavMenu()
-    {
-        collapseNavMenu = !collapseNavMenu;
-    }
-}
 </file>
 
 <file path="Core/User.cs">
@@ -719,6 +803,139 @@ public class Users
     { 
         await LocalStorage.RemoveItemAsync("user");
         navManager.NavigateTo("/", true);
+    }
+}
+</file>
+
+<file path="Client/Pages/AddUser.razor">
+@page "/adduser"
+@using Core
+@inject HttpClient http
+@inject NavigationManager navMan
+
+<PageTitle>Add User</PageTitle>
+
+<h3>Add User</h3>
+
+<EditForm Model="@_user" OnValidSubmit="@HandleValidSubmit" class="row p-3">
+    <DataAnnotationsValidator />
+    <ValidationSummary />
+
+    <div class="col-md-12 mb-3">
+        <label for="UserName">User Name</label>
+        <InputText id="UserName" @bind-Value="_user.UserName" class="form-control" />
+    </div>
+
+    <div class="col-md-12 mb-3">
+        <label for="Password">Password</label>
+        <InputText id="Password" @bind-Value="_user.Password" class="form-control" type="password" />
+    </div>
+
+    <div class="col-md-12 mb-3">
+        <label for="Role">Role</label>
+        <InputSelect id="Role" @bind-Value="_user.Role" class="form-select" >
+
+            @foreach (var r in roles)
+            {
+                <option value="@r">@r</option>
+            }
+        </InputSelect>
+    </div>
+
+    <div class="col-12 mb-3">
+        <button type="submit" class="btn btn-primary">Add User</button>
+    </div>
+</EditForm>
+
+@code {
+    private Users _user = new();
+
+    private string[] roles = ["Bruger", "Admin"];
+
+    private async Task HandleValidSubmit()
+    {
+        // Sender POST request direkte til API'et
+        var response = await http.PostAsJsonAsync("http://localhost:5028/api/user", _user);
+
+        if (response.IsSuccessStatusCode)
+        {
+            // Clear form
+            _user = new Users();
+            // Naviger tilbage til brugersiden (juster route som ønsket)
+            navMan.NavigateTo("/");
+        }
+    }
+}
+</file>
+
+<file path="Client/Layout/NavMenu.razor">
+@using Core
+@inject Blazored.LocalStorage.ILocalStorageService LocalStorage
+@inject NavigationManager navManager
+
+
+<div class="logo-con">
+    <div class="m-4">
+        <img src="Assets/Larsen-logo_2021hvid.png" class="logo-larsen"/>
+        <button title="Navigation menu" class="navbar-toggler" @onclick="ToggleNavMenu">
+            <span><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-list" viewBox="0 0 16 16">
+                <path fill-rule="evenodd" d="M2.5 12a.5.5 0 0 1 .5-.5h10a.5.5 0 0 1 0 1H3a.5.5 0 0 1-.5-.5m0-4a.5.5 0 0 1 .5-.5h10a.5.5 0 0 1 0 1H3a.5.5 0 0 1-.5-.5m0-4a.5.5 0 0 1 .5-.5h10a.5.5 0 0 1 0 1H3a.5.5 0 0 1-.5-.5"/>
+            </svg></span>
+        </button>
+    </div>
+</div>
+
+<div class="@NavMenuCssClass nav-scrollable" @onclick="ToggleNavMenu">
+    <nav class="nav flex-column h-100">
+        <div class="nav-item px-3">
+            <NavLink class="nav-link" href="projects" Match="NavLinkMatch.All">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-folder" viewBox="0 0 16 16">
+                    <path d="M.54 3.87.5 3a2 2 0 0 1 2-2h3.672a2 2 0 0 1 1.414.586l.828.828A2 2 0 0 0 9.828 3h3.982a2 2 0 0 1 1.992 2.181l-.637 7A2 2 0 0 1 13.174 14H2.826a2 2 0 0 1-1.991-1.819l-.637-7a2 2 0 0 1 .342-1.31zM2.19 4a1 1 0 0 0-.996 1.09l.637 7a1 1 0 0 0 .995.91h10.348a1 1 0 0 0 .995-.91l.637-7A1 1 0 0 0 13.81 4zm4.69-1.707A1 1 0 0 0 6.172 2H2.5a1 1 0 0 0-1 .981l.006.139q.323-.119.684-.12h5.396z"/>
+                </svg> Projects
+            </NavLink>
+        </div>
+        <div class="nav-item px-3">
+            <NavLink class="nav-link" href="CreateProjectPage">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-file-plus" viewBox="0 0 16 16">
+                    <path d="M8.5 6a.5.5 0 0 0-1 0v1.5H6a.5.5 0 0 0 0 1h1.5V10a.5.5 0 0 0 1 0V8.5H10a.5.5 0 0 0 0-1H8.5z"/>
+                    <path d="M2 2a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2zm10-1H4a1 1 0 0 0-1 1v12a1 1 0 0 0 1 1h8a1 1 0 0 0 1-1V2a1 1 0 0 0-1-1"/>
+                </svg> Opret projekt
+            </NavLink>
+        </div>
+        
+        @if (loggedIn != null && loggedIn.Role.Equals("admin", StringComparison.CurrentCultureIgnoreCase))
+        {
+            <div class="nav-item px-3">
+                <NavLink class="nav-link" href="adduser">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-receipt-cutoff" viewBox="0 0 16 16">
+                        <path d="M3 4.5a.5.5 0 0 1 .5-.5h6a.5.5 0 1 1 0 1h-6a.5.5 0 0 1-.5-.5m0 2a.5.5 0 0 1 .5-.5h6a.5.5 0 1 1 0 1h-6a.5.5 0 0 1-.5-.5m0 2a.5.5 0 0 1 .5-.5h6a.5.5 0 1 1 0 1h-6a.5.5 0 0 1-.5-.5m0 2a.5.5 0 0 1 .5-.5h6a.5.5 0 0 1 0 1h-6a.5.5 0 0 1-.5-.5m0 2a.5.5 0 0 1 .5-.5h6a.5.5 0 0 1 0 1h-6a.5.5 0 0 1-.5-.5M11.5 4a.5.5 0 0 0 0 1h1a.5.5 0 0 0 0-1zm0 2a.5.5 0 0 0 0 1h1a.5.5 0 0 0 0-1zm0 2a.5.5 0 0 0 0 1h1a.5.5 0 0 0 0-1zm0 2a.5.5 0 0 0 0 1h1a.5.5 0 0 0 0-1zm0 2a.5.5 0 0 0 0 1h1a.5.5 0 0 0 0-1z" />
+                        <path d="M2.354.646a.5.5 0 0 0-.801.13l-.5 1A.5.5 0 0 0 1 2v13H.5a.5.5 0 0 0 0 1h15a.5.5 0 0 0 0-1H15V2a.5.5 0 0 0-.053-.224l-.5-1a.5.5 0 0 0-.8-.13L13 1.293l-.646-.647a.5.5 0 0 0-.708 0L11 1.293l-.646-.647a.5.5 0 0 0-.708 0L9 1.293 8.354.646a.5.5 0 0 0-.708 0L7 1.293 6.354.646a.5.5 0 0 0-.708 0L5 1.293 4.354.646a.5.5 0 0 0-.708 0L3 1.293zm-.217 1.198.51.51a.5.5 0 0 0 .707 0L4 1.707l.646.647a.5.5 0 0 0 .708 0L6 1.707l.646.647a.5.5 0 0 0 .708 0L8 1.707l.646.647a.5.5 0 0 0 .708 0L10 1.707l.646.647a.5.5 0 0 0 .708 0L12 1.707l.646.647a.5.5 0 0 0 .708 0l.509-.51.137.274V15H2V2.118z" />
+                    </svg> Tilføj bruger
+                </NavLink>
+            </div>
+        }
+        
+    </nav>
+</div>
+
+
+
+
+@code {
+    private bool collapseNavMenu = true;
+
+    private string? NavMenuCssClass => collapseNavMenu ? "collapse" : null;
+
+    private void ToggleNavMenu()
+    {
+        collapseNavMenu = !collapseNavMenu;
+    }
+
+    Users? loggedIn;
+
+    protected override async Task OnInitializedAsync()
+    {
+        loggedIn = await LocalStorage.GetItemAsync<Users?>("user");
     }
 }
 </file>
