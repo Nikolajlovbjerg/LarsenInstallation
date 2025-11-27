@@ -2,7 +2,7 @@ using System.Data;
 using System.Text;
 using ExcelDataReader;
 
-namespace Service;
+/* namespace Service;
 
 public class ExcelReader
 {
@@ -44,4 +44,4 @@ public class ExcelReader
             }
             
         }
-}
+}*/
