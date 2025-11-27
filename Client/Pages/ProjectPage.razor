@@ -1,19 +1,29 @@
 ﻿@page "/projects"
 @using Client.Components
-@using Core;
+@using Core
+@inject Client.Service.ProjectService ProjectService
+
 <h3>ProjectPage</h3>
 
 <ProjectsList Projects="@projectList"></ProjectsList>
 
 @code {
-
-
     private List<Project> projectList = new()
     {
         new Project { ProjectId = 1, Name = "Projekt A", DateCreated = DateTime.Now },
         new Project { ProjectId = 2, Name = "Projekt B", DateCreated = DateTime.Now.AddDays(-1) },
         new Project { ProjectId = 3, Name = "Projekt C", DateCreated = DateTime.Now.AddDays(-2) }
     };
+
+    protected override async Task OnInitializedAsync()
+    {
+        // Hent projekter fra server
+        var fromApi = await ProjectService.GetProjects();
+
+        if (fromApi != null)
+        {
+            // Tilføj dem til den eksisterende liste
+            projectList.AddRange(fromApi);
+        }
+    }
 }
-
-

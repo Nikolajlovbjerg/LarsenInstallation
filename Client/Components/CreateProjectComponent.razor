@@ -1,4 +1,7 @@
 @using Core
+@inject Client.Service.ProjectService ProjectService
+@inject NavigationManager Nav
+
 
 <div class="create-page-back">
     <div class="create-con">
@@ -63,9 +66,15 @@
 @code {
     Project _project = new();
 
-    private void OnClickCreate(EditContext obj)
+    private async Task OnClickCreate(EditContext obj)
     {
-        throw new NotImplementedException();
+        var created = await ProjectService.CreateProject(_project);
+
+        if (created != null)
+        {
+            Nav.NavigateTo("/projects");
+        }
     }
+
 
 }
