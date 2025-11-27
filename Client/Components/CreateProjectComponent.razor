@@ -1,0 +1,71 @@
+@using Core
+
+<div class="create-page-back">
+    <div class="create-con">
+        <h3>Opret projekt</h3>
+
+        <EditForm Model="@_project" OnValidSubmit="OnClickCreate">
+            
+                <div class="upload-grid">
+                    <div class="upload-box">
+                        <label class="upload-title"><strong>Vælg time fil</strong></label>
+
+                        <div class="upload-area">
+                            <InputFile class="hidden-file-input" multiple="" />
+                        </div>
+                    </div>
+
+                    <div class="upload-box">
+                        <label class="upload-title"><strong>Vælg materiale fil</strong></label>
+
+                        <div class="upload-area">
+                            <InputFile class="hidden-file-input" multiple="" />
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-floating-group">
+                    <InputText id="name" class="form-control" @bind-Value="_project.Name"/>
+                    <label for="name">Navn</label>
+                </div>
+                
+                <div class="form-grid">
+                    <div class="form-floating-group">
+                        <InputNumber id="svend" class="form-control" @bind-Value="_project.SvendTimePris"/>
+                        <label for="svend">Svend sats</label>
+                    </div>
+                    <div class="form-floating-group">
+                        <InputNumber id="lærling" class="form-control" @bind-Value="_project.LærlingTimePris"/>
+                        <label for="lærling">Lærling sats</label>
+                    </div>
+                    <div class="form-floating-group">
+                        <InputNumber id="konsulent" class="form-control" @bind-Value="_project.KonsulentTimePris"/>
+                        <label for="konsulent">Konsulent sats</label>
+                    </div>
+                    <div class="form-floating-group">
+                        <InputNumber id="arbejdsmand" class="form-control" @bind-Value="_project.ArbjedsmandTimePris"/>
+                        <label for="konsulent">Arbejdsmand sats</label>
+                    </div>
+                </div>
+                
+                <div class="">
+                    <div class="">
+                        <button type="submit" class="opretbtn">Opret</button>
+                    </div>
+                </div>
+            
+        </EditForm>
+    </div>
+</div>
+
+
+
+@code {
+    Project _project = new();
+
+    private void OnClickCreate(EditContext obj)
+    {
+        throw new NotImplementedException();
+    }
+
+}

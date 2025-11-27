@@ -52,11 +52,7 @@
             // Clear form
             _user = new Users();
             // Naviger tilbage til brugersiden (juster route som ønsket)
-            navMan.NavigateTo("/users");
-        }
-        else
-        {
-            Console.WriteLine($"Fejl: {response.StatusCode}");
+            navMan.NavigateTo("/");
         }
     }
 }
