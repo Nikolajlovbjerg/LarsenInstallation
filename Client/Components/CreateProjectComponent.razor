@@ -1,4 +1,6 @@
 @using Core
+@inject NavigationManager Nav
+@inject HttpClient Http
 
 <div class="create-page-back">
     <div class="create-con">
@@ -6,23 +8,48 @@
 
         <EditForm Model="@_project" OnValidSubmit="OnClickCreate">
             
-                <div class="upload-grid">
-                    <div class="upload-box">
-                        <label class="upload-title"><strong>Vælg time fil</strong></label>
+            <DataAnnotationsValidator />
+            <ValidationSummary />
 
-                        <div class="upload-area">
-                            <InputFile class="hidden-file-input" multiple="" />
-                        </div>
-                    </div>
-
-                    <div class="upload-box">
-                        <label class="upload-title"><strong>Vælg materiale fil</strong></label>
-
-                        <div class="upload-area">
-                            <InputFile class="hidden-file-input" multiple="" />
-                        </div>
+            <div class="upload-grid">
+                <div class="upload-box">
+                    <label class="upload-title"><strong>Vælg time fil (.xls, .xlsx)</strong></label>
+                    <div class="upload-area">
+                        <InputFile OnChange="OnTimeFileChange" multiple accept=".xls,.xlsx" />
+                        @if (timeFiles?.Count > 0)
+                        {
+                            <div class="mt-2 small">
+                                Valgte:
+                                <ul>
+                                    @foreach (var f in timeFiles)
+                                    {
+                                        <li>@f.Name (@FormatBytes(f.Size))</li>
+                                    }
+                                </ul>
+                            </div>
+                        }
                     </div>
                 </div>
+
+                <div class="upload-box">
+                    <label class="upload-title"><strong>Vælg materiale fil (.xls, .xlsx)</strong></label>
+                    <div class="upload-area">
+                        <InputFile OnChange="OnMaterialFileChange" multiple accept=".xls,.xlsx" />
+                        @if (materialFiles?.Count > 0)
+                        {
+                            <div class="mt-2 small">
+                                Valgte:
+                                <ul>
+                                    @foreach (var f in materialFiles)
+                                    {
+                                        <li>@f.Name (@FormatBytes(f.Size))</li>
+                                    }
+                                </ul>
+                            </div>
+                        }
+                    </div>
+                </div>
+            </div>
 
                 <div class="form-floating-group">
                     <InputText id="name" class="form-control" @bind-Value="_project.Name"/>
@@ -61,11 +88,110 @@
 
 
 @code {
-    Project _project = new();
+    private Project _project = new() { DateCreated = DateTime.UtcNow };
 
-    private void OnClickCreate(EditContext obj)
+    private IReadOnlyList<IBrowserFile> timeFiles = new List<IBrowserFile>();
+    private IReadOnlyList<IBrowserFile> materialFiles = new List<IBrowserFile>();
+
+    private bool isUploading = false;
+    private string statusMessage = "";
+    private string statusClass = "alert-info";
+
+    private const long MaxFileBytes = 50L * 1024 * 1024;
+
+    private void OnTimeFileChange(InputFileChangeEventArgs e)
     {
-        throw new NotImplementedException();
+        var list = e.GetMultipleFiles().ToList();
+
+        // Størrelsestjek for alle filer
+        if (list.Any(f => f.Size > MaxFileBytes))
+        {
+            statusClass = "alert-danger";
+            statusMessage = $"Mindst én timefil er for stor (maks {FormatBytes(MaxFileBytes)}).";
+            return;
+        }
+
+        timeFiles = list;
+        statusMessage = "";
     }
 
+    private void OnMaterialFileChange(InputFileChangeEventArgs e)
+    {
+        var list = e.GetMultipleFiles().ToList();
+
+        if (list.Any(f => f.Size > MaxFileBytes))
+        {
+            statusClass = "alert-danger";
+            statusMessage = $"Mindst én materialefil er for stor (maks {FormatBytes(MaxFileBytes)}).";
+            return;
+        }
+
+        materialFiles = list;
+        statusMessage = "";
+    }
+
+    private static string FormatBytes(long bytes)
+    {
+        if (bytes < 1024) return $"{bytes} B";
+        if (bytes < 1024 * 1024) return $"{bytes / 1024.0:F1} KB";
+        return $"{bytes / (1024.0 * 1024.0):F2} MB";
+    }
+
+    private async Task OnClickCreate()
+    {
+        if (string.IsNullOrWhiteSpace(_project.Name))
+        {
+            statusClass = "alert-danger";
+            statusMessage = "Projektet skal have et navn.";
+            return;
+        }
+
+        if (timeFiles.Count == 0 && materialFiles.Count == 0)
+        {
+            statusClass = "alert-danger";
+            statusMessage = "Du skal vælge mindst én fil.";
+            return;
+        }
+
+        using var content = new MultipartFormDataContent();
+
+        // Project JSON
+        var json = System.Text.Json.JsonSerializer.Serialize(_project);
+        content.Add(new StringContent(json, System.Text.Encoding.UTF8, "application/json"), "project");
+
+        // Send ALLE time filer
+        foreach (var f in timeFiles)
+        {
+            var stream = f.OpenReadStream(MaxFileBytes);
+            var sc = new StreamContent(stream);
+            sc.Headers.ContentType = new System.Net.Http.Headers.MediaTypeHeaderValue(f.ContentType ?? "application/octet-stream");
+
+            content.Add(sc, "timeFile", f.Name); // NAVN UÆNDRET
+        }
+
+        // Send ALLE materialefiler
+        foreach (var f in materialFiles)
+        {
+            var stream = f.OpenReadStream(MaxFileBytes);
+            var sc = new StreamContent(stream);
+            sc.Headers.ContentType = new System.Net.Http.Headers.MediaTypeHeaderValue(f.ContentType ?? "application/octet-stream");
+
+            content.Add(sc, "materialFile", f.Name); // NAVN UÆNDRET
+        }
+
+        // Kald API
+        var resp = await Http.PostAsync("api/project", content);
+
+        if (resp.IsSuccessStatusCode)
+        {
+            statusClass = "alert-success";
+            statusMessage = "Projekt oprettet!";
+            Nav.NavigateTo("projects", true);
+        }
+        else
+        {
+            statusClass = "alert-danger";
+            statusMessage = await resp.Content.ReadAsStringAsync();
+        }
+    }
 }

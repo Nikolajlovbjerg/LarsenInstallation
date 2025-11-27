@@ -6,7 +6,7 @@ public class Project
     
     public string Name { get; set; } = string.Empty;
     
-    public DateTime DateCreated { get; set; }
+    public DateTime DateCreated { get; set; } = DateTime.UtcNow;
     
     public int SvendTimePris { get; set; }
     
