@@ -1,10 +1,13 @@
 ﻿@using Core
 
-@if (Projects is not null)
-{
+<div class="annonce-list">
     @foreach (var p in Projects)
     {
-        <article class="annonce-row" role="listitem">
+        <article class="annonce-card">
+            <div class="thumb">
+                <img src="https://via.placeholder.com/150" />
+            </div>
+
             <div class="content">
                 <h3 class="title">@p.Name</h3>
                 <p>Oprettet: @p.DateCreated.ToShortDateString()</p>
@@ -13,7 +16,7 @@
             <button class="btn mark-sold">Se mere</button>
         </article>
     }
-}
+</div>
 
 @code {
     [Parameter] public IEnumerable<Project>? Projects { get; set; }

@@ -4,9 +4,9 @@
 
 /* Container for listen: én række per linje */
 .annonce-list {
-    display: flex;
-    flex-direction: column;
-    gap: 8px;
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+    gap: 16px;
 }
 
 /* row layout: thumbnail | main content | actions */
@@ -24,6 +24,15 @@
     .annonce-row .content .title {
         color: #ffffff !important;
     }
+
+.annonce-card {
+    background: #0b1f3a; /* mørk blå baggrund */
+    color: white; /* hvid tekst */
+    padding: 16px; /* luft inde i cardet */
+    border-radius: 12px; /* afrundede hjørner */
+    border: 2px solid #1b2f5d; /* KANT rundt om cardet */
+    box-shadow: 0 4px 10px rgba(0,0,0,0.2); /* fin skygge */
+}
 
 
 /* thumbnail */
@@ -63,7 +72,7 @@
     margin: 0 0 6px 0;
     font-size: 16px;
     font-weight: 700;
-    color: #111;
+    color: white;
     line-height: 1.15;
     overflow: hidden;
     text-overflow: ellipsis;
