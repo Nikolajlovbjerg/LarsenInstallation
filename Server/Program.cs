@@ -1,5 +1,6 @@
-using Server.Repositories.User;
 using Server.Repositories;
+using Server.Repositories.ProjCalc;
+using Server.Repositories.User;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -8,6 +9,8 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddSingleton<IProjectRepository, ProjectRepositorySQL>();
 
 builder.Services.AddSingleton<ICreateUserRepoSQL, CreateUserRepoSQL>();
+
+builder.Services.AddSingleton<IProjectTotalCalcRepo, ProjectTotalCalcRepo>();
 
 builder.Services.AddControllers();
 

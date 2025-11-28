@@ -6,7 +6,7 @@ namespace Server.Repositories.User
 {
     public class CreateUserRepoSQL : ICreateUserRepoSQL
     {
-        private const string conString =
+    private const string conString =
     "Host=ep-spring-unit-a2y1k0pd.eu-central-1.aws.neon.tech;" +
     "Port=5432;" +
     "Database=LarsenInstallation;" +

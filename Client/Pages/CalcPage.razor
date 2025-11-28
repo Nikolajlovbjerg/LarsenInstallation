@@ -1,0 +1,43 @@
+﻿@page "/calc"
+@using Core
+@inject NavigationManager navMan
+@inject HttpClient http
+
+<h3>CalcPage</h3>
+
+@if (calcs == null)
+{
+    <p><em>Loading...</em></p>
+}
+else
+{
+    <table class="table table-striped">
+        <tbody>
+            @foreach (var calc in calcs)
+            {
+                <tr class="calcRow">
+                    <td>
+                        <h2>@calc.CalcId - @calc.ProjectId</h2>
+                        Materiale: @calc.TotalMaterialCost kr.<br />
+                        Timer: @calc.TotalHourlyCost kr.<br />
+                        Kundepris: @calc.TotalCustomerPrice kr.<br />
+                        Indtjening: @calc.TotalEarnings kr.<br />
+                        Oprettet: @calc.CreatedAt.ToString("dd-MM-yyyy")
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}
+
+
+@code {
+	private List<Calculation>? calcs;
+
+	protected override async Task OnInitializedAsync()
+	{
+		calcs = await http.GetFromJsonAsync<List<Calculation>>("http://localhost:5028/api/projcalc");
+	}
+
+
+}
