@@ -16,7 +16,7 @@ namespace Server.Controllers
         }
 
         [HttpGet]
-        public IEnumerable<Calculation> get()
+        public IEnumerable<Project> get()
         {
             return calcRepo.GetAll();
         }

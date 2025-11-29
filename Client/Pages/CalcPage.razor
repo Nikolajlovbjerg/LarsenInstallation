@@ -17,12 +17,13 @@ else
             {
                 <tr class="calcRow">
                     <td>
-                        <h2>@calc.CalcId - @calc.ProjectId</h2>
-                        Materiale: @calc.TotalMaterialCost kr.<br />
-                        Timer: @calc.TotalHourlyCost kr.<br />
-                        Kundepris: @calc.TotalCustomerPrice kr.<br />
-                        Indtjening: @calc.TotalEarnings kr.<br />
-                        Oprettet: @calc.CreatedAt.ToString("dd-MM-yyyy")
+                        <h2>@calc.ProjectId</h2>
+                        Navn: @calc.Name.<br />
+                        Dato: @calc.DateCreated.ToString("dd-MM-yyyy").<br />
+                        Sven time pris: @calc.SvendTimePris kr.<br />
+                        Lærling time pris: @calc.LærlingTimePris kr.<br />
+                        Konsulent time pris: @calc.KonsulentTimePris <br/>
+                        Arbejdsmand time pris: @calc.ArbjedsmandTimePris <br />
                     </td>
                 </tr>
             }
@@ -32,11 +33,11 @@ else
 
 
 @code {
-	private List<Calculation>? calcs;
+	private List<Project>? calcs;
 
 	protected override async Task OnInitializedAsync()
 	{
-		calcs = await http.GetFromJsonAsync<List<Calculation>>("http://localhost:5028/api/projcalc");
+		calcs = await http.GetFromJsonAsync<List<Project>>("http://localhost:5028/api/projcalc");
 	}
 
 
