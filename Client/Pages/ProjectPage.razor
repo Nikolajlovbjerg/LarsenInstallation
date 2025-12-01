@@ -1,29 +1,22 @@
 ﻿@page "/projects"
 @using Client.Components
 @using Core
-@inject Client.Service.ProjectService ProjectService
+@inject NavigationManager Navigation
 
-<h3>ProjectPage</h3>
+<h3>Projekter</h3>
 
-<ProjectsList Projects="@projectList"></ProjectsList>
+<ProjectsList Projects="@projectList" OnSeeMore="@NavigateToDetails"></ProjectsList>
 
 @code {
     private List<Project> projectList = new()
     {
-        new Project { ProjectId = 1, Name = "Gadehjørnet", DateCreated = DateTime.Now},
-        new Project { ProjectId = 2, Name = "Projekt B", DateCreated = DateTime.Now.AddDays(-1)},
-        new Project { ProjectId = 3, Name = "Mandøvænget", DateCreated = DateTime.Now.AddDays(-2)}
+        new Project { ProjectId = 1, Name = "Gadehjørnet", DateCreated = DateTime.Now },
+        new Project { ProjectId = 2, Name = "Projekt B", DateCreated = DateTime.Now.AddDays(-1) },
+        new Project { ProjectId = 3, Name = "Mandøvænget", DateCreated = DateTime.Now.AddDays(-2) }
     };
 
-    protected override async Task OnInitializedAsync()
+    private void NavigateToDetails(int projectId)
     {
-        // Hent projekter fra server
-        var fromApi = await ProjectService.GetProjects();
-
-        if (fromApi != null)
-        {
-            // Tilføj dem til den eksisterende liste
-            projectList.AddRange(fromApi);
-        }
+        Navigation.NavigateTo($"/projects/{projectId}");
     }
 }

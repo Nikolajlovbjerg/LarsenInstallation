@@ -9,11 +9,12 @@
                 <p>Oprettet: @p.DateCreated.ToShortDateString()</p>
             </div>
 
-            <button class="btn mark-sold">Se mere</button>
+            <button class="btn mark-sold" @onclick="@(() => OnSeeMore?.Invoke(p.ProjectId))">Se mere</button>
         </article>
     }
 </div>
 
 @code {
     [Parameter] public IEnumerable<Project>? Projects { get; set; }
+    [Parameter] public Action<int>? OnSeeMore { get; set; }
 }

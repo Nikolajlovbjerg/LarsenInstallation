@@ -1,0 +1,57 @@
+﻿@using Core
+
+@if (Project == null)
+{
+    <p>Projektet blev ikke fundet!</p>
+}
+else
+{
+    <div class="project-info">
+        <h4>@Project.Name</h4>
+        <p>Oprettet: @Project.DateCreated.ToShortDateString()</p>
+
+        <h5>Omkostninger</h5>
+        <p>Total pris for kunden: @(Project.TotalCostCustomer.ToString("C"))</p>
+        <p>Virksomhedens omkostninger: @(Project.TotalCostCompany.ToString("C"))</p>
+        <p>Overskud: @((Project.TotalCostCustomer - Project.TotalCostCompany).ToString("C"))</p>
+    </div>
+
+    @foreach (var house in Project.Houses)
+    {
+        <div class="house-report">
+            <h4>@house.Name</h4>
+            <p>Pris kunde: @(house.CostCustomer.ToString("C"))</p>
+            <p>Omkostninger: @(house.CostCompany.ToString("C"))</p>
+            <p>Overskud: @((house.CostCustomer - house.CostCompany).ToString("C"))</p>
+            <p>Timer brugt: @house.Hours</p>
+
+            <h5>Installationer</h5>
+            <ul>
+                @foreach (var inst in house.InstallationCosts)
+                {
+                    <li>@inst.Key: @(inst.Value.ToString("C"))</li>
+                }
+            </ul>
+
+            <h5>Materialer</h5>
+            <ul>
+                @foreach (var mat in house.MaterialsUsed)
+                {
+                    <li>@mat.Key: @mat.Value stk</li>
+                }
+            </ul>
+        </div>
+    }
+
+    <h5>Tidsforbrug pr. dag</h5>
+    <ul>
+        @foreach (var entry in Project.TimeEntries)
+        {
+            <li>@entry.Date.ToShortDateString(): @entry.Hours timer</li>
+        }
+    </ul>
+}
+
+@code {
+    [Parameter] public Project? Project { get; set; }
+}
