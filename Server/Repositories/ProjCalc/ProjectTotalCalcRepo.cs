@@ -23,7 +23,44 @@ namespace Server.Repositories.ProjCalc
 
         }
 
-        public List<Project> GetAll()
+        public List<Calculation> GetAll()
+        {
+            var result = new List<Calculation>();
+            using (var mConnection = new NpgsqlConnection(conString))
+            {
+                mConnection.Open();
+                var command = mConnection.CreateCommand();
+                command.CommandText = @"select * from calculations";
+
+                using (var reader = command.ExecuteReader())
+                {
+                    while (reader.Read())
+                    {
+                        var CalcId = reader.GetInt32(0);
+                        var ProjectId = reader.GetInt32(1);
+                        var TotalMaterialCost = reader.GetDecimal(2);
+                        var TotalHourlyCost = reader.GetDecimal(3);
+                        var TotalCustomerPrice = reader.GetDecimal(4);
+                        var TotalEarnings = reader.GetDecimal(5);
+                        var CreatedAt = reader.GetDateTime(6);
+
+                        Calculation c = new Calculation
+                        { 
+                            CalcId = CalcId,
+                            ProjectId = ProjectId,
+                            TotalMaterialCost = TotalMaterialCost,
+                            TotalHourlyCost = TotalHourlyCost,
+                            TotalCustomerPrice = TotalCustomerPrice,
+                            TotalEarnings = TotalEarnings,
+                            CreatedAt = CreatedAt
+                        };
+                        result.Add(c);
+                    }
+                }
+            }
+            return result;
+        }
+        public List<Project> GetAllProjects()
         {
             var result = new List<Project>();
             using (var mConnection = new NpgsqlConnection(conString))
@@ -45,21 +82,23 @@ namespace Server.Repositories.ProjCalc
                         var ArbjedsmandTimePris = reader.GetInt32(6);
 
                         Project p = new Project
-                        { 
+                        {
+
                             ProjectId = ProjectId,
                             Name = Name,
                             DateCreated = DateCreated,
                             SvendTimePris = SvendTimePris,
                             LærlingTimePris = LærlingTimePris,
-                            KonsulentTimePris=KonsulentTimePris,
-                            ArbjedsmandTimePris=ArbjedsmandTimePris
+                            KonsulentTimePris = KonsulentTimePris,
+                            ArbjedsmandTimePris = ArbjedsmandTimePris
                         };
                         result.Add(p);
                     }
                 }
             }
             return result;
-        } 
+        }
 
     } 
 }
+

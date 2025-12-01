@@ -15,10 +15,15 @@ namespace Server.Controllers
             this.calcRepo = calcRepo;
         }
 
-        [HttpGet]
-        public IEnumerable<Project> get()
+        [HttpGet("calculations")]
+        public IEnumerable<Calculation> get()
         {
             return calcRepo.GetAll();
+        }
+        [HttpGet("projects")]
+        public IEnumerable<Project> getprojects()
+        {
+            return calcRepo.GetAllProjects();
         }
     }
 }

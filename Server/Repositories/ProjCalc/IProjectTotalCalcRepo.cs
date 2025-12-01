@@ -4,6 +4,8 @@ namespace Server.Repositories.ProjCalc
 {
     public interface IProjectTotalCalcRepo
     {
-        List<Project> GetAll();
+        List<Calculation> GetAll();
+
+        List<Project> GetAllProjects();
     }
 }

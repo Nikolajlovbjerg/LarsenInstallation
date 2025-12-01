@@ -17,13 +17,20 @@ else
             {
                 <tr class="calcRow">
                     <td>
-                        <h2>@calc.ProjectId</h2>
-                        Navn: @calc.Name.<br />
-                        Dato: @calc.DateCreated.ToString("dd-MM-yyyy").<br />
-                        Sven time pris: @calc.SvendTimePris kr.<br />
-                        Lærling time pris: @calc.LærlingTimePris kr.<br />
-                        Konsulent time pris: @calc.KonsulentTimePris <br/>
-                        Arbejdsmand time pris: @calc.ArbjedsmandTimePris <br />
+                        <h2>@calc.CalcId</h2>
+                        @foreach (var project in proj)
+                        {
+                            @if (project.ProjectId == calc.CalcId)
+                            {
+                            <h2>Projekt navn @project.Name</h2> 
+                            }
+                        }
+                        <br />
+                        Matriale pris: @calc.TotalMaterialCost kr.<br />
+                        Time pris: @calc.TotalHourlyCost kr.<br />
+                        Købers pris: @calc.TotalCustomerPrice kr. <br/>
+                        Tjent: @calc.TotalEarnings kr.<br />
+                        Dato: @calc.CreatedAt.ToString("dd-MM-yyyy").<br />
                     </td>
                 </tr>
             }
@@ -33,11 +40,13 @@ else
 
 
 @code {
-	private List<Project>? calcs;
+    private List<Calculation>? calcs;
+    private List<Project>? proj;
 
 	protected override async Task OnInitializedAsync()
 	{
-		calcs = await http.GetFromJsonAsync<List<Project>>("http://localhost:5028/api/projcalc");
+		calcs = await http.GetFromJsonAsync<List<Calculation>>("http://localhost:5028/api/projcalc/calculations");
+        proj = await http.GetFromJsonAsync<List<Project>>("http://localhost:5028/api/projcalc/projects");
 	}
 
 
