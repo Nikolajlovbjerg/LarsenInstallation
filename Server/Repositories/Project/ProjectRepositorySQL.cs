@@ -15,17 +15,16 @@ namespace Server.Repositories.Project
             "Ssl Mode=Require;" +
             "Trust Server Certificate=true;";
 
+        // 1. OPRETTE PROJEKT (Denne har vi styr på, men den skal med)
         public int CreateProject(Core.Project project, List<ProjectHour> hours, List<ProjectMaterial> materials)
         {
             using var conn = new NpgsqlConnection(conString);
             conn.Open();
-
             using var transaction = conn.BeginTransaction();
 
             try
             {
-                // 1. INDSÆT PROJEKT
-                // Rettet: Bruger nu snake_case kolonnenavne (fx svend_timepris)
+                // Indsæt Projekt
                 var cmdProject = new NpgsqlCommand(@"
                     INSERT INTO projects (name, svend_timepris, lærling_timepris, konsulent_timepris, arbjedsmand_timepris)
                     VALUES (@Name, @Svend, @Laerling, @Konsulent, @Arb)
@@ -39,10 +38,7 @@ namespace Server.Repositories.Project
 
                 int newProjectId = (int)cmdProject.ExecuteScalar()!;
 
-                // 2. INDSÆT TIMER
-                // Bemærk: Din tabel 'projecthours' har ikke 'medarbejder' eller 'beskrivelse' kolonner.
-                // Jeg gemmer derfor kun de felter, der findes i tabellen (dato, timer, type, raw_row).
-                // Hvis du vil gemme beskrivelse, kan vi sætte det ind i 'type' eller 'raw_row'.
+                // Indsæt Timer
                 foreach (var h in hours)
                 {
                     var cmdHour = new NpgsqlCommand(@"
@@ -59,9 +55,7 @@ namespace Server.Repositories.Project
                     cmdHour.ExecuteNonQuery();
                 }
 
-                // 3. INDSÆT MATERIALER
-                // Rettet: Din tabel har ikke 'varenummer', så den er fjernet.
-                // Tilføjet: avance og dækningsgrad
+                // Indsæt Materialer
                 foreach (var m in materials)
                 {
                     var cmdMat = new NpgsqlCommand(@"
@@ -87,6 +81,103 @@ namespace Server.Repositories.Project
                 transaction.Rollback();
                 throw;
             }
+        }
+
+        // 2. HENT OG BEREGN DETALJER (Den nye del)
+        public ProjectDetailsDTO? GetProjectDetails(int projectId)
+        {
+            using var conn = new NpgsqlConnection(conString);
+            conn.Open();
+
+            var dto = new ProjectDetailsDTO();
+
+            // A. Hent Stamdata
+            using (var cmd = new NpgsqlCommand("SELECT * FROM projects WHERE projectid = @Id", conn))
+            {
+                cmd.Parameters.AddWithValue("Id", projectId);
+                using var reader = cmd.ExecuteReader();
+                if (reader.Read())
+                {
+                    dto.Project = new Core.Project
+                    {
+                        ProjectId = reader.GetInt32(0),
+                        Name = reader.GetString(1),
+                        DateCreated = reader.GetDateTime(2),
+                        SvendTimePris = reader.GetInt32(3),
+                        LærlingTimePris = reader.GetInt32(4),
+                        KonsulentTimePris = reader.GetInt32(5),
+                        ArbjedsmandTimePris = reader.GetInt32(6)
+                    };
+                }
+                else return null; 
+            }
+
+            // B. Hent Materialer og Beregn
+            using (var cmd = new NpgsqlCommand("SELECT * FROM projectmaterials WHERE projectid = @Id", conn))
+            {
+                cmd.Parameters.AddWithValue("Id", projectId);
+                using var reader = cmd.ExecuteReader();
+                while (reader.Read())
+                {
+                    var m = new ProjectMaterial
+                    {
+                        MaterialsId = reader.GetInt32(0),
+                        Beskrivelse = reader.IsDBNull(2) ? "" : reader.GetString(2),
+                        Kostpris = reader.GetDecimal(3),      // Enheds Kostpris
+                        Antal = reader.GetDecimal(4),         // Antal
+                        Total = reader.GetDecimal(5),         // Total Salgspris (fra Excel kolonne R)
+                        Avance = reader.IsDBNull(6) ? 0 : reader.GetDecimal(6),
+                        Dækningsgrad = reader.IsDBNull(7) ? 0 : reader.GetDecimal(7)
+                    };
+                    dto.Materials.Add(m);
+
+                    // BEREGNING MATERIALER:
+                    // Kostpris = Enhedspris * Antal
+                    dto.TotalKostprisMaterialer += (m.Kostpris * m.Antal);
+                    
+                    // Salgspris = Total kolonnen fra Excel
+                    dto.TotalSalgsprisMaterialer += m.Total;
+                }
+            }
+
+            // C. Hent Timer og Beregn
+            using (var cmd = new NpgsqlCommand("SELECT * FROM projecthours WHERE projectid = @Id", conn))
+            {
+                cmd.Parameters.AddWithValue("Id", projectId);
+                using var reader = cmd.ExecuteReader();
+                while (reader.Read())
+                {
+                    var h = new ProjectHour
+                    {
+                        HourId = reader.GetInt32(0),
+                        Dato = reader.IsDBNull(2) ? null : reader.GetDateTime(2),
+                        // Vi skipper Stoptid (index 3) i visningen hvis vi vil, men den er i DB
+                        Timer = reader.GetDecimal(4),
+                        Type = reader.IsDBNull(5) ? "" : reader.GetString(5), 
+                        Kostpris = reader.GetDecimal(6) // Total kostpris for denne linje (fra Excel)
+                    };
+                    dto.Hours.Add(h);
+
+                    // BEREGNING TIMER:
+                    // Kostpris = Summen af kostpris kolonnerne
+                    dto.TotalKostprisTimer += h.Kostpris;
+
+                    // Salgspris = Timer * Sats (baseret på Type)
+                    decimal timeSats = dto.Project.SvendTimePris; // Default
+                    var typeL = h.Type.ToLower();
+
+                    if (typeL.Contains("svend")) timeSats = dto.Project.SvendTimePris;
+                    else if (typeL.Contains("lærling")) timeSats = dto.Project.LærlingTimePris;
+                    else if (typeL.Contains("konsulent")) timeSats = dto.Project.KonsulentTimePris;
+                    else if (typeL.Contains("arbejdsmand")) timeSats = dto.Project.ArbjedsmandTimePris;
+                    
+                    // Hvis det er "Overtid", bruger vi lige nu Svend satsen (medmindre du vil lave en Overtidssats)
+                    
+                    dto.TotalSalgsprisTimer += (h.Timer * timeSats);
+                }
+            }
+
+            return dto;
         }
     }
 }

@@ -33,9 +33,6 @@ namespace Server.Service
                         // 2. STOPTID (Kolonne C / Index 2)
                         var rawStop = reader.GetValue(2);
                         
-                        // DEBUG: Skriver hvad vi finder i konsollen
-                        // Console.WriteLine($"Læser Stoptid: '{rawStop}' (Type: {rawStop?.GetType().Name})");
-                        
                         h.Stoptid = ParseDate(rawStop);
 
                         // 3. TIMER (Kolonne F / Index 5)
@@ -85,27 +82,37 @@ namespace Server.Service
         }
 
         public List<ProjectMaterial> ParseMaterials(Stream stream)
-        {
-             var list = new List<ProjectMaterial>();
-             using (var reader = ExcelReaderFactory.CreateReader(stream))
+{
+     var list = new List<ProjectMaterial>();
+     using (var reader = ExcelReaderFactory.CreateReader(stream))
+     {
+         reader.Read(); // Skipper header-rækken
+         while (reader.Read())
+         {
+             if (reader.GetValue(1) == null && reader.GetValue(2) == null) continue;
+
+             var m = new ProjectMaterial();
+             
+             try 
              {
-                 reader.Read(); 
-                 while (reader.Read())
-                 {
-                     if (reader.GetValue(0) == null) continue;
-                     var m = new ProjectMaterial();
-                     
-                     m.Beskrivelse = reader.GetValue(1)?.ToString();
-                     if (decimal.TryParse(reader.GetValue(4)?.ToString(), out var ant)) m.Antal = ant;
-                     if (decimal.TryParse(reader.GetValue(2)?.ToString(), out var kost)) m.Kostpris = kost;
-                     if (decimal.TryParse(reader.GetValue(17)?.ToString(), out var tot)) m.Total = tot;
-                     
-                     m.RawRow = GetRawRowString(reader);
-                     list.Add(m);
-                 }
+                 m.Beskrivelse = reader.GetValue(1)?.ToString();
+                 if (decimal.TryParse(reader.GetValue(2)?.ToString(), out var kost)) m.Kostpris = kost;
+                 if (decimal.TryParse(reader.GetValue(4)?.ToString(), out var ant)) m.Antal = ant;
+                 if (decimal.TryParse(reader.GetValue(17)?.ToString(), out var tot)) m.Total = tot;
+                 if (decimal.TryParse(reader.GetValue(19)?.ToString(), out var av)) m.Avance = av;
+                 if (decimal.TryParse(reader.GetValue(20)?.ToString(), out var dg)) m.Dækningsgrad = dg;
+                 m.RawRow = GetRawRowString(reader);
+                 
+                 list.Add(m);
              }
-             return list;
-        }
+             catch (Exception ex)
+             {
+                 Console.WriteLine($"Fejl ved læsning af materiale-række: {ex.Message}");
+             }
+         }
+     }
+     return list;
+}
 
         private string GetRawRowString(IExcelDataReader reader)
         {

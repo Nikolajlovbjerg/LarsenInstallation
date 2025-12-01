@@ -7,7 +7,7 @@ using Server.Repositories.Project;
 namespace Server.Controllers
 {
     [ApiController]
-    [Route("api/[controller]")]
+    [Route("api/project")]
     public class ProjectController : ControllerBase
     {
         private readonly IProjectRepository _repo;
@@ -65,5 +65,21 @@ namespace Server.Controllers
                 return StatusCode(500, "Fejl ved lagring i database: " + ex.Message);
             }
         }
+        
+        [HttpGet("{id}")]
+        public ActionResult<ProjectDetailsDTO> GetProjectDetails(int id)
+        {
+            try 
+            {
+                var result = _repo.GetProjectDetails(id);
+                if (result == null) return NotFound("Projektet findes ikke");
+                return Ok(result);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, ex.Message);
+            }
+        }
+        
     }
 }
