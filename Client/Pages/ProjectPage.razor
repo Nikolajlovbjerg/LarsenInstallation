@@ -10,9 +10,9 @@
 @code {
     private List<Project> projectList = new()
     {
-        new Project { ProjectId = 1, Name = "Gadehjørnet", DateCreated = DateTime.Now, ImageUrl = "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQIlhvbDjwW7Gw2hSZxizq3-tCnYYrMnOKChg&s"},
-        new Project { ProjectId = 2, Name = "Projekt B", DateCreated = DateTime.Now.AddDays(-1) },
-        new Project { ProjectId = 3, Name = "Mandøvænget", DateCreated = DateTime.Now.AddDays(-2), ImageUrl = "https://cdn.lecollectionist.com/__lecollectionist__/production/houses/8227/photos/gtXg1MPxR0OX20vODOZP_dfb8475e-1a67-470a-f745-e0db878bcc6e.jpg"}
+        new Project { ProjectId = 1, Name = "Gadehjørnet", DateCreated = DateTime.Now},
+        new Project { ProjectId = 2, Name = "Projekt B", DateCreated = DateTime.Now.AddDays(-1)},
+        new Project { ProjectId = 3, Name = "Mandøvænget", DateCreated = DateTime.Now.AddDays(-2)}
     };
 
     protected override async Task OnInitializedAsync()

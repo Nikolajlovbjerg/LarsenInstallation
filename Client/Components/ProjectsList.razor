@@ -4,10 +4,6 @@
     @foreach (var p in Projects)
     {
         <article class="annonce-card">
-            <div class="thumb">
-                <img src="@p.ImageUrl" alt="@p.Name" />
-            </div>
-
             <div class="content">
                 <h3 class="title">@p.Name</h3>
                 <p>Oprettet: @p.DateCreated.ToShortDateString()</p>
