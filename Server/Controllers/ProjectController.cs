@@ -1,135 +1,68 @@
-using Microsoft.AspNetCore.Mvc;
-using System.Data;
-using ExcelDataReader;
 using Core;
-using Server.Repositories;
-using System.Text;
+using Microsoft.AspNetCore.Mvc;
+using Server.Service;
+using System.Text.Json;
+using Server.Repositories.Project;
 
 namespace Server.Controllers
 {
     [ApiController]
-    [Route("api/project")]
+    [Route("api/[controller]")]
     public class ProjectController : ControllerBase
     {
         private readonly IProjectRepository _repo;
+        private readonly ExcelReaderService _excelService;
 
-        public ProjectController(IProjectRepository repo)
+        public ProjectController(IProjectRepository repo, ExcelReaderService excelService)
         {
             _repo = repo;
+            _excelService = excelService;
         }
 
         [HttpPost]
         public async Task<IActionResult> CreateProject()
         {
-            if (!Request.HasFormContentType)
-                return BadRequest("Forventet multipart/form-data.");
-
+            // Vi læser form data manuelt for at håndtere JSON + filer blandet sammen
             var form = await Request.ReadFormAsync();
 
-            // Læs project JSON (felt "project")
-            var projectJson = form["project"].FirstOrDefault();
-            if (string.IsNullOrWhiteSpace(projectJson))
-                return BadRequest("Mangler 'project' JSON i form-data.");
+            // 1. Hent Projekt JSON
+            if (!form.TryGetValue("project", out var projectString))
+                return BadRequest("Mangler projekt data");
 
-            Project project;
+            var project = JsonSerializer.Deserialize<Project>(projectString.ToString(), new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
+            
+            if (project == null) return BadRequest("Kunne ikke læse projekt data");
+
+            // Lister til data
+            var hours = new List<ProjectHour>();
+            var materials = new List<ProjectMaterial>();
+
+            // 2. Behandl Time filer
+            foreach (var file in form.Files.Where(f => f.Name == "timeFile"))
+            {
+                using var stream = file.OpenReadStream();
+                var fileHours = _excelService.ParseHours(stream);
+                hours.AddRange(fileHours);
+            }
+
+            // 3. Behandl Materiale filer
+            foreach (var file in form.Files.Where(f => f.Name == "materialFile"))
+            {
+                using var stream = file.OpenReadStream();
+                var fileMaterials = _excelService.ParseMaterials(stream);
+                materials.AddRange(fileMaterials);
+            }
+
+            // 4. Gem i databasen
             try
             {
-                project = System.Text.Json.JsonSerializer.Deserialize<Project>(projectJson, new System.Text.Json.JsonSerializerOptions
-                {
-                    PropertyNameCaseInsensitive = true
-                })!;
+                int newId = _repo.CreateProject(project, hours, materials);
+                return Ok(new { ProjectId = newId, Message = "Projekt oprettet success" });
             }
             catch (Exception ex)
             {
-                return BadRequest("Ugyldigt project JSON: " + ex.Message);
-            }
-
-            // Indsaml ALLE filer med navn "timeFile" og "materialFile"
-            var timeFileUploads = form.Files.Where(f => f.Name == "timeFile").ToList();
-            var materialFileUploads = form.Files.Where(f => f.Name == "materialFile").ToList();
-
-            // Til brug for ExcelDataReader
-            Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
-
-            DataTable? combinedHours = null;
-            DataTable? combinedMaterials = null;
-
-            try
-            {
-                // Helper: læs første ark i en excel fil og returnér DataTable (UseHeaderRow = true)
-                DataTable? ReadFirstTableFromExcel(string filePath)
-                {
-                    using var stream = System.IO.File.OpenRead(filePath);
-                    // Vælg reader type efter fil-endelse
-                    using var reader = filePath.EndsWith(".xls", StringComparison.OrdinalIgnoreCase)
-                        ? ExcelReaderFactory.CreateBinaryReader(stream)
-                        : ExcelReaderFactory.CreateOpenXmlReader(stream);
-
-                    var ds = reader.AsDataSet(new ExcelDataSetConfiguration
-                    {
-                        ConfigureDataTable = _ => new ExcelDataTableConfiguration { UseHeaderRow = true }
-                    });
-
-                    return ds.Tables.Count > 0 ? ds.Tables[0] : null;
-                }
-
-                // Process time files (behold kolonnenavne fra første fil)
-                foreach (var f in timeFileUploads)
-                {
-                    // Gem midlertidigt
-                    var tmp = Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString() + Path.GetExtension(f.FileName));
-                    await using (var fs = System.IO.File.Create(tmp))
-                        await f.CopyToAsync(fs);
-
-                    var dt = ReadFirstTableFromExcel(tmp);
-
-                    try { System.IO.File.Delete(tmp); } catch { /* swallow */ }
-
-                    if (dt == null) continue;
-
-                    if (combinedHours == null)
-                    {
-                        combinedHours = dt.Clone(); // clone schema (kolonnenavne)
-                    }
-
-                    foreach (DataRow r in dt.Rows)
-                        combinedHours.ImportRow(r);
-                }
-
-                // Process material files
-                foreach (var f in materialFileUploads)
-                {
-                    var tmp = Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString() + Path.GetExtension(f.FileName));
-                    await using (var fs = System.IO.File.Create(tmp))
-                        await f.CopyToAsync(fs);
-
-                    var dt = ReadFirstTableFromExcel(tmp);
-                    try { System.IO.File.Delete(tmp); } catch { }
-
-                    if (dt == null) continue;
-
-                    if (combinedMaterials == null)
-                    {
-                        combinedMaterials = dt.Clone();
-                    }
-
-                    foreach (DataRow r in dt.Rows)
-                        combinedMaterials.ImportRow(r);
-                }
-
-                // (Valgfri) kort validering: hvis du vil kræve mindst én række i en fil, uncomment
-                // if ((combinedHours == null || combinedHours.Rows.Count == 0) && (combinedMaterials == null || combinedMaterials.Rows.Count == 0))
-                //     return BadRequest("Ingen rækker fundet i uploadede filer.");
-
-                // Send til repository (som forventer DataTable? for hver type)
-                await _repo.CreateProjectWithDataAsync(project, combinedHours, combinedMaterials);
-
-                return Ok(new { message = "Projekt oprettet" });
-            }
-            catch (Exception ex)
-            {
-                // Log evt. her
-                return StatusCode(500, "Fejl ved import: " + ex.Message);
+                Console.WriteLine(ex);
+                return StatusCode(500, "Fejl ved lagring i database: " + ex.Message);
             }
         }
     }

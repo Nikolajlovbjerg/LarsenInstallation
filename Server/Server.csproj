@@ -12,6 +12,7 @@
         <PackageReference Include="ExcelDataReader.DataSet" Version="3.8.0" />
         <PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="9.0.8" />
         <PackageReference Include="Npgsql" Version="10.0.0" />
+        <PackageReference Include="System.Text.Encoding.CodePages" Version="10.0.0" />
     </ItemGroup>
 
     <ItemGroup>

@@ -1,11 +1,14 @@
 using Server.Repositories.User;
-using Server.Repositories;
+using Server.Repositories.Project;
+using Server.Service;
 
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
+System.Text.Encoding.RegisterProvider(System.Text.CodePagesEncodingProvider.Instance);
 
-builder.Services.AddSingleton<IProjectRepository, ProjectRepositorySQL>();
+builder.Services.AddScoped<IProjectRepository, ProjectRepositorySQL>();
+builder.Services.AddScoped<ExcelReaderService>();
 
 builder.Services.AddSingleton<ICreateUserRepoSQL, CreateUserRepoSQL>();
 
