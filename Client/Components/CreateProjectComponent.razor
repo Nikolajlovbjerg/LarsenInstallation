@@ -23,7 +23,10 @@
                                 <ul>
                                     @foreach (var f in timeFiles)
                                     {
-                                        <li>@f.Name (@FormatBytes(f.Size))</li>
+                                        <li>
+                                            <span class="file-name">@f.Name</span>
+                                            <span class="file-size">(@FormatBytes(f.Size))</span>
+                                        </li>
                                     }
                                 </ul>
                             </div>
@@ -42,7 +45,10 @@
                                 <ul>
                                     @foreach (var f in materialFiles)
                                     {
-                                        <li>@f.Name (@FormatBytes(f.Size))</li>
+                                        <li>
+                                            <span class="file-name">@f.Name</span>
+                                            <span class="file-size">(@FormatBytes(f.Size))</span>
+                                        </li>
                                     }
                                 </ul>
                             </div>
@@ -51,40 +57,41 @@
                 </div>
             </div>
 
+            <div class="form-floating-group">
+                <InputText id="name" class="form-control" @bind-Value="_project.Name"/>
+                <label for="name">Navn</label>
+            </div>
+                
+            <div class="form-grid">
                 <div class="form-floating-group">
-                    <InputText id="name" class="form-control" @bind-Value="_project.Name"/>
-                    <label for="name">Navn</label>
+                    <InputNumber id="svend" class="form-control" @bind-Value="_project.SvendTimePris"/>
+                    <label for="svend">Svend sats</label>
                 </div>
-                
-                <div class="form-grid">
-                    <div class="form-floating-group">
-                        <InputNumber id="svend" class="form-control" @bind-Value="_project.SvendTimePris"/>
-                        <label for="svend">Svend sats</label>
-                    </div>
-                    <div class="form-floating-group">
-                        <InputNumber id="lærling" class="form-control" @bind-Value="_project.LærlingTimePris"/>
-                        <label for="lærling">Lærling sats</label>
-                    </div>
-                    <div class="form-floating-group">
-                        <InputNumber id="konsulent" class="form-control" @bind-Value="_project.KonsulentTimePris"/>
-                        <label for="konsulent">Konsulent sats</label>
-                    </div>
-                    <div class="form-floating-group">
-                        <InputNumber id="arbejdsmand" class="form-control" @bind-Value="_project.ArbjedsmandTimePris"/>
-                        <label for="konsulent">Arbejdsmand sats</label>
-                    </div>
+                <div class="form-floating-group">
+                    <InputNumber id="lærling" class="form-control" @bind-Value="_project.LærlingTimePris"/>
+                    <label for="lærling">Lærling sats</label>
                 </div>
+                <div class="form-floating-group">
+                    <InputNumber id="konsulent" class="form-control" @bind-Value="_project.KonsulentTimePris"/>
+                    <label for="konsulent">Konsulent sats</label>
+                </div>
+                <div class="form-floating-group">
+                    <InputNumber id="arbejdsmand" class="form-control" @bind-Value="_project.ArbjedsmandTimePris"/>
+                    <label for="konsulent">Arbejdsmand sats</label>
+                </div>
+            </div>
                 
+            <div class="">
                 <div class="">
-                    <div class="">
-                        <button type="submit" class="opretbtn">Opret</button>
-                    </div>
+                    <button type="submit" class="opretbtn">Opret</button>
                 </div>
+            </div>
             
         </EditForm>
+        
+        
     </div>
 </div>
-
 
 
 @code {
@@ -194,4 +201,5 @@
             statusMessage = await resp.Content.ReadAsStringAsync();
         }
     }
+    
 }

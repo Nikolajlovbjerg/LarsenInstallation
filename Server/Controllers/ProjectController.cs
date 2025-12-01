@@ -8,16 +8,14 @@ using System.Text;
 namespace Server.Controllers
 {
     [ApiController]
-    [Route("api/[controller]")]
+    [Route("api/project")]
     public class ProjectController : ControllerBase
     {
         private readonly IProjectRepository _repo;
-        private readonly IWebHostEnvironment _env;
 
-        public ProjectController(IProjectRepository repo, IWebHostEnvironment env)
+        public ProjectController(IProjectRepository repo)
         {
             _repo = repo;
-            _env = env;
         }
 
         [HttpPost]
