@@ -1,55 +1,105 @@
 ﻿@using Core
+@using System.Globalization
 
 @if (Project == null)
 {
-    <p>Projektet blev ikke fundet!</p>
+    <p class="error-message">Projektet blev ikke fundet!</p>
 }
 else
 {
-    <div class="project-info">
-        <h4>@Project.Name</h4>
-        <p>Oprettet: @Project.DateCreated.ToShortDateString()</p>
+    <div class="project-detail-content">
+        <header class="project-header">
+            <h2>@Project.Name</h2>
+            <p class="created-date">Oprettet: @Project.DateCreated.ToShortDateString()</p>
+        </header>
 
-        <h5>Omkostninger</h5>
-        <p>Total pris for kunden: @(Project.TotalCostCustomer.ToString("C"))</p>
-        <p>Virksomhedens omkostninger: @(Project.TotalCostCompany.ToString("C"))</p>
-        <p>Overskud: @((Project.TotalCostCustomer - Project.TotalCostCompany).ToString("C"))</p>
-    </div>
+        
+        <section class="overview-section">
+            <h3>Omkostninger</h3>
+            
+            <div class="info-grid">
+                
+                <div class="info-card primary">
+                    <p class="label">Total pris for kunden:</p>
+                    <p class="value">@(Project.TotalCostCustomer.ToString("C", new CultureInfo("da-DK")))</p>
+                </div>
+                
+                <div class="info-card secondary">
+                    <p class="label">Virksomhedens omkostninger:</p>
+                    <p class="value">@(Project.TotalCostCompany.ToString("C", new CultureInfo("da-DK")))</p>
+                </div>
+                
+                <div class="info-card success">
+                    <p class="label">Overskud:</p>
+                    <p class="value">@((Project.TotalCostCustomer - Project.TotalCostCompany).ToString("C", new CultureInfo("da-DK")))</p>
+                </div>
+            </div>
+        </section>
 
-    @foreach (var house in Project.Houses)
-    {
-        <div class="house-report">
-            <h4>@house.Name</h4>
-            <p>Pris kunde: @(house.CostCustomer.ToString("C"))</p>
-            <p>Omkostninger: @(house.CostCompany.ToString("C"))</p>
-            <p>Overskud: @((house.CostCustomer - house.CostCompany).ToString("C"))</p>
-            <p>Timer brugt: @house.Hours</p>
+        <hr class="divider" />
 
-            <h5>Installationer</h5>
-            <ul>
-                @foreach (var inst in house.InstallationCosts)
-                {
-                    <li>@inst.Key: @(inst.Value.ToString("C"))</li>
-                }
-            </ul>
-
-            <h5>Materialer</h5>
-            <ul>
-                @foreach (var mat in house.MaterialsUsed)
-                {
-                    <li>@mat.Key: @mat.Value stk</li>
-                }
-            </ul>
-        </div>
-    }
-
-    <h5>Tidsforbrug pr. dag</h5>
-    <ul>
-        @foreach (var entry in Project.TimeEntries)
+        @foreach (var house in Project.Houses)
         {
-            <li>@entry.Date.ToShortDateString(): @entry.Hours timer</li>
+            <section class="house-section">
+                <h3>Hus @house.Name</h3>
+                
+                <div class="info-grid compact">
+                    <div class="info-card">
+                        <p class="label">Pris kunde:</p>
+                        <p class="value">@(house.CostCustomer.ToString("C", new CultureInfo("da-DK")))</p>
+                    </div>
+                    <div class="info-card">
+                        <p class="label">Omkostninger:</p>
+                        <p class="value">@(house.CostCompany.ToString("C", new CultureInfo("da-DK")))</p>
+                    </div>
+                    <div class="info-card success">
+                        <p class="label">Overskud:</p>
+                        <p class="value">@((house.CostCustomer - house.CostCompany).ToString("C", new CultureInfo("da-DK")))</p>
+                    </div>
+                    <div class="info-card info">
+                        <p class="label">Timer brugt:</p>
+                        <p class="value">@house.Hours timer</p>
+                    </div>
+                </div>
+
+                <div class="details-list-group">
+                    <div>
+                        <h4>Installationer</h4>
+                        <ul class="clean-list"> 
+                            @foreach (var inst in house.InstallationCosts)
+                            {
+                                <li>@inst.Key: <span>@inst.Value.ToString("C", new CultureInfo("da-DK"))</span></li>
+                            }
+                        </ul>
+                    </div>
+                    <div>
+                        <h4>Materialer</h4>
+                        <ul class="clean-list">
+                            @foreach (var mat in house.MaterialsUsed)
+                            {
+                                <li>@mat.Key: <span>@mat.Value stk</span></li>
+                            }
+                        </ul>
+                    </div>
+                </div>
+            </section>
         }
-    </ul>
+
+        <hr class="divider" />
+
+        <section class="time-usage-section">
+            <h3>Tidsforbrug pr. dag</h3>
+            <div class="time-entries-list">
+                <h4>Detaljeret Tidslog</h4>
+                <ul class="clean-list time-log-list">
+                    @foreach (var entry in Project.TimeEntries)
+                    {
+                        <li>@entry.Date.ToShortDateString(): <span>@entry.Hours timer</span></li>
+                    }
+                </ul>
+            </div>
+        </section>
+    </div>
 }
 
 @code {
