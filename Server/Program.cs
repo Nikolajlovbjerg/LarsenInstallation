@@ -12,7 +12,8 @@ builder.Services.AddScoped<IProjectRepository, ProjectRepositorySQL>();
 builder.Services.AddScoped<ExcelReaderService>();
 
 builder.Services.AddSingleton<ICreateUserRepoSQL, CreateUserRepoSQL>();
-builder.Services.AddSingleton<IExcelRepo, ExcelRepo>(); 
+builder.Services.AddSingleton<IExcelRepo, ExcelRepo>();
+builder.Services.AddSingleton<IMaterialExcelRepo, MaterialExcelRepo>();
 
 builder.Services.AddControllers();
 

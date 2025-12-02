@@ -33,30 +33,30 @@ namespace Server.Repositories.User
                     (projectid, dato, stoptid, timer, type, kostpris) VALUES (@projectid, @dato, @stoptid, @timer, @type, @kostpris)";
 
                 Console.WriteLine(command.CommandText);
-                var paramBrand = command.CreateParameter();
-                paramBrand.ParameterName = "dato";
-                command.Parameters.Add(paramBrand);
-                paramBrand.Value = proj.Dato;
+                var paramDato = command.CreateParameter();
+                paramDato.ParameterName = "dato";
+                command.Parameters.Add(paramDato);
+                paramDato.Value = proj.Dato;
 
-                var paramModel = command.CreateParameter();
-                paramModel.ParameterName = "stoptid";
-                command.Parameters.Add(paramModel);
-                paramModel.Value = proj.Stoptid;
+                var paramStop = command.CreateParameter();
+                paramStop.ParameterName = "stoptid";
+                command.Parameters.Add(paramStop);
+                paramStop.Value = proj.Stoptid;
 
-                var paramDesc = command.CreateParameter();
-                paramDesc.ParameterName = "timer";
-                command.Parameters.Add(paramDesc);
-                paramDesc.Value = proj.Timer;
+                var paramTimer = command.CreateParameter();
+                paramTimer.ParameterName = "timer";
+                command.Parameters.Add(paramTimer);
+                paramTimer.Value = proj.Timer;
 
-                var paramPrice = command.CreateParameter();
-                paramPrice.ParameterName = "type";
-                command.Parameters.Add(paramPrice);
-                paramPrice.Value = proj.Type;
+                var paramType = command.CreateParameter();
+                paramType.ParameterName = "type";
+                command.Parameters.Add(paramType);
+                paramType.Value = proj.Type;
 
-                var paramImg = command.CreateParameter();
-                paramImg.ParameterName = "kostpris";
-                command.Parameters.Add(paramImg);
-                paramImg.Value = proj.Kostpris;
+                var paramKost = command.CreateParameter();
+                paramKost.ParameterName = "kostpris";
+                command.Parameters.Add(paramKost);
+                paramKost.Value = proj.Kostpris;
 
                 //skal fjernes på et tidspunkt
                 var paramProjectId = command.CreateParameter();

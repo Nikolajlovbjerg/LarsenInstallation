@@ -2,8 +2,24 @@
 @page "/upload"
 <h3>UploadProjectPage</h3>
 
-<InputFile OnChange="@UploadFile"></InputFile>
+<h2>Time fil</h2>
+<InputFile OnChange="UploadFile"></InputFile>
+
+<h2>Materiale fil</h2>
+<InputFile OnChange="MaterialUploadFile"></InputFile>
+
+
+@* <button class="btn btn-primary" @onclick="RunUploads">
+	Upload filer
+</button> *@
+
 @code {
+	// private async Task RunUploads()
+	// {
+	// 	await UploadFile();
+	// 	await MaterialUploadFile();
+	// }
+
 	public async Task UploadFile(InputFileChangeEventArgs e)
 	{
 		var file = e.File;
@@ -15,5 +31,16 @@
 		var result = await http.PostAsync("http://localhost:5028/api/uploadexcel", content);
 
 
+	}
+
+	public async Task MaterialUploadFile(InputFileChangeEventArgs e)
+	{
+		var file = e.File;
+		var stream = file.OpenReadStream(10000000);
+
+		using var content = new MultipartFormDataContent();
+		content.Add(new StreamContent(stream), "file", file.Name);
+
+		var result = await http.PostAsync("http://localhost:5028/api/materialuploadexcel", content);
 	}
 }
