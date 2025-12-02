@@ -1,5 +1,6 @@
-using Server.Repositories.User;
+using Server.Repositories.ExcelRepos;
 using Server.Repositories.Project;
+using Server.Repositories.User;
 using Server.Service;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -11,6 +12,7 @@ builder.Services.AddScoped<IProjectRepository, ProjectRepositorySQL>();
 builder.Services.AddScoped<ExcelReaderService>();
 
 builder.Services.AddSingleton<ICreateUserRepoSQL, CreateUserRepoSQL>();
+builder.Services.AddSingleton<IExcelRepo, ExcelRepo>(); 
 
 builder.Services.AddControllers();
 

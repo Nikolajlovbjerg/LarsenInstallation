@@ -1,0 +1,19 @@
+﻿@inject HttpClient http
+@page "/upload"
+<h3>UploadProjectPage</h3>
+
+<InputFile OnChange="@UploadFile"></InputFile>
+@code {
+	public async Task UploadFile(InputFileChangeEventArgs e)
+	{
+		var file = e.File;
+		var stream = file.OpenReadStream(10000000);
+
+		using var content = new  MultipartFormDataContent();
+		content.Add(new StreamContent(stream), "file", file.Name);
+
+		var result = await http.PostAsync("http://localhost:5028/api/uploadexcel", content);
+
+
+	}
+}
