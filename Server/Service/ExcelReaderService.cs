@@ -26,26 +26,17 @@ namespace Server.Service
                     
                     try 
                     {
-                        // 1. DATO (Kolonne B / Index 1)
                         var rawDato = reader.GetValue(1);
                         h.Dato = ParseDate(rawDato);
-
-                        // 2. STOPTID (Kolonne C / Index 2)
+                        
                         var rawStop = reader.GetValue(2);
-                        
-                        // DEBUG: Skriver hvad vi finder i konsollen
-                        // Console.WriteLine($"Læser Stoptid: '{rawStop}' (Type: {rawStop?.GetType().Name})");
-                        
                         h.Stoptid = ParseDate(rawStop);
 
-                        // 3. TIMER (Kolonne F / Index 5)
                         var timerVal = reader.GetValue(5)?.ToString();
                         if (decimal.TryParse(timerVal, out var t)) h.Timer = t;
-
-                        // 4. TYPE (Kolonne G / Index 6)
+                        
                         h.Type = reader.GetValue(6)?.ToString();
-
-                        // 5. KOSTPRIS (Kolonne I / Index 8)
+                        
                         var kostVal = reader.GetValue(8)?.ToString();
                         if (decimal.TryParse(kostVal, out var k)) h.Kostpris = k;
 

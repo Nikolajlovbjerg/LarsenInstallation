@@ -13,5 +13,6 @@ builder.Services.AddScoped(sp => new HttpClient { BaseAddress = new Uri("http://
 
 builder.Services.AddBlazoredLocalStorage();
 builder.Services.AddScoped<UserRepository>();
+builder.Services.AddSingleton<IProjectService, ProjectServiceMock>();
 
 await builder.Build().RunAsync();

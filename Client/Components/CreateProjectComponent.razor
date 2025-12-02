@@ -1,13 +1,14 @@
+@using Client.Service
 @using Core
 @inject NavigationManager Nav
 @inject HttpClient Http
+@inject IProjectService ProjectService
 
 <div class="create-page-back">
     <div class="create-con">
         <h3>Opret projekt</h3>
 
         <EditForm Model="@_project" OnValidSubmit="OnClickCreate">
-            
             <DataAnnotationsValidator />
             <ValidationSummary />
 
@@ -15,44 +16,14 @@
                 <div class="upload-box">
                     <label class="upload-title"><strong>Vælg time fil (.xls, .xlsx)</strong></label>
                     <div class="upload-area">
-                        <InputFile OnChange="OnTimeFileChange" multiple accept=".xls,.xlsx" />
-                        @if (timeFiles?.Count > 0)
-                        {
-                            <div class="mt-2 small">
-                                Valgte:
-                                <ul>
-                                    @foreach (var f in timeFiles)
-                                    {
-                                        <li>
-                                            <span class="file-name">@f.Name</span>
-                                            <span class="file-size">(@(f.Size / 1024) KB)</span>
-                                        </li>
-                                    }
-                                </ul>
-                            </div>
-                        }
+                        <InputFile OnChange="OnTimeFileChange" accept=".xls,.xlsx" />
                     </div>
                 </div>
 
                 <div class="upload-box">
                     <label class="upload-title"><strong>Vælg materiale fil (.xls, .xlsx)</strong></label>
                     <div class="upload-area">
-                        <InputFile OnChange="OnMaterialFileChange" multiple accept=".xls,.xlsx" />
-                        @if (materialFiles?.Count > 0)
-                        {
-                            <div class="mt-2 small">
-                                Valgte:
-                                <ul>
-                                    @foreach (var f in materialFiles)
-                                    {
-                                        <li>
-                                            <span class="file-name">@f.Name</span>
-                                            <span class="file-size">(@(f.Size / 1024) KB)</span>
-                                        </li>
-                                    }
-                                </ul>
-                            </div>
-                        }
+                        <InputFile OnChange="OnMaterialFileChange" accept=".xls,.xlsx" />
                     </div>
                 </div>
             </div>
@@ -96,76 +67,36 @@
 
 @code {
     private Project _project = new();
-    private IReadOnlyList<IBrowserFile> timeFiles = new List<IBrowserFile>();
-    private IReadOnlyList<IBrowserFile> materialFiles = new List<IBrowserFile>();
     
-    private string statusMessage = "";
-    private string statusClass = "";
-    private const long MaxFileSize = 50 * 1024 * 1024; // 50 MB
-
-    // Simple one-liner handlers
-    private void OnTimeFileChange(InputFileChangeEventArgs e) => timeFiles = e.GetMultipleFiles();
-    private void OnMaterialFileChange(InputFileChangeEventArgs e) => materialFiles = e.GetMultipleFiles();
+    private IBrowserFile timeFile;
+    private IBrowserFile materialFile;
 
     private async Task OnClickCreate()
     {
-        statusMessage = "";
-
-        // Simpel validering
-        if (string.IsNullOrWhiteSpace(_project.Name))
+        if(timeFile != null && materialFile != null)
         {
-            ShowError("Husk at give projektet et navn.");
-            return;
-        }
-
-        if (!timeFiles.Any() && !materialFiles.Any())
-        {
-            ShowError("Du skal vælge mindst én fil.");
-            return;
-        }
-
-        try 
-        {
-            using var content = new MultipartFormDataContent();
-
-            // Tilføj Projekt JSON
-            content.Add(JsonContent.Create(_project), "project");
-
-            // Brug hjælpefunktion til at tilføje filer
-            AddFilesToContent(content, timeFiles, "timeFile");
-            AddFilesToContent(content, materialFiles, "materialFile");
-
-            var resp = await Http.PostAsync("api/project", content);
-
-            if (resp.IsSuccessStatusCode)
+            // Kald vores service
+            bool success = await ProjectService.CreateProject(_project, timeFile, materialFile);
+            
+            if(success)
             {
-                Nav.NavigateTo("projects", true);
-            }
-            else
-            {
-                ShowError(await resp.Content.ReadAsStringAsync());
+                Console.WriteLine("Projekt oprettet og filer læst!");
+                Nav.NavigateTo("/"); 
             }
         }
-        catch (Exception ex)
+        else 
         {
-            ShowError($"Fejl: {ex.Message}");
+            Console.WriteLine("Husk at vælge begge filer");
         }
     }
 
-    // Hjælpefunktion der fjerner gentagelser
-    private void AddFilesToContent(MultipartFormDataContent content, IEnumerable<IBrowserFile> files, string formName)
+    private void OnTimeFileChange(InputFileChangeEventArgs obj)
     {
-        foreach (var file in files)
-        {
-            var streamContent = new StreamContent(file.OpenReadStream(MaxFileSize));
-            streamContent.Headers.ContentType = new System.Net.Http.Headers.MediaTypeHeaderValue(file.ContentType);
-            content.Add(streamContent, formName, file.Name);
-        }
+        timeFile = obj.File;
     }
 
-    private void ShowError(string msg)
+    private void OnMaterialFileChange(InputFileChangeEventArgs obj)
     {
-        statusMessage = msg;
-        statusClass = "alert-danger";
+        materialFile = obj.File;
     }
 }
