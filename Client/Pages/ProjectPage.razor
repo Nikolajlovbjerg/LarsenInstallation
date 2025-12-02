@@ -1,22 +1,25 @@
 ﻿@page "/projects"
-@using Client.Components
 @using Core
+@using Client.Components
 @inject NavigationManager Navigation
+@inject HttpClient Http
 
 <h3>Projekter</h3>
 
 <ProjectsList Projects="@projectList" OnSeeMore="@NavigateToDetails"></ProjectsList>
 
 @code {
-    private List<Project> projectList = new()
+    private List<Project> projectList = new();
+
+    protected override async Task OnInitializedAsync()
     {
-        new Project { ProjectId = 1, Name = "Gadehjørnet", DateCreated = DateTime.Now },
-        new Project { ProjectId = 2, Name = "Projekt B", DateCreated = DateTime.Now.AddDays(-1) },
-        new Project { ProjectId = 3, Name = "Mandøvænget", DateCreated = DateTime.Now.AddDays(-2) }
-    };
+        // Hent projekter via API
+        projectList = await Http.GetFromJsonAsync<List<Project>>("api/project");
+    }
 
     private void NavigateToDetails(int projectId)
     {
         Navigation.NavigateTo($"/projects/{projectId}");
     }
 }
+    
