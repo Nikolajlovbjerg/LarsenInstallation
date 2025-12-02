@@ -34,7 +34,7 @@ public class House
 
     public Dictionary<string, decimal> InstallationCosts { get; set; } = new();
     public Dictionary<string, int> MaterialsUsed { get; set; } = new();
-}
+}   
 
 
 public class TimeEntry

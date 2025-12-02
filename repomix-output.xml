@@ -1,5 +1,4 @@
-This file is a merged representation of a subset of the codebase, containing specifically included files and files not matching ignore patterns, combined into a single document by Repomix.
-The content has been processed where empty lines have been removed.
+This file is a merged representation of a subset of the codebase, containing specifically included files, combined into a single document by Repomix.
 
 <file_summary>
 This section contains a summary of this file.
@@ -33,21 +32,71 @@ The content is organized as follows:
 <notes>
 - Some files may have been excluded based on .gitignore rules and Repomix's configuration
 - Binary files are not included in this packed representation. Please refer to the Repository Structure section for a complete list of file paths, including binary files
-- Only files matching these patterns are included: Client/App.razor;Client/_Imports.razor;Client/Program.cs;Client/Components/**/*.razor;Client/Layout/**/*.razor;Client/Pages/**/*.razor;Client/Service/**/*.cs;Core/**/*.cs;Server/Controllers/**/*.cs;Server/Repositories/**/*.cs;Server/Program.cs;Server/appsettings*.json
-- Files matching these patterns are excluded: /bin/; /obj/; */.csproj; */.sln; */.css; */.map; */.min.js; /wwwroot/; ServerApp/ServerApp.http
+- Only files matching these patterns are included: Client/App.razor
 - Files matching patterns in .gitignore are excluded
 - Files matching default ignore patterns are excluded
-- Empty lines have been removed from all files
 - Files are sorted by Git change count (files with more changes are at the bottom)
 </notes>
 
 </file_summary>
 
 <directory_structure>
-
+Client/App.razor
 </directory_structure>
 
 <files>
 This section contains the contents of the repository's files.
+
+<file path="Client/App.razor">
+@inject Blazored.LocalStorage.ILocalStorageService LocalStorage
+@inject NavigationManager Nav
+@using Client.Pages
+
+@if (!initialized)
+{
+    <!-- small placeholder while we read local storage -->
+    <div></div>
+}
+else if (!isLoggedIn)
+{
+    <!-- Render the LoginPage component directly if not logged in -->
+    <LoginPage/>
+}
+else
+{
+    <Router AppAssembly="@typeof(App).Assembly">
+        <Found Context="routeData">
+            <RouteView RouteData="@routeData" DefaultLayout="@typeof(Client.Layout.MainLayout)" />
+            <FocusOnNavigate RouteData="@routeData" Selector="h1" />
+        </Found>
+        <NotFound>
+            <LayoutView Layout="@typeof(Client.Layout.MainLayout)">
+                <p>Page not found.</p>
+            </LayoutView>
+        </NotFound>
+    </Router>
+}
+
+@code
+{
+    private bool initialized = false;
+    private bool isLoggedIn = false;
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            var user = await LocalStorage.GetItemAsync<object>("user");
+            isLoggedIn = user != null;
+        }
+        catch (Exception)
+        {
+            // If localStorage read fails, treat as not logged in
+            isLoggedIn = false;
+        }
+        initialized = true;
+    }
+}
+</file>
 
 </files>

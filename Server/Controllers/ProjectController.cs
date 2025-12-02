@@ -1,5 +1,7 @@
-using Core;
+
 using Microsoft.AspNetCore.Mvc;
+using Core;
+using Server.Repositories;
 
 namespace Server.Controllers
 {
@@ -7,22 +9,40 @@ namespace Server.Controllers
     [Route("api/[controller]")]
     public class ProjectController : ControllerBase
     {
-        private static readonly List<Project> _projects = new();
+        private readonly IProjectRepo _projectRepo;
 
-        [HttpPost]
-        public IActionResult Create(Project project)
+        public ProjectController(IProjectRepo projectRepo)
         {
-            project.ProjectId = _projects.Count + 1;
-            project.DateCreated = DateTime.Now;
-
-            _projects.Add(project);
-            return Ok(project);
+            _projectRepo = projectRepo;
         }
 
         [HttpGet]
-        public IActionResult GetAll()
+        public ActionResult<List<Project>> GetAll()
         {
-            return Ok(_projects);
+            var projects = _projectRepo.GetAll();
+            return Ok(projects);
+        }
+
+        [HttpGet("{id}")]
+        public ActionResult<Project> GetById(int id)
+        {
+            var project = _projectRepo.GetAll().FirstOrDefault(p => p.ProjectId == id);
+            if (project == null) return NotFound();
+            return Ok(project);
+        }
+
+        [HttpPost]
+        public ActionResult Add(Project project)
+        {
+            _projectRepo.Add(project);
+            return Ok();
+        }
+
+        [HttpDelete("{id}")]
+        public ActionResult Delete(int id)
+        {
+            _projectRepo.DeleteById(id);
+            return Ok();
         }
     }
 }

@@ -1,3 +1,4 @@
+using Server.Repositories;
 using Server.Repositories.User;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -5,6 +6,8 @@ var builder = WebApplication.CreateBuilder(args);
 // Add services to the container.
 
 builder.Services.AddSingleton<ICreateUserRepoSQL, CreateUserRepoSQL>();
+
+builder.Services.AddSingleton<IProjectRepo, ProjectRepositoryMock>();
 
 builder.Services.AddControllers();
 
