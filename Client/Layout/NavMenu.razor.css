@@ -2,6 +2,24 @@
     background-color: white;
 }
 
+.nav-scrollable {
+    flex: 1 1 auto;
+    display: flex;
+    flex-direction: column;
+    overflow: auto; /* allow nav to scroll if too tall */
+}
+
+/* make the nav a column flex container */
+.nav {
+    display: flex;
+    flex-direction: column;
+}
+
+/* push this specific nav-item to the bottom */
+.nav .push-bottom {
+    margin-top: auto;
+}
+
 .top-row {
     max-height: 3.5rem;
     background-color: rgba(66, 66, 66, 0.25);
