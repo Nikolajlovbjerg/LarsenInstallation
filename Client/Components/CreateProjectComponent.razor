@@ -1,6 +1,6 @@
 @using Core
 @inject NavigationManager Nav
-@inject HttpClient Http
+@inject HttpClient http
 
 <div class="create-page-back">
     <div class="create-con">
@@ -15,44 +15,14 @@
                 <div class="upload-box">
                     <label class="upload-title"><strong>Vælg time fil (.xls, .xlsx)</strong></label>
                     <div class="upload-area">
-                        <InputFile OnChange="OnTimeFileChange" multiple accept=".xls,.xlsx" />
-                        @if (timeFiles?.Count > 0)
-                        {
-                            <div class="mt-2 small">
-                                Valgte:
-                                <ul>
-                                    @foreach (var f in timeFiles)
-                                    {
-                                        <li>
-                                            <span class="file-name">@f.Name</span>
-                                            <span class="file-size">(@(f.Size / 1024) KB)</span>
-                                        </li>
-                                    }
-                                </ul>
-                            </div>
-                        }
+                        <InputFile OnChange="UploadFile" accept=".xls,.xlsx" />
                     </div>
                 </div>
 
                 <div class="upload-box">
                     <label class="upload-title"><strong>Vælg materiale fil (.xls, .xlsx)</strong></label>
                     <div class="upload-area">
-                        <InputFile OnChange="OnMaterialFileChange" multiple accept=".xls,.xlsx" />
-                        @if (materialFiles?.Count > 0)
-                        {
-                            <div class="mt-2 small">
-                                Valgte:
-                                <ul>
-                                    @foreach (var f in materialFiles)
-                                    {
-                                        <li>
-                                            <span class="file-name">@f.Name</span>
-                                            <span class="file-size">(@(f.Size / 1024) KB)</span>
-                                        </li>
-                                    }
-                                </ul>
-                            </div>
-                        }
+                        <InputFile OnChange="MaterialUploadFile" accept=".xls,.xlsx" />
                     </div>
                 </div>
             </div>
@@ -95,77 +65,38 @@
 
 
 @code {
-    private Project _project = new();
-    private IReadOnlyList<IBrowserFile> timeFiles = new List<IBrowserFile>();
-    private IReadOnlyList<IBrowserFile> materialFiles = new List<IBrowserFile>();
-    
-    private string statusMessage = "";
-    private string statusClass = "";
-    private const long MaxFileSize = 50 * 1024 * 1024; // 50 MB
+	// private async Task RunUploads()
+	// {
+	// 	await UploadFile();
+	// 	await MaterialUploadFile();
+	// }
+	Project _project = new();
 
-    // Simple one-liner handlers
-    private void OnTimeFileChange(InputFileChangeEventArgs e) => timeFiles = e.GetMultipleFiles();
-    private void OnMaterialFileChange(InputFileChangeEventArgs e) => materialFiles = e.GetMultipleFiles();
+	public async Task UploadFile(InputFileChangeEventArgs e)
+	{
+		var file = e.File;
+		var stream = file.OpenReadStream(10000000);
 
-    private async Task OnClickCreate()
-    {
-        statusMessage = "";
+		using var content = new MultipartFormDataContent();
+		content.Add(new StreamContent(stream), "file", file.Name);
 
-        // Simpel validering
-        if (string.IsNullOrWhiteSpace(_project.Name))
-        {
-            ShowError("Husk at give projektet et navn.");
-            return;
-        }
+		var result = await http.PostAsync("http://localhost:5028/api/uploadexcel", content);
 
-        if (!timeFiles.Any() && !materialFiles.Any())
-        {
-            ShowError("Du skal vælge mindst én fil.");
-            return;
-        }
 
-        try 
-        {
-            using var content = new MultipartFormDataContent();
+	}
 
-            // Tilføj Projekt JSON
-            content.Add(JsonContent.Create(_project), "project");
+	public async Task MaterialUploadFile(InputFileChangeEventArgs e)
+	{
+		var file = e.File;
+		var stream = file.OpenReadStream(10000000);
 
-            // Brug hjælpefunktion til at tilføje filer
-            AddFilesToContent(content, timeFiles, "timeFile");
-            AddFilesToContent(content, materialFiles, "materialFile");
+		using var content = new MultipartFormDataContent();
+		content.Add(new StreamContent(stream), "file", file.Name);
 
-            var resp = await Http.PostAsync("api/project", content);
-
-            if (resp.IsSuccessStatusCode)
-            {
-                Nav.NavigateTo("projects", true);
-            }
-            else
-            {
-                ShowError(await resp.Content.ReadAsStringAsync());
-            }
-        }
-        catch (Exception ex)
-        {
-            ShowError($"Fejl: {ex.Message}");
-        }
-    }
-
-    // Hjælpefunktion der fjerner gentagelser
-    private void AddFilesToContent(MultipartFormDataContent content, IEnumerable<IBrowserFile> files, string formName)
-    {
-        foreach (var file in files)
-        {
-            var streamContent = new StreamContent(file.OpenReadStream(MaxFileSize));
-            streamContent.Headers.ContentType = new System.Net.Http.Headers.MediaTypeHeaderValue(file.ContentType);
-            content.Add(streamContent, formName, file.Name);
-        }
-    }
-
-    private void ShowError(string msg)
-    {
-        statusMessage = msg;
-        statusClass = "alert-danger";
-    }
+		var result = await http.PostAsync("http://localhost:5028/api/materialuploadexcel", content);
+	}
+	private void OnClickCreate(EditContext args)
+	{
+		throw new NotImplementedException();
+	}
 }

@@ -1,4 +1,5 @@
-﻿@inject HttpClient http
+﻿@using Core;
+@inject HttpClient http
 @page "/upload"
 <h3>UploadProjectPage</h3>
 
@@ -19,6 +20,7 @@
 	// 	await UploadFile();
 	// 	await MaterialUploadFile();
 	// }
+	Project _project = new();
 
 	public async Task UploadFile(InputFileChangeEventArgs e)
 	{
