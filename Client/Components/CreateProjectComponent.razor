@@ -65,66 +65,70 @@
 
 
 @code {
+    // Initialiserer en ny instans af projekt-modellen
     Project aProject = new();
 
+    // Variabler til at holde filerne midlertidigt. 'IBrowserFile?' betyder, de kan være null.
     IBrowserFile? timeFile;
     IBrowserFile? materialeFile;
 
-    public async Task UploadFile(InputFileChangeEventArgs e)
+    // Metode der køres, når brugeren vælger en fil i "Time" upload-feltet
+    public void UploadFile(InputFileChangeEventArgs e)
     {
-        var file = e.File;
-        var stream = file.OpenReadStream(10000000);
-
-        using var content = new MultipartFormDataContent();
-        content.Add(new StreamContent(stream), "file", file.Name);
-
-        var result = await http.PostAsync("http://localhost:5028/api/uploadexcel", content);
-
-
+        // Gemmer filen i variablen, men uploader den ikke endnu
+        timeFile = e.File; 
     }
 
-    public async Task MaterialUploadFile(InputFileChangeEventArgs e)
+    // Metode der køres, når brugeren vælger en fil i "Materiale" upload-feltet
+    public void MaterialUploadFile(InputFileChangeEventArgs e)
     {
-        var file = e.File;
-        var stream = file.OpenReadStream(10000000);
-
-        using var content = new MultipartFormDataContent();
-        content.Add(new StreamContent(stream), "file", file.Name);
-
-        var result = await http.PostAsync("http://localhost:5028/api/materialuploadexcel", content);
+        materialeFile = e.File;
     }
 
-
+    // Hovedmetoden der køres, når brugeren trykker på "Opret" knappen
     private async Task OnClickCreate()
     {
+        // 1. Send projektdata (tekst/tal) til API'et for at oprette rækken i databasen
         var response = await http.PostAsJsonAsync("http://localhost:5028/api/createproject", aProject);
 
+        // 2. Tjek om oprettelsen gik godt (HTTP status 200-299)
         if (response.IsSuccessStatusCode)
         {
+            // 3. Læs det nye ID som API'et returnerer (vigtigt for at kunne koble filerne)
             var newProjectId = await response.Content.ReadFromJsonAsync<int>();
 
+            // 4. Hvis der er valgt en Time-fil, upload den nu med det nye ID
             if (timeFile != null)
             {
                 await UploadFileToApi(timeFile, newProjectId, "api/uploadexcel");
             }
 
+            // 5. Hvis der er valgt en Materiale-fil, upload den nu med det nye ID
             if (materialeFile != null)
             {
                 await UploadFileToApi(materialeFile, newProjectId, "api/materialuploadexcel");
             }
-
         }
 
+        // 6. Nulstil formularen og naviger brugeren tilbage til forsiden
         aProject = new();
         Nav.NavigateTo("/");
     }
 
+    // Hjælpemetode til selve fil-uploaden (genbruges for at undgå duplikeret kode)
     private async Task UploadFileToApi(IBrowserFile file, int projectId, string endpoint)
     {
+        // Åbner en strøm til læsning af filen. 
+        // 10000000 bytes = ca. 10 MB grænse. Filer større end dette vil fejle.
         var stream = file.OpenReadStream(10000000);
+
+        // Opretter en 'container' til filen, ligesom en HTML <form>
         using var content = new MultipartFormDataContent();
+        
+        // Tilføjer fil-strømmen til indholdet med navnet "file"
         content.Add(new StreamContent(stream), "file", file.Name);
 
+        // Sender filen til det specifikke endpoint (API URL) med projectId som query parameter
         await http.PostAsync($"http://localhost:5028/{endpoint}?projectId={projectId}", content);
     }
 }

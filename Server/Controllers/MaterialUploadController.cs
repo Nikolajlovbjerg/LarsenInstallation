@@ -17,7 +17,7 @@ namespace Server.Controllers
         }
 
         [HttpPost]
-        public IActionResult Upload(IFormFile? file)
+        public IActionResult Upload(IFormFile? file, int projectId)
         {
             if (file == null || file.Length == 0)
                 return BadRequest("No file uploaded");
@@ -26,15 +26,17 @@ namespace Server.Controllers
             {
                 Stream s = new MemoryStream();
                 file.CopyTo(s);
-
+                s.Position = 0;
+                
                 List<ProjectMaterial> res = MaterialConverter.Convert(s);
 
                 foreach (var row in res)
                 {
+                    row.ProjectId = projectId;
                     MatExRepo.Add(row);
                 }
 
-                return Ok("Material uploaded");
+                return Ok("Material uploaded" + projectId);
 
             }
             return Ok();
