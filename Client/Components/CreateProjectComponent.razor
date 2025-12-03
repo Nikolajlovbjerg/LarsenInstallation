@@ -6,7 +6,7 @@
     <div class="create-con">
         <h3>Opret projekt</h3>
 
-        <EditForm Model="@_project" OnValidSubmit="OnClickCreate">
+        <EditForm Model="@aProject" OnValidSubmit="OnClickCreate">
             
             <DataAnnotationsValidator />
             <ValidationSummary />
@@ -28,25 +28,25 @@
             </div>
 
             <div class="form-floating-group">
-                <InputText id="name" class="form-control" @bind-Value="_project.Name"/>
+                <InputText id="name" class="form-control" @bind-Value="aProject.Name" />
                 <label for="name">Navn</label>
             </div>
                 
             <div class="form-grid">
                 <div class="form-floating-group">
-                    <InputNumber id="svend" class="form-control" @bind-Value="_project.SvendTimePris"/>
+                    <InputNumber id="svend" class="form-control" @bind-Value="aProject.SvendTimePris" />
                     <label for="svend">Svend sats</label>
                 </div>
                 <div class="form-floating-group">
-                    <InputNumber id="lærling" class="form-control" @bind-Value="_project.LærlingTimePris"/>
+                    <InputNumber id="lærling" class="form-control" @bind-Value="aProject.LærlingTimePris" />
                     <label for="lærling">Lærling sats</label>
                 </div>
                 <div class="form-floating-group">
-                    <InputNumber id="konsulent" class="form-control" @bind-Value="_project.KonsulentTimePris"/>
+                    <InputNumber id="konsulent" class="form-control" @bind-Value="aProject.KonsulentTimePris" />
                     <label for="konsulent">Konsulent sats</label>
                 </div>
                 <div class="form-floating-group">
-                    <InputNumber id="arbejdsmand" class="form-control" @bind-Value="_project.ArbjedsmandTimePris"/>
+                    <InputNumber id="arbejdsmand" class="form-control" @bind-Value="aProject.ArbjedsmandTimePris" />
                     <label for="konsulent">Arbejdsmand sats</label>
                 </div>
             </div>
@@ -65,38 +65,37 @@
 
 
 @code {
-	// private async Task RunUploads()
-	// {
-	// 	await UploadFile();
-	// 	await MaterialUploadFile();
-	// }
-	Project _project = new();
+    Project aProject = new();
 
-	public async Task UploadFile(InputFileChangeEventArgs e)
-	{
-		var file = e.File;
-		var stream = file.OpenReadStream(10000000);
+    public async Task UploadFile(InputFileChangeEventArgs e)
+    {
+        var file = e.File;
+        var stream = file.OpenReadStream(10000000);
 
-		using var content = new MultipartFormDataContent();
-		content.Add(new StreamContent(stream), "file", file.Name);
+        using var content = new MultipartFormDataContent();
+        content.Add(new StreamContent(stream), "file", file.Name);
 
-		var result = await http.PostAsync("http://localhost:5028/api/uploadexcel", content);
+        var result = await http.PostAsync("http://localhost:5028/api/uploadexcel", content);
 
 
-	}
+    }
 
-	public async Task MaterialUploadFile(InputFileChangeEventArgs e)
-	{
-		var file = e.File;
-		var stream = file.OpenReadStream(10000000);
+    public async Task MaterialUploadFile(InputFileChangeEventArgs e)
+    {
+        var file = e.File;
+        var stream = file.OpenReadStream(10000000);
 
-		using var content = new MultipartFormDataContent();
-		content.Add(new StreamContent(stream), "file", file.Name);
+        using var content = new MultipartFormDataContent();
+        content.Add(new StreamContent(stream), "file", file.Name);
 
-		var result = await http.PostAsync("http://localhost:5028/api/materialuploadexcel", content);
-	}
-	private void OnClickCreate(EditContext args)
-	{
-		throw new NotImplementedException();
-	}
+        var result = await http.PostAsync("http://localhost:5028/api/materialuploadexcel", content);
+    }
+
+
+    private async Task OnClickCreate()
+    {
+        await http.PostAsJsonAsync("http://localhost:5028/api/createproject", aProject);
+        aProject = new();
+        Nav.NavigateTo("/");
+    }
 }

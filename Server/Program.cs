@@ -1,3 +1,4 @@
+using Server.Repositories;
 using Server.Repositories.ExcelRepos;
 using Server.Repositories.Project;
 using Server.Repositories.User;
@@ -14,6 +15,7 @@ builder.Services.AddScoped<ExcelReaderService>();
 builder.Services.AddSingleton<ICreateUserRepoSQL, CreateUserRepoSQL>();
 builder.Services.AddSingleton<IExcelRepo, ExcelRepo>();
 builder.Services.AddSingleton<IMaterialExcelRepo, MaterialExcelRepo>();
+builder.Services.AddSingleton<ICreateProjectRepo, CreateProjectRepo>();
 
 builder.Services.AddControllers();
 
