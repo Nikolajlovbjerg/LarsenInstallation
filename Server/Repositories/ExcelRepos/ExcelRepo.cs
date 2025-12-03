@@ -1,4 +1,5 @@
-﻿using Core;
+﻿/*
+using Core;
 using Npgsql;
 using Server.PW1;
 using Server.Repositories.ExcelRepos;
@@ -21,7 +22,7 @@ namespace Server.Repositories.User
         {
 
         }
-        public void Add(ProjectHour proj)
+        public void AddHour(ProjectHour proj)
         {
             var result = new List<ProjectHour>();
 
@@ -70,6 +71,7 @@ namespace Server.Repositories.User
         }
     }
 }
+*/
 
         
 

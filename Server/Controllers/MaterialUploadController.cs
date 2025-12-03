@@ -1,5 +1,7 @@
-﻿using Core;
+﻿/*
+using Core;
 using Microsoft.AspNetCore.Mvc;
+using Server.Repositories;
 using Server.Repositories.ExcelRepos;
 using Server.Service;
 
@@ -9,15 +11,15 @@ namespace Server.Controllers
     [Route("api/materialuploadexcel")]
     public class MaterialUploadController : ControllerBase
     {
-        private readonly IMaterialExcelRepo MatExRepo;
+        private readonly ICreateProjectRepo MatExRepo;
 
-        public MaterialUploadController(IMaterialExcelRepo MatExRepo)
+        public MaterialUploadController(ICreateProjectRepo MatExRepo)
         {
             this.MatExRepo = MatExRepo;
         }
 
         [HttpPost]
-        public IActionResult Upload(IFormFile? file, int projectId)
+        public IActionResult UploadMaterial(IFormFile? file, int projectId)
         {
             if (file == null || file.Length == 0)
                 return BadRequest("No file uploaded");
@@ -43,3 +45,4 @@ namespace Server.Controllers
         }
     }
 }
+*/

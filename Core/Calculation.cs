@@ -20,7 +20,7 @@ namespace Core
         // Samlet
         public decimal SamletKostPris => TotalKostPrisMaterialer + TotalKostPrisTimer;
         public decimal SamletTotalPris => TotalPrisMaterialer + TotalPrisTimer;
-        public decimal Dækningsgrad => SamletTotalPris > 0 ? (Dækningsgrad/SamletTotalPris) * 100 : 0;
+        public decimal Dækningsgrad => SamletTotalPris > 0 ? (Dækningsbidrag/SamletTotalPris) * 100 : 0;
         public decimal Dækningsbidrag => SamletTotalPris - SamletKostPris;
     }
 }

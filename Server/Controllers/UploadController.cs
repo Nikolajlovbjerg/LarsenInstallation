@@ -1,5 +1,7 @@
-﻿using Core;
+﻿/*
+using Core;
 using Microsoft.AspNetCore.Mvc;
+using Server.Repositories;
 using Server.Repositories.ExcelRepos;
 using Server.Service;
 
@@ -9,15 +11,15 @@ namespace Server.Controllers
     [Route("api/uploadexcel")]
     public class UploadController : ControllerBase
     {
-        private readonly IExcelRepo exRepo;
+        private readonly ICreateProjectRepo exRepo;
 
-        public UploadController(IExcelRepo exRepo)
+        public UploadController(ICreateProjectRepo exRepo)
         {
             this.exRepo = exRepo;
         }
 
         [HttpPost]
-        public IActionResult Upload(IFormFile? file, int projectId) 
+        public IActionResult UploadHour(IFormFile? file, int projectId) 
             //ProjectId parameteren er der for at vi kan modtage id udefra
         {
             if (file == null || file.Length == 0) 
@@ -31,16 +33,35 @@ namespace Server.Controllers
 
                     List<ProjectHour> res = WorkerConverter.Convert(s);
 
-                foreach (var row in res)
+                foreach (var row1 in res)
                 {
-                    row.ProjectId = projectId; //Her for id værdien
-                    exRepo.Add(row);
+                    row1.ProjectId = projectId; //Her for id værdien
+                    exRepo.Add(row1);
                 }
 
                 return Ok("worker uploaded" + projectId);
 
-                }
+            }
             return Ok();
+        }
+        
+        [HttpGet("{id}")]
+        public ActionResult<Calculation> GetProjectDetails(int id)
+        {
+            try
+            {
+                var result = exRepo.GetProjectDetails(id);
+                if (result == null) return NotFound("Project not found");
+                {
+                    return Ok(result);
+                }
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500,  "Error: " + ex.Message);
+            }
+
         }
     }
 }
+*/

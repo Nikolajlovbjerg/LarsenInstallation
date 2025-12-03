@@ -1,4 +1,5 @@
-﻿using Core;
+﻿/*
+using Core;
 using Npgsql;
 using Server.PW1;
 using Server.Repositories.ExcelRepos;
@@ -76,6 +77,7 @@ namespace Server.Repositories.User
         }
     }
 }
+*/
 
 
 

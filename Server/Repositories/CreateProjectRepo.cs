@@ -1,7 +1,7 @@
 ﻿using Core;
 using Npgsql;
 using Server.PW1;
-using Server.Repositories.ExcelRepos;
+using Server.Repositories;
 
 namespace Server.Repositories
 {
@@ -71,7 +71,112 @@ namespace Server.Repositories
             }
         }
 
+        public void AddHour(ProjectHour proj)
+        {
+            var result = new List<ProjectHour>();
 
+
+            using (var mConnection = new NpgsqlConnection(conString))
+            {
+                mConnection.Open();
+                var command = mConnection.CreateCommand();
+                command.CommandText = @"INSERT INTO projecthours
+                    (projectid, dato, stoptid, timer, type, kostpris) 
+                    VALUES (@projectid, @dato, @stoptid, @timer, @type, @kostpris)";
+
+                var paramProjId = command.CreateParameter();
+                paramProjId.ParameterName = "projectid";
+                command.Parameters.Add(paramProjId);
+                paramProjId.Value = proj.ProjectId;
+
+                Console.WriteLine(command.CommandText);
+                var paramDato = command.CreateParameter();
+                paramDato.ParameterName = "dato";
+                command.Parameters.Add(paramDato);
+                paramDato.Value = proj.Dato;
+
+                var paramStop = command.CreateParameter();
+                paramStop.ParameterName = "stoptid";
+                command.Parameters.Add(paramStop);
+                paramStop.Value = proj.Stoptid;
+
+                var paramTimer = command.CreateParameter();
+                paramTimer.ParameterName = "timer";
+                command.Parameters.Add(paramTimer);
+                paramTimer.Value = proj.Timer;
+
+                var paramType = command.CreateParameter();
+                paramType.ParameterName = "type";
+                command.Parameters.Add(paramType);
+                paramType.Value = proj.Type;
+
+                var paramKost = command.CreateParameter();
+                paramKost.ParameterName = "kostpris";
+                command.Parameters.Add(paramKost);
+                paramKost.Value = proj.Kostpris;
+
+                command.ExecuteNonQuery();
+            }
+        }
+        
+        
+        
+        public void AddMaterials(ProjectMaterial projmat)
+        {
+            var result = new List<ProjectMaterial>();
+
+
+            using (var mConnection = new NpgsqlConnection(conString))
+            {
+                mConnection.Open();
+                var command = mConnection.CreateCommand();
+                command.CommandText = @"INSERT INTO projectmaterials
+                    (projectid, beskrivelse, kostpris, antal, total, avance, dækningsgrad) 
+                    VALUES (@projectid, @beskrivelse, @kostpris, @antal, @total, @avance, @dækningsgrad)";
+
+
+                var paramProjId = command.CreateParameter();
+                paramProjId.ParameterName = "projectid";
+                command.Parameters.Add(paramProjId);
+                paramProjId.Value = projmat.ProjectId;
+
+                Console.WriteLine(command.CommandText);
+                var paramBeskriv = command.CreateParameter();
+                paramBeskriv.ParameterName = "beskrivelse";
+                command.Parameters.Add(paramBeskriv);
+                paramBeskriv.Value = projmat.Beskrivelse;
+
+                var paramKost = command.CreateParameter();
+                paramKost.ParameterName = "kostpris";
+                command.Parameters.Add(paramKost);
+                paramKost.Value = projmat.Kostpris;
+
+                var paramAntal = command.CreateParameter();
+                paramAntal.ParameterName = "antal";
+                command.Parameters.Add(paramAntal);
+                paramAntal.Value = projmat.Antal;
+
+                var paramTotal = command.CreateParameter();
+                paramTotal.ParameterName = "total";
+                command.Parameters.Add(paramTotal);
+                paramTotal.Value = projmat.Total;
+
+                var PriceAvance = command.CreateParameter();
+                PriceAvance.ParameterName = "avance";
+                command.Parameters.Add(PriceAvance);
+                PriceAvance.Value = projmat.Avance;
+
+                var paramDaek = command.CreateParameter();
+                paramDaek.ParameterName = "dækningsgrad";
+                command.Parameters.Add(paramDaek);
+                paramDaek.Value = projmat.Dækningsgrad;
+
+                command.ExecuteNonQuery();
+            }
+        }
+        
+       
+        
         public Calculation? GetProjectDetails(int projectId)
         {
             using var conn = new NpgsqlConnection(conString);
