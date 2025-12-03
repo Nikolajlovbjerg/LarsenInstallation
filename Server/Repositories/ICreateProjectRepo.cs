@@ -4,6 +4,6 @@ namespace Server.Repositories
 {
     public interface ICreateProjectRepo
     {
-        void Add(Core.Project pro);
+        int Add(Core.Project pro);
     }
 }

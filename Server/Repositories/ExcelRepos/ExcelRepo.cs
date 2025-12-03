@@ -2,6 +2,7 @@
 using Npgsql;
 using Server.PW1;
 using Server.Repositories.ExcelRepos;
+using Server.Repositories;
 
 namespace Server.Repositories.User
 {
@@ -30,7 +31,13 @@ namespace Server.Repositories.User
                 mConnection.Open();
                 var command = mConnection.CreateCommand();
                 command.CommandText = @"INSERT INTO projecthours
-                    (projectid, dato, stoptid, timer, type, kostpris) VALUES (@projectid, @dato, @stoptid, @timer, @type, @kostpris)";
+                    (projectid, dato, stoptid, timer, type, kostpris) 
+                    VALUES (@projectid, @dato, @stoptid, @timer, @type, @kostpris)";
+
+                var paramProjId = command.CreateParameter();
+                paramProjId.ParameterName = "projectid";
+                command.Parameters.Add(paramProjId);
+                paramProjId.Value = proj.ProjectId;
 
                 Console.WriteLine(command.CommandText);
                 var paramDato = command.CreateParameter();
@@ -57,12 +64,6 @@ namespace Server.Repositories.User
                 paramKost.ParameterName = "kostpris";
                 command.Parameters.Add(paramKost);
                 paramKost.Value = proj.Kostpris;
-
-                //skal fjernes på et tidspunkt
-                var paramProjectId = command.CreateParameter();
-                paramProjectId.ParameterName = "projectid";
-                paramProjectId.Value = 1; // <-- hard coded for now
-                command.Parameters.Add(paramProjectId);
 
                 command.ExecuteNonQuery();
             }

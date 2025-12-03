@@ -18,9 +18,11 @@ namespace Server.Controllers
         }
 
         [HttpPost]
-        public void Add(Project pro)
+        public IActionResult Add(Project pro) //Fleksibel pakke. Bruges når man for en masse forskellige slags data.
+        //Det er et interface der giver dig lov til at retunere hvad som helst så længe der er et gyldigt http svar
         {
-            crProj.Add(pro);
+            int newProjectId = crProj.Add(pro);
+            return Ok(newProjectId); //Ok er en hjælpe metode der fortæller klienten det lykkedes og giver svaret
         }
 
 

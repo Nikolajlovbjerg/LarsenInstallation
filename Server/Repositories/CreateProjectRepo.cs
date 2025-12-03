@@ -20,7 +20,7 @@ namespace Server.Repositories
         {
 
         }
-        public void Add(Core.Project pro)
+        public int Add(Core.Project pro) //Er en int fordi vi retunere et int
         {
             var result = new List<Core.Project>();
 
@@ -30,7 +30,9 @@ namespace Server.Repositories
                 mConnection.Open();
                 var command = mConnection.CreateCommand();
                 command.CommandText = @"INSERT INTO projects
-                    (name, datecreated, svend_timepris, lærling_timepris, konsulent_timepris, arbejdsmand_timepris) VALUES (@name, @datecreated, @svend_timepris, @lærling_timepris, @konsulent_timepris, @arbejdsmand_timepris)";
+                    (name, datecreated, svend_timepris, lærling_timepris, konsulent_timepris, arbejdsmand_timepris) 
+                    VALUES (@name, @datecreated, @svend_timepris, @lærling_timepris, @konsulent_timepris, @arbejdsmand_timepris)          
+                    RETURNING projectid"; //Retunering query som sender projectid tilbage
 
 
                 var paramStop = command.CreateParameter();
@@ -64,6 +66,9 @@ namespace Server.Repositories
                 paramArb.ParameterName = "arbejdsmand_timepris";
                 command.Parameters.Add(paramArb);
                 paramArb.Value = pro.ArbjedsmandTimePris;
+
+                var newProjectId = (int)command.ExecuteScalar(); 
+                return newProjectId; //retunere det nye id
 
                 command.ExecuteNonQuery();
             }

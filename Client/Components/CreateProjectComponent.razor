@@ -67,6 +67,9 @@
 @code {
     Project aProject = new();
 
+    IBrowserFile? timeFile;
+    IBrowserFile? materialeFile;
+
     public async Task UploadFile(InputFileChangeEventArgs e)
     {
         var file = e.File;
@@ -94,8 +97,34 @@
 
     private async Task OnClickCreate()
     {
-        await http.PostAsJsonAsync("http://localhost:5028/api/createproject", aProject);
+        var response = await http.PostAsJsonAsync("http://localhost:5028/api/createproject", aProject);
+
+        if (response.IsSuccessStatusCode)
+        {
+            var newProjectId = await response.Content.ReadFromJsonAsync<int>();
+
+            if (timeFile != null)
+            {
+                await UploadFileToApi(timeFile, newProjectId, "api/uploadexcel");
+            }
+
+            if (materialeFile != null)
+            {
+                await UploadFileToApi(materialeFile, newProjectId, "api/materialuploadexcel");
+            }
+
+        }
+
         aProject = new();
         Nav.NavigateTo("/");
+    }
+
+    private async Task UploadFileToApi(IBrowserFile file, int projectId, string endpoint)
+    {
+        var stream = file.OpenReadStream(10000000);
+        using var content = new MultipartFormDataContent();
+        content.Add(new StreamContent(stream), "file", file.Name);
+
+        await http.PostAsync($"http://localhost:5028/{endpoint}?projectId={projectId}", content);
     }
 }
