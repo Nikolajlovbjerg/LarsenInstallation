@@ -22,11 +22,11 @@
 
 .project-header h2 {
     font-size: 2em;
-    color: #00bcd4; /* Accentfarve */
+    color: #2964bc; /* Accentfarve */
 }
 
 .house-section h3, .overview-section h3, .time-usage-section h3, .details-list-group h4 {
-    color: #00bcd4;
+    color: #2964bc;
     font-weight: 600;
 }
 
@@ -68,7 +68,7 @@
 }
 
 /* Farvemarkeringer til bokse */
-.info-card.primary { border-left: 6px solid #00bcd4; }
+.info-card.primary { border-left: 6px solid #2964bc; }
 .info-card.secondary { border-left: 6px solid #ff9800; }
 .info-card.success { border-left: 6px solid #4caf50; }
 .info-card.info { border-left: 6px solid #2196f3; }
@@ -103,6 +103,6 @@
 
 .clean-list li span {
     font-weight: bold;
-    color: #00bcd4;
+    color: #2964bc;
     margin-left: 10px;
 }
