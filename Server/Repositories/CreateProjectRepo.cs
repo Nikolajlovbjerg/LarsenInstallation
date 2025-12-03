@@ -85,7 +85,7 @@ namespace Server.Repositories
                 using var reader = command.ExecuteReader();
                 if (reader.Read())
                 {
-                    dto.project = new Project
+                    dto.Project = new Project
                     {
                         ProjectId = reader.GetInt32(0),
                         Name = reader.GetString(1),
@@ -145,13 +145,13 @@ namespace Server.Repositories
                     
                     dto.TotalKostPrisTimer += h.Kostpris;
 
-                    decimal timeSats = dto.project.SvendTimePris;
+                    decimal timeSats = dto.Project.SvendTimePris;
                     var type = h.Type.ToLower();
 
-                    if (type.Contains("svend")) timeSats = dto.project.SvendTimePris;
-                    else if (type.Contains("lærling")) timeSats = dto.project.LærlingTimePris;
-                    else if (type.Contains("konsulent")) timeSats = dto.project.KonsulentTimePris;
-                    else if (type.Contains("arbejdsmand")) timeSats = dto.project.ArbjedsmandTimePris;
+                    if (type.Contains("svend")) timeSats = dto.Project.SvendTimePris;
+                    else if (type.Contains("lærling")) timeSats = dto.Project.LærlingTimePris;
+                    else if (type.Contains("konsulent")) timeSats = dto.Project.KonsulentTimePris;
+                    else if (type.Contains("arbejdsmand")) timeSats = dto.Project.ArbjedsmandTimePris;
                     
                     dto.TotalPrisTimer += (h.Timer * timeSats);
 

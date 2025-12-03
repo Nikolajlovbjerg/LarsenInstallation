@@ -3,7 +3,7 @@ namespace Core
     public class Calculation
     {
         // Stamdata
-        public Project project { get; set; }
+        public Project Project { get; set; }
 
         // Lister af data
         public List<ProjectHour> Hours { get; set; } = new();

@@ -1,0 +1,94 @@
+@page "/createproject/{Id:int}"
+@using Core
+@inject HttpClient Http
+
+<PageTitle>Projekt Detaljer</PageTitle>
+
+@if (details == null)
+{
+    <p><em>Indlæser beregninger...</em></p>
+}
+else
+{
+    <div class="container">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h1>@details.Project.Name</h1>
+            <span class="badge bg-secondary">Oprettet: @details.Project.DateCreated.ToShortDateString()</span>
+        </div>
+
+        <div class="row mb-4">
+            <div class="col-md-4">
+                <div class="card text-white bg-success mb-3">
+                    <div class="card-header">Samlet Salgspris</div>
+                    <div class="card-body">
+                        <h3 class="card-title">@details.SamletTotalPris.ToString("N2") kr.</h3>
+                        <p class="card-text">
+                            Materialer: @details.TotalPrisMaterialer.ToString("N0")<br/>
+                            Arbejdsløn: @details.TotalKostPrisTimer.ToString("N0")
+                        </p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-md-4">
+                <div class="card text-dark bg-light mb-3">
+                    <div class="card-header">Samlet Kostpris</div>
+                    <div class="card-body">
+                        <h3 class="card-title">@details.SamletKostPris.ToString("N2") kr.</h3>
+                        <p class="card-text">
+                            Materialer: @details.TotalKostPrisMaterialer.ToString("N0")<br/>
+                            Lønudgift: @details.TotalKostPrisTimer.ToString("N0")
+                        </p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-md-4">
+                <div class="card text-white bg-primary mb-3">
+                    <div class="card-header">Dækningsbidrag</div>
+                    <div class="card-body">
+                        <h3 class="card-title">@details.Dækningsbidrag.ToString("N2") kr.</h3>
+                        <p class="card-text">
+                            Dækningsgrad: <strong>@details.Dækningsgrad.ToString("N1") %</strong>
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <h3>Timeregistreringer (@details.TotalTimer timer)</h3>
+        <table class="table table-striped">
+            <thead>
+                <tr>
+                    <th>Dato</th>
+                    <th>Type</th>
+                    <th>Timer</th>
+                    <th>Kostpris</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var h in details.Hours)
+                {
+                    <tr>
+                        <td>@(h.Dato?.ToShortDateString() ?? "-")</td>
+                        <td>@h.Type</td>
+                        <td>@h.Timer</td>
+                        <td>@h.Kostpris</td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+}
+
+@code {
+    [Parameter]
+    public int id { get; set; }
+
+    private Calculation? details;
+
+    protected override async Task OnInitializedAsync()
+    {
+        details = await Http.GetFromJsonAsync<Calculation>($"api/createproject/{id}");
+    }
+}
