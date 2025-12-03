@@ -30,7 +30,7 @@ namespace Server.Repositories
                 mConnection.Open();
                 var command = mConnection.CreateCommand();
                 command.CommandText = @"INSERT INTO projects
-                    (name, datecreated, svend_timepris, lærling_timepris, konsulent_timepris, arbjedsmand_timepris) VALUES (@name, @datecreated, @svend_timepris, @lærling_timepris, @konsulent_timepris, @arbjedsmand_timepris)";
+                    (name, datecreated, svend_timepris, lærling_timepris, konsulent_timepris, arbejdsmand_timepris) VALUES (@name, @datecreated, @svend_timepris, @lærling_timepris, @konsulent_timepris, @arbejdsmand_timepris)";
 
 
                 var paramStop = command.CreateParameter();
@@ -61,7 +61,7 @@ namespace Server.Repositories
 
 
                 var paramArb = command.CreateParameter();
-                paramArb.ParameterName = "arbjedsmand_timepris";
+                paramArb.ParameterName = "arbejdsmand_timepris";
                 command.Parameters.Add(paramArb);
                 paramArb.Value = pro.ArbjedsmandTimePris;
 
