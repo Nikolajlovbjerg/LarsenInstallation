@@ -1,4 +1,5 @@
 @using Core
+@inject Client.Service.ProjectService ProjectService
 @inject NavigationManager Nav
 @inject HttpClient http
 
@@ -46,7 +47,7 @@
                     <label for="konsulent">Konsulent sats</label>
                 </div>
                 <div class="form-floating-group">
-                    <InputNumber id="arbejdsmand" class="form-control" @bind-Value="aProject.ArbjedsmandTimePris" />
+                    <InputNumber id="arbejdsmand" class="form-control" @bind-Value="aProject.ArbejdsmandTimePris" />
                     <label for="konsulent">Arbejdsmand sats</label>
                 </div>
             </div>
@@ -58,8 +59,6 @@
             </div>
             
         </EditForm>
-        
-        
     </div>
 </div>
 

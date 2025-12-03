@@ -62,7 +62,7 @@ namespace Server.Repositories
                 var paramArb = command.CreateParameter();
                 paramArb.ParameterName = "arbejdsmand_timepris";
                 command.Parameters.Add(paramArb);
-                paramArb.Value = pro.ArbjedsmandTimePris;
+                paramArb.Value = pro.ArbejdsmandTimePris;
 
                 var newProjectId = (int)command.ExecuteScalar(); 
                 return newProjectId; //retunere det nye id
