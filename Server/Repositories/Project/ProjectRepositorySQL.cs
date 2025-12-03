@@ -25,7 +25,6 @@ namespace Server.Repositories.Project
             try
             {
                 // 1. INDSÆT PROJEKT
-                // Rettet: Bruger nu snake_case kolonnenavne (fx svend_timepris)
                 var cmdProject = new NpgsqlCommand(@"
                     INSERT INTO projects (name, svend_timepris, lærling_timepris, konsulent_timepris, arbjedsmand_timepris)
                     VALUES (@Name, @Svend, @Laerling, @Konsulent, @Arb)
@@ -40,9 +39,6 @@ namespace Server.Repositories.Project
                 int newProjectId = (int)cmdProject.ExecuteScalar()!;
 
                 // 2. INDSÆT TIMER
-                // Bemærk: Din tabel 'projecthours' har ikke 'medarbejder' eller 'beskrivelse' kolonner.
-                // Jeg gemmer derfor kun de felter, der findes i tabellen (dato, timer, type, raw_row).
-                // Hvis du vil gemme beskrivelse, kan vi sætte det ind i 'type' eller 'raw_row'.
                 foreach (var h in hours)
                 {
                     var cmdHour = new NpgsqlCommand(@"
@@ -60,8 +56,6 @@ namespace Server.Repositories.Project
                 }
 
                 // 3. INDSÆT MATERIALER
-                // Rettet: Din tabel har ikke 'varenummer', så den er fjernet.
-                // Tilføjet: avance og dækningsgrad
                 foreach (var m in materials)
                 {
                     var cmdMat = new NpgsqlCommand(@"
