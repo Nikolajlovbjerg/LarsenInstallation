@@ -8,21 +8,18 @@ namespace Server.Repositories
     public class CreateProjectRepo : ICreateProjectRepo
     {
         private const string conString =
-    "Host=ep-spring-unit-a2y1k0pd.eu-central-1.aws.neon.tech;" +
-    "Port=5432;" +
-    "Database=LarsenInstallation;" +
-    "Username=neondb_owner;" +
-    $"Password={PASSWORD.PW1};" +
-    "Ssl Mode=Require;" +
-    "Trust Server Certificate=true;";
+            "Host=ep-spring-unit-a2y1k0pd.eu-central-1.aws.neon.tech;" +
+            "Port=5432;" +
+            "Database=LarsenInstallation;" +
+            "Username=neondb_owner;" +
+            $"Password={PASSWORD.PW1};" +
+            "Ssl Mode=Require;" +
+            "Trust Server Certificate=true;";
 
-        public CreateProjectRepo()
+        
+        public int Add(Project pro) //Er en int fordi vi retunere et int
         {
-
-        }
-        public int Add(Core.Project pro) //Er en int fordi vi retunere et int
-        {
-            var result = new List<Core.Project>();
+            var result = new List<Project>();
 
 
             using (var mConnection = new NpgsqlConnection(conString))
@@ -73,6 +70,9 @@ namespace Server.Repositories
                 command.ExecuteNonQuery();
             }
         }
+        
+        
+        
     }
 }
 
