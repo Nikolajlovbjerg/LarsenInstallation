@@ -1,9 +1,11 @@
 ﻿@using Core
+@inject NavigationManager navMan
+@inject  HttpClient http
 
 <div class="row"> 
-    @if (Projects != null)
+    @if (projectlist != null)
     {
-        @foreach (var p in Projects)
+        @foreach (var p in projectlist)
         {
             <div class="col-12 mb-3"> 
                 <div class="card shadow-sm">
@@ -14,10 +16,11 @@
                             <h5 class="card-title mb-1">Projekt @p.ProjectId - @p.Name</h5>
                             <p class="card-text text-muted mb-2"><small>Dato Oprettet: @p.DateCreated.ToString("dd/MM/yyyy")</small></p>
                         </div>
-
-                        <button class="btn btn-outline-primary flex-shrink-0" @onclick="@(() => OnSeeMore?.Invoke(p.ProjectId))">
+                        @*
+                        <button class="btn btn-outline-primary flex-shrink-0" @onclick="OnSeeMore()">
                             Se mere
                         </button>
+                        *@
                     </div>
                 </div>
             </div>
@@ -26,6 +29,19 @@
 </div>
 
 @code {
-    [Parameter] public IEnumerable<Project>? Projects { get; set; }
-    [Parameter] public Action<int>? OnSeeMore { get; set; }
+
+    private List<Project>? projectlist;
+
+    protected override async Task OnInitializedAsync()
+    {
+            projectlist = await http.GetFromJsonAsync<List<Project>>("http://localhost:5028/api/projectlist");
+        
+    }
+
+    public void NavigateToDetails(int id)
+    {
+        // Bruger NavigationManager til at navigere til detaljesiden
+        navMan.NavigateTo($"/projects/{id}"); 
+    }
+
 }
