@@ -17,7 +17,8 @@ namespace Server.Controllers
         }
 
         [HttpPost]
-        public IActionResult Upload(IFormFile? file)
+        public IActionResult Upload(IFormFile? file, int projectId) 
+            //ProjectId parameteren er der for at vi kan modtage id udefra
         {
             if (file == null || file.Length == 0) 
                 return BadRequest("No file uploaded");
@@ -26,15 +27,17 @@ namespace Server.Controllers
             {
                     Stream s = new MemoryStream();
                     file.CopyTo(s);
+                    s.Position = 0; //Går tilbage til starten så vi kan læse dataen. Fordi efter filen er indlæst vil den være i sidste kolonne
 
                     List<ProjectHour> res = WorkerConverter.Convert(s);
 
                 foreach (var row in res)
                 {
+                    row.ProjectId = projectId; //Her for id værdien
                     exRepo.Add(row);
                 }
 
-                return Ok("worker uploaded");
+                return Ok("worker uploaded" + projectId);
 
                 }
             return Ok();

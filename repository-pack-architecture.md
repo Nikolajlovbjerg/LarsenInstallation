@@ -55,6 +55,7 @@ Client/
     CreateProjectPage.razor
     Home.razor
     LoginPage.razor
+    UploadProjectPage.razor
   Service/
     UserRepository.cs
   _Imports.razor
@@ -71,13 +72,23 @@ Server/
   Controllers/
     UserCon/
       UserController.cs
+    CreateProjectController.cs
+    MaterialUploadController.cs
+    UploadController.cs
   Repositories/
+    ExcelRepos/
+      ExcelRepo.cs
+      IExcelRepo.cs
+      IMaterialExcelRepo.cs
+      MaterialExcelRepo.cs
     User/
       CreateUserRepoSQL.cs
       ICreateUserRepoSQL.cs
+    CreateProjectRepo.cs
+    ICreateProjectRepo.cs
   Service/
-    ExcelFileHelper.cs
-    ExcelReader.cs
+    MaterialConverter.cs
+    WorkerConverter.cs
   appsettings.Development.json
   appsettings.json
   Program.cs
@@ -137,78 +148,79 @@ namespace Core
 }
 </file>
 
-<file path="Core/ProjectHours.cs">
-namespace Core
+<file path="Server/Controllers/MaterialUploadController.cs">
+using Core;
+using Microsoft.AspNetCore.Mvc;
+using Server.Repositories.ExcelRepos;
+using Server.Service;
+namespace Server.Controllers
 {
-    public class ProjectHour
+    [ApiController]
+    [Route("api/materialuploadexcel")]
+    public class MaterialUploadController : ControllerBase
     {
-        public int HourId { get; set; }
-        public int ProjectId { get; set; }
-        public string? Medarbejder { get; set; }
-        public DateTime? Dato { get; set; }
-        public DateTime? Stoptid { get; set; }
-        public string? Fra { get; set; }
-        public string? Til { get; set; }
-        public decimal Timer { get; set; }
-        public string? Type { get; set; }
-        public string? Beskrivelse { get; set; }
-        public decimal Kostpris { get; set; }
-        public string? Ordrenr { get; set; }
-        public string RawRow { get; set; } = string.Empty;
-        public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+        private readonly IMaterialExcelRepo MatExRepo;
+        public MaterialUploadController(IMaterialExcelRepo MatExRepo)
+        {
+            this.MatExRepo = MatExRepo;
+        }
+        [HttpPost]
+        public IActionResult Upload(IFormFile? file)
+        {
+            if (file == null || file.Length == 0)
+                return BadRequest("No file uploaded");
+            else if (file.FileName.StartsWith("Mater"))
+            {
+                Stream s = new MemoryStream();
+                file.CopyTo(s);
+                List<ProjectMaterial> res = MaterialConverter.Convert(s);
+                foreach (var row in res)
+                {
+                    MatExRepo.Add(row);
+                }
+                return Ok("Material uploaded");
+            }
+            return Ok();
+        }
     }
 }
 </file>
 
-<file path="Core/ProjectMaterial.cs">
-namespace Core
+<file path="Server/Repositories/ExcelRepos/IExcelRepo.cs">
+using Core;
+namespace Server.Repositories.ExcelRepos
 {
-    public class ProjectMaterial
+    public interface IExcelRepo
     {
-        public int MaterialsId { get; set; }
-        public int ProjectId { get; set; }
-        public string? Varenummer { get; set; }
-        public string? Beskrivelse { get; set; }
-        public decimal Kostpris { get; set; }
-        public decimal Listepris { get; set; }
-        public decimal Antal { get; set; }
-        public decimal Total { get; set; }
-        public decimal Markedspris { get; set; }
-        public decimal Avance { get; set; }
-        public decimal Dækningsgrad { get; set; }
-        public string RawRow { get; set; } = string.Empty;
-        public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+        void Add(ProjectHour proj);
     }
 }
 </file>
 
-<file path="Server/Service/ExcelFileHelper.cs">
-using ExcelDataReader;
-using System;
-using System.Collections.Generic;
+<file path="Server/Repositories/ExcelRepos/IMaterialExcelRepo.cs">
+using Core;
+namespace Server.Repositories.ExcelRepos
+{
+    public interface IMaterialExcelRepo
+    {
+        void Add(ProjectMaterial projmat);
+    }
+}
+</file>
+
+<file path="Server/Service/MaterialConverter.cs">
 using System.IO;
-using System.Linq;
 using System.Text;
-using System.Threading.Tasks;
-namespace Service;
-public class ExcelFileHelper
+using Core;
+using ExcelDataReader;
+namespace Server.Service
 {
-    public static bool SaveAsCsv(string excelFilePath, string destinationCsvFilePath)
+    public class MaterialConverter
     {
-        using (var stream = new FileStream(excelFilePath, FileMode.Open, FileAccess.Read, FileShare.ReadWrite))
+        public static List<ProjectMaterial> Convert(Stream stream)
         {
             Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
-            IExcelDataReader reader = null;
-            if (excelFilePath.EndsWith(".xls"))
-            {
-                reader = ExcelReaderFactory.CreateBinaryReader(stream);
-            }
-            else if (excelFilePath.EndsWith(".xlsx"))
-            {
-                reader = ExcelReaderFactory.CreateOpenXmlReader(stream);
-            }
-            if (reader == null)
-                return false;
+            IExcelDataReader reader = ExcelReaderFactory.CreateOpenXmlReader(stream);
             var ds = reader.AsDataSet(new ExcelDataSetConfiguration()
             {
                 ConfigureDataTable = (tableReader) => new ExcelDataTableConfiguration()
@@ -216,22 +228,66 @@ public class ExcelFileHelper
                     UseHeaderRow = false
                 }
             });
-            var csvContent = string.Empty;
-            int row_no = 0;
+            List<ProjectMaterial> result = new();
+            int row_no = 1;
             while (row_no < ds.Tables[0].Rows.Count)
             {
-                var arr = new List<string>();
-                for (int i = 0; i < ds.Tables[0].Columns.Count; i++)
-                {
-                    arr.Add(ds.Tables[0].Rows[row_no][i].ToString());
-                }
+                var row = ds.Tables[0].Rows[row_no];
+                ProjectMaterial p = new ProjectMaterial();
+                p.Beskrivelse = row[1].ToString();
+                p.Kostpris = Decimal.Parse(row[2].ToString());
+                p.Antal = Decimal.Parse(row[4].ToString());
+                p.Total = Decimal.Parse(row[17].ToString());
+                p.Avance = decimal.Parse(row[19].ToString());
+                p.Dækningsgrad = Decimal.Parse(row[20].ToString());
+                // other fields here...
+                result.Add(p);
+                Console.WriteLine($"Beskrivelse= {p.Beskrivelse}, Kostpris = {p.Kostpris} Antal = {p.Antal}, Total = {p.Total}  Avance = {p.Avance}, dækningsgrad = {p.Dækningsgrad}");
                 row_no++;
-                csvContent += string.Join(",", arr) + "\n";
             }
-            StreamWriter csv = new StreamWriter(destinationCsvFilePath, false);
-            csv.Write(csvContent);
-            csv.Close();
-            return true;
+            return result;
+        }
+    }
+}
+</file>
+
+<file path="Server/Service/WorkerConverter.cs">
+using System.IO;
+using System.Text;
+using Core;
+using ExcelDataReader;
+namespace Server.Service
+{
+    public class WorkerConverter
+    {
+        public static List<ProjectHour> Convert(Stream stream)
+        {
+            Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
+            IExcelDataReader reader =  ExcelReaderFactory.CreateOpenXmlReader(stream);
+            var ds = reader.AsDataSet(new ExcelDataSetConfiguration()
+            {
+                ConfigureDataTable = (tableReader) => new ExcelDataTableConfiguration()
+                {
+                    UseHeaderRow = false
+                }
+            });
+            List<ProjectHour> result = new();
+            int row_no = 1;
+            while (row_no < ds.Tables[0].Rows.Count)
+            {
+                var row = ds.Tables[0].Rows[row_no];
+                ProjectHour p = new ProjectHour();
+                p.Dato = DateTime.Parse(row[1].ToString());
+                p.Stoptid = DateTime.Parse(row[2].ToString());
+                p.Timer = Decimal.Parse(row[5].ToString());
+                p.Type = row[6].ToString();
+                p.Kostpris = Decimal.Parse(row[8].ToString());
+                // other fields here...
+                result.Add(p);
+                Console.WriteLine($"dato= {p.Dato}, stop tid = {p.Stoptid} Timer = {p.Timer}, Type = {p.Type}  kostpris = {p.Kostpris}");
+                row_no++;
+            }
+            return result;
         }
     }
 }
@@ -335,6 +391,43 @@ public class Project
 }
 </file>
 
+<file path="Core/ProjectHours.cs">
+namespace Core
+{
+    public class ProjectHour
+    {
+        public int HourId { get; set; }
+        public int ProjectId { get; set; }
+        public DateTime? Dato { get; set; }
+        public DateTime? Stoptid { get; set; }
+        public decimal Timer { get; set; }
+        public string? Type { get; set; }
+        public decimal Kostpris { get; set; }
+        public string RawRow { get; set; } = string.Empty;
+        public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+    }
+}
+</file>
+
+<file path="Core/ProjectMaterial.cs">
+namespace Core
+{
+    public class ProjectMaterial
+    {
+        public int MaterialsId { get; set; }
+        public int ProjectId { get; set; }
+        public string? Beskrivelse { get; set; }
+        public decimal Kostpris { get; set; }
+        public decimal Antal { get; set; }
+        public decimal Total { get; set; }
+        public decimal Avance { get; set; }
+        public decimal Dækningsgrad { get; set; }
+        public string RawRow { get; set; } = string.Empty;
+        public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+    }
+}
+</file>
+
 <file path="Server/Controllers/UserCon/UserController.cs">
 using Core;
 using Microsoft.AspNetCore.Mvc;
@@ -379,6 +472,141 @@ namespace ServerApp.Controllers
         public void DeleteByQuery([FromQuery] int id)
         {
             userRepo.Delete(id);
+        }
+    }
+}
+</file>
+
+<file path="Server/Controllers/CreateProjectController.cs">
+using Core;
+using Microsoft.AspNetCore.Mvc;
+using Server.Repositories;
+using Server.Repositories.User;
+namespace Server.Controllers
+{
+    [ApiController]
+    [Route("api/createproject")]
+    public class CreateProjectController : ControllerBase
+    {
+        private ICreateProjectRepo crProj;
+        public CreateProjectController(ICreateProjectRepo crProj)
+        {
+            this.crProj = crProj;
+        }
+        [HttpPost]
+        public IActionResult Add(Project pro) //Fleksibel pakke. Bruges når man for en masse forskellige slags data.
+        //Det er et interface der giver dig lov til at retunere hvad som helst så længe der er et gyldigt http svar
+        {
+            int newProjectId = crProj.Add(pro);
+            return Ok(newProjectId); //Ok er en hjælpe metode der fortæller klienten det lykkedes og giver svaret
+        }
+    }
+}
+</file>
+
+<file path="Server/Controllers/UploadController.cs">
+using Core;
+using Microsoft.AspNetCore.Mvc;
+using Server.Repositories.ExcelRepos;
+using Server.Service;
+namespace Server.Controllers
+{
+    [ApiController]
+    [Route("api/uploadexcel")]
+    public class UploadController : ControllerBase
+    {
+        private readonly IExcelRepo exRepo;
+        public UploadController(IExcelRepo exRepo)
+        {
+            this.exRepo = exRepo;
+        }
+        [HttpPost]
+        public IActionResult Upload(IFormFile? file, int projectId) 
+            //ProjectId parameteren er der for at vi kan modtage id udefra
+        {
+            if (file == null || file.Length == 0) 
+                return BadRequest("No file uploaded");
+            else if (file.FileName.StartsWith("Work"))
+            {
+                    Stream s = new MemoryStream();
+                    file.CopyTo(s);
+                    s.Position = 0; //Går tilbage til starten så vi kan læse dataen. Fordi efter filen er indlæst vil den være i sidste kolonne
+                    List<ProjectHour> res = WorkerConverter.Convert(s);
+                foreach (var row in res)
+                {
+                    row.ProjectId = projectId; //Her for id værdien
+                    exRepo.Add(row);
+                }
+                return Ok("worker uploaded" + projectId);
+                }
+            return Ok();
+        }
+    }
+}
+</file>
+
+<file path="Server/Repositories/ExcelRepos/MaterialExcelRepo.cs">
+using Core;
+using Npgsql;
+using Server.PW1;
+using Server.Repositories.ExcelRepos;
+using Server.Repositories;
+namespace Server.Repositories.User
+{
+    public class MaterialExcelRepo : IMaterialExcelRepo
+    {
+        private const string conString =
+    "Host=ep-spring-unit-a2y1k0pd.eu-central-1.aws.neon.tech;" +
+    "Port=5432;" +
+    "Database=LarsenInstallation;" +
+    "Username=neondb_owner;" +
+    $"Password={PASSWORD.PW1};" +
+    "Ssl Mode=Require;" +
+    "Trust Server Certificate=true;";
+        public MaterialExcelRepo()
+        {
+        }
+        public void Add(ProjectMaterial projmat)
+        {
+            var result = new List<ProjectMaterial>();
+            using (var mConnection = new NpgsqlConnection(conString))
+            {
+                mConnection.Open();
+                var command = mConnection.CreateCommand();
+                command.CommandText = @"INSERT INTO projectmaterials
+                    (projectid, beskrivelse, kostpris, antal, total, avance, dækningsgrad) 
+                    VALUES (@projectid, @beskrivelse, @kostpris, @antal, @total, @avance, @dækningsgrad)";
+                var paramProjId = command.CreateParameter();
+                paramProjId.ParameterName = "projectid";
+                command.Parameters.Add(paramProjId);
+                paramProjId.Value = projmat.ProjectId;
+                Console.WriteLine(command.CommandText);
+                var paramBeskriv = command.CreateParameter();
+                paramBeskriv.ParameterName = "beskrivelse";
+                command.Parameters.Add(paramBeskriv);
+                paramBeskriv.Value = projmat.Beskrivelse;
+                var paramKost = command.CreateParameter();
+                paramKost.ParameterName = "kostpris";
+                command.Parameters.Add(paramKost);
+                paramKost.Value = projmat.Kostpris;
+                var paramAntal = command.CreateParameter();
+                paramAntal.ParameterName = "antal";
+                command.Parameters.Add(paramAntal);
+                paramAntal.Value = projmat.Antal;
+                var paramTotal = command.CreateParameter();
+                paramTotal.ParameterName = "total";
+                command.Parameters.Add(paramTotal);
+                paramTotal.Value = projmat.Total;
+                var PriceAvance = command.CreateParameter();
+                PriceAvance.ParameterName = "avance";
+                command.Parameters.Add(PriceAvance);
+                PriceAvance.Value = projmat.Avance;
+                var paramDaek = command.CreateParameter();
+                paramDaek.ParameterName = "dækningsgrad";
+                command.Parameters.Add(paramDaek);
+                paramDaek.Value = projmat.Dækningsgrad;
+                command.ExecuteNonQuery();
+            }
         }
     }
 }
@@ -489,251 +717,65 @@ namespace Server.Repositories.User
 }
 </file>
 
-<file path="Server/Service/ExcelReader.cs">
-/*using System.Data;
-using System.Text;
-using ExcelDataReader;
-namespace Service;
-public class ExcelReader
+<file path="Server/Repositories/ICreateProjectRepo.cs">
+using Core;
+namespace Server.Repositories
 {
-        string excelFilePath = "data.xlsx";
-        using (var stream = new FileStream(excelFilePath, FileMode.Open, FileAccess.Read, FileShare.ReadWrite))
-        {
-            Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
-            IExcelDataReader reader = null;
-            if (excelFilePath.EndsWith(".xls"))
-            {
-                reader = ExcelReaderFactory.CreateBinaryReader(stream);
-            }
-            else if (excelFilePath.EndsWith(".xlsx"))
-            {
-                reader = ExcelReaderFactory.CreateOpenXmlReader(stream);
-            }
-            if (reader == null)
-                throw new Exception("could not read excel-file");
-            var ds = reader.AsDataSet();
-            int row_no = 1;
-            DataRowCollection rows = ds.Tables[0].Rows;
-            while (row_no < rows.Count)
-            {
-                DataRow aRow = rows[row_no];
-                //dato in idx 0
-                string dato = aRow[0].ToString();
-                // timer in idx 2
-                string timer = aRow[2].ToString();
-                int timerAsInt = int.Parse(timer);
-                Console.WriteLine($"{row_no}: {dato}, {timerAsInt}");
-                row_no++;
-            }
-        }
-}*/
+    public interface ICreateProjectRepo
+    {
+        int Add(Core.Project pro);
+    }
+}
 </file>
 
-<file path="Client/Components/CreateProjectComponent.razor">
-@using Core
-@inject NavigationManager Nav
-@inject HttpClient Http
+<file path="Client/Pages/UploadProjectPage.razor">
+@using Core;
+@inject HttpClient http
+@page "/upload"
+<h3>UploadProjectPage</h3>
 
-<div class="create-page-back">
-    <div class="create-con">
-        <h3>Opret projekt</h3>
+<h2>Time fil</h2>
+<InputFile OnChange="UploadFile"></InputFile>
 
-        <EditForm Model="@_project" OnValidSubmit="OnClickCreate">
-            
-            <DataAnnotationsValidator />
-            <ValidationSummary />
+<h2>Materiale fil</h2>
+<InputFile OnChange="MaterialUploadFile"></InputFile>
 
-            <div class="upload-grid">
-                <div class="upload-box">
-                    <label class="upload-title"><strong>Vælg time fil (.xls, .xlsx)</strong></label>
-                    <div class="upload-area">
-                        <InputFile OnChange="OnTimeFileChange" multiple accept=".xls,.xlsx" />
-                        @if (timeFiles?.Count > 0)
-                        {
-                            <div class="mt-2 small">
-                                Valgte:
-                                <ul>
-                                    @foreach (var f in timeFiles)
-                                    {
-                                        <li>
-                                            <span class="file-name">@f.Name</span>
-                                            <span class="file-size">(@FormatBytes(f.Size))</span>
-                                        </li>
-                                    }
-                                </ul>
-                            </div>
-                        }
-                    </div>
-                </div>
 
-                <div class="upload-box">
-                    <label class="upload-title"><strong>Vælg materiale fil (.xls, .xlsx)</strong></label>
-                    <div class="upload-area">
-                        <InputFile OnChange="OnMaterialFileChange" multiple accept=".xls,.xlsx" />
-                        @if (materialFiles?.Count > 0)
-                        {
-                            <div class="mt-2 small">
-                                Valgte:
-                                <ul>
-                                    @foreach (var f in materialFiles)
-                                    {
-                                        <li>
-                                            <span class="file-name">@f.Name</span>
-                                            <span class="file-size">(@FormatBytes(f.Size))</span>
-                                        </li>
-                                    }
-                                </ul>
-                            </div>
-                        }
-                    </div>
-                </div>
-            </div>
-
-            <div class="form-floating-group">
-                <InputText id="name" class="form-control" @bind-Value="_project.Name"/>
-                <label for="name">Navn</label>
-            </div>
-                
-            <div class="form-grid">
-                <div class="form-floating-group">
-                    <InputNumber id="svend" class="form-control" @bind-Value="_project.SvendTimePris"/>
-                    <label for="svend">Svend sats</label>
-                </div>
-                <div class="form-floating-group">
-                    <InputNumber id="lærling" class="form-control" @bind-Value="_project.LærlingTimePris"/>
-                    <label for="lærling">Lærling sats</label>
-                </div>
-                <div class="form-floating-group">
-                    <InputNumber id="konsulent" class="form-control" @bind-Value="_project.KonsulentTimePris"/>
-                    <label for="konsulent">Konsulent sats</label>
-                </div>
-                <div class="form-floating-group">
-                    <InputNumber id="arbejdsmand" class="form-control" @bind-Value="_project.ArbjedsmandTimePris"/>
-                    <label for="konsulent">Arbejdsmand sats</label>
-                </div>
-            </div>
-                
-            <div class="">
-                <div class="">
-                    <button type="submit" class="opretbtn">Opret</button>
-                </div>
-            </div>
-            
-        </EditForm>
-        
-        
-    </div>
-</div>
-
+@* <button class="btn btn-primary" @onclick="RunUploads">
+	Upload filer
+</button> *@
 
 @code {
-    private Project _project = new() { DateCreated = DateTime.UtcNow };
+	// private async Task RunUploads()
+	// {
+	// 	await UploadFile();
+	// 	await MaterialUploadFile();
+	// }
+	Project _project = new();
 
-    private IReadOnlyList<IBrowserFile> timeFiles = new List<IBrowserFile>();
-    private IReadOnlyList<IBrowserFile> materialFiles = new List<IBrowserFile>();
+	public async Task UploadFile(InputFileChangeEventArgs e)
+	{
+		var file = e.File;
+		var stream = file.OpenReadStream(10000000);
 
-    private bool isUploading = false;
-    private string statusMessage = "";
-    private string statusClass = "alert-info";
+		using var content = new  MultipartFormDataContent();
+		content.Add(new StreamContent(stream), "file", file.Name);
 
-    private const long MaxFileBytes = 50L * 1024 * 1024;
+		var result = await http.PostAsync("http://localhost:5028/api/uploadexcel", content);
 
-    private void OnTimeFileChange(InputFileChangeEventArgs e)
-    {
-        var list = e.GetMultipleFiles().ToList();
 
-        // Størrelsestjek for alle filer
-        if (list.Any(f => f.Size > MaxFileBytes))
-        {
-            statusClass = "alert-danger";
-            statusMessage = $"Mindst én timefil er for stor (maks {FormatBytes(MaxFileBytes)}).";
-            return;
-        }
+	}
 
-        timeFiles = list;
-        statusMessage = "";
-    }
+	public async Task MaterialUploadFile(InputFileChangeEventArgs e)
+	{
+		var file = e.File;
+		var stream = file.OpenReadStream(10000000);
 
-    private void OnMaterialFileChange(InputFileChangeEventArgs e)
-    {
-        var list = e.GetMultipleFiles().ToList();
+		using var content = new MultipartFormDataContent();
+		content.Add(new StreamContent(stream), "file", file.Name);
 
-        if (list.Any(f => f.Size > MaxFileBytes))
-        {
-            statusClass = "alert-danger";
-            statusMessage = $"Mindst én materialefil er for stor (maks {FormatBytes(MaxFileBytes)}).";
-            return;
-        }
-
-        materialFiles = list;
-        statusMessage = "";
-    }
-
-    private static string FormatBytes(long bytes)
-    {
-        if (bytes < 1024) return $"{bytes} B";
-        if (bytes < 1024 * 1024) return $"{bytes / 1024.0:F1} KB";
-        return $"{bytes / (1024.0 * 1024.0):F2} MB";
-    }
-
-    private async Task OnClickCreate()
-    {
-        if (string.IsNullOrWhiteSpace(_project.Name))
-        {
-            statusClass = "alert-danger";
-            statusMessage = "Projektet skal have et navn.";
-            return;
-        }
-
-        if (timeFiles.Count == 0 && materialFiles.Count == 0)
-        {
-            statusClass = "alert-danger";
-            statusMessage = "Du skal vælge mindst én fil.";
-            return;
-        }
-
-        using var content = new MultipartFormDataContent();
-
-        // Project JSON
-        var json = System.Text.Json.JsonSerializer.Serialize(_project);
-        content.Add(new StringContent(json, System.Text.Encoding.UTF8, "application/json"), "project");
-
-        // Send ALLE time filer
-        foreach (var f in timeFiles)
-        {
-            var stream = f.OpenReadStream(MaxFileBytes);
-            var sc = new StreamContent(stream);
-            sc.Headers.ContentType = new System.Net.Http.Headers.MediaTypeHeaderValue(f.ContentType ?? "application/octet-stream");
-
-            content.Add(sc, "timeFile", f.Name); // NAVN UÆNDRET
-        }
-
-        // Send ALLE materialefiler
-        foreach (var f in materialFiles)
-        {
-            var stream = f.OpenReadStream(MaxFileBytes);
-            var sc = new StreamContent(stream);
-            sc.Headers.ContentType = new System.Net.Http.Headers.MediaTypeHeaderValue(f.ContentType ?? "application/octet-stream");
-
-            content.Add(sc, "materialFile", f.Name); // NAVN UÆNDRET
-        }
-
-        // Kald API
-        var resp = await Http.PostAsync("api/project", content);
-
-        if (resp.IsSuccessStatusCode)
-        {
-            statusClass = "alert-success";
-            statusMessage = "Projekt oprettet!";
-            Nav.NavigateTo("projects", true);
-        }
-        else
-        {
-            statusClass = "alert-danger";
-            statusMessage = await resp.Content.ReadAsStringAsync();
-        }
-    }
-    
+		var result = await http.PostAsync("http://localhost:5028/api/materialuploadexcel", content);
+	}
 }
 </file>
 
@@ -774,36 +816,131 @@ namespace Client.Service
 }
 </file>
 
-<file path="Server/Program.cs">
-using Server.Repositories.User;
+<file path="Server/Repositories/ExcelRepos/ExcelRepo.cs">
+using Core;
+using Npgsql;
+using Server.PW1;
+using Server.Repositories.ExcelRepos;
 using Server.Repositories;
-var builder = WebApplication.CreateBuilder(args);
-// Add services to the container.
-builder.Services.AddSingleton<ICreateUserRepoSQL, CreateUserRepoSQL>();
-builder.Services.AddControllers();
-builder.Services.AddCors(options =>
+namespace Server.Repositories.User
 {
-    options.AddPolicy("policy",
-        policy =>
+    public class ExcelRepo : IExcelRepo
+    {
+        private const string conString =
+    "Host=ep-spring-unit-a2y1k0pd.eu-central-1.aws.neon.tech;" +
+    "Port=5432;" +
+    "Database=LarsenInstallation;" +
+    "Username=neondb_owner;" +
+    $"Password={PASSWORD.PW1};" +
+    "Ssl Mode=Require;" +
+    "Trust Server Certificate=true;";
+        public ExcelRepo()
         {
-            policy.AllowAnyOrigin();
-            policy.AllowAnyMethod();
-            policy.AllowAnyHeader();
-        });
-});
-// Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
-builder.Services.AddOpenApi();
-var app = builder.Build();
-// Configure the HTTP request pipeline.
-if (app.Environment.IsDevelopment())
-{
-    app.MapOpenApi();
+        }
+        public void Add(ProjectHour proj)
+        {
+            var result = new List<ProjectHour>();
+            using (var mConnection = new NpgsqlConnection(conString))
+            {
+                mConnection.Open();
+                var command = mConnection.CreateCommand();
+                command.CommandText = @"INSERT INTO projecthours
+                    (projectid, dato, stoptid, timer, type, kostpris) 
+                    VALUES (@projectid, @dato, @stoptid, @timer, @type, @kostpris)";
+                var paramProjId = command.CreateParameter();
+                paramProjId.ParameterName = "projectid";
+                command.Parameters.Add(paramProjId);
+                paramProjId.Value = proj.ProjectId;
+                Console.WriteLine(command.CommandText);
+                var paramDato = command.CreateParameter();
+                paramDato.ParameterName = "dato";
+                command.Parameters.Add(paramDato);
+                paramDato.Value = proj.Dato;
+                var paramStop = command.CreateParameter();
+                paramStop.ParameterName = "stoptid";
+                command.Parameters.Add(paramStop);
+                paramStop.Value = proj.Stoptid;
+                var paramTimer = command.CreateParameter();
+                paramTimer.ParameterName = "timer";
+                command.Parameters.Add(paramTimer);
+                paramTimer.Value = proj.Timer;
+                var paramType = command.CreateParameter();
+                paramType.ParameterName = "type";
+                command.Parameters.Add(paramType);
+                paramType.Value = proj.Type;
+                var paramKost = command.CreateParameter();
+                paramKost.ParameterName = "kostpris";
+                command.Parameters.Add(paramKost);
+                paramKost.Value = proj.Kostpris;
+                command.ExecuteNonQuery();
+            }
+        }
+    }
 }
-app.UseCors("policy");
-//app.UseHttpsRedirection();
-app.UseAuthorization();
-app.MapControllers();
-app.Run();
+</file>
+
+<file path="Server/Repositories/CreateProjectRepo.cs">
+using Core;
+using Npgsql;
+using Server.PW1;
+using Server.Repositories.ExcelRepos;
+namespace Server.Repositories
+{
+    public class CreateProjectRepo : ICreateProjectRepo
+    {
+        private const string conString =
+    "Host=ep-spring-unit-a2y1k0pd.eu-central-1.aws.neon.tech;" +
+    "Port=5432;" +
+    "Database=LarsenInstallation;" +
+    "Username=neondb_owner;" +
+    $"Password={PASSWORD.PW1};" +
+    "Ssl Mode=Require;" +
+    "Trust Server Certificate=true;";
+        public CreateProjectRepo()
+        {
+        }
+        public int Add(Core.Project pro) //Er en int fordi vi retunere et int
+        {
+            var result = new List<Core.Project>();
+            using (var mConnection = new NpgsqlConnection(conString))
+            {
+                mConnection.Open();
+                var command = mConnection.CreateCommand();
+                command.CommandText = @"INSERT INTO projects
+                    (name, datecreated, svend_timepris, lærling_timepris, konsulent_timepris, arbejdsmand_timepris) 
+                    VALUES (@name, @datecreated, @svend_timepris, @lærling_timepris, @konsulent_timepris, @arbejdsmand_timepris)          
+                    RETURNING projectid"; //Retunering query som sender projectid tilbage
+                var paramStop = command.CreateParameter();
+                paramStop.ParameterName = "name";
+                command.Parameters.Add(paramStop);
+                paramStop.Value = pro.Name;
+                var paramTimer = command.CreateParameter();
+                paramTimer.ParameterName = "datecreated";
+                command.Parameters.Add(paramTimer);
+                paramTimer.Value = pro.DateCreated;
+                var paramType = command.CreateParameter();
+                paramType.ParameterName = "svend_timepris";
+                command.Parameters.Add(paramType);
+                paramType.Value = pro.SvendTimePris;
+                var paramKost = command.CreateParameter();
+                paramKost.ParameterName = "lærling_timepris";
+                command.Parameters.Add(paramKost);
+                paramKost.Value = pro.LærlingTimePris;
+                var paramKons = command.CreateParameter();
+                paramKons.ParameterName = "konsulent_timepris";
+                command.Parameters.Add(paramKons);
+                paramKons.Value = pro.KonsulentTimePris;
+                var paramArb = command.CreateParameter();
+                paramArb.ParameterName = "arbejdsmand_timepris";
+                command.Parameters.Add(paramArb);
+                paramArb.Value = pro.ArbjedsmandTimePris;
+                var newProjectId = (int)command.ExecuteScalar(); 
+                return newProjectId; //retunere det nye id
+                command.ExecuteNonQuery();
+            }
+        }
+    }
+}
 </file>
 
 <file path="Client/Pages/LoginPage.razor">
@@ -1065,6 +1202,177 @@ public class Users
         }
     }
 }
+</file>
+
+<file path="Client/Components/CreateProjectComponent.razor">
+@using Core
+@inject NavigationManager Nav
+@inject HttpClient http
+
+<div class="create-page-back">
+    <div class="create-con">
+        <h3>Opret projekt</h3>
+
+        <EditForm Model="@aProject" OnValidSubmit="OnClickCreate">
+            
+            <DataAnnotationsValidator />
+            <ValidationSummary />
+
+            <div class="upload-grid">
+                <div class="upload-box">
+                    <label class="upload-title"><strong>Vælg time fil (.xls, .xlsx)</strong></label>
+                    <div class="upload-area">
+                        <InputFile OnChange="UploadFile" accept=".xls,.xlsx" />
+                    </div>
+                </div>
+
+                <div class="upload-box">
+                    <label class="upload-title"><strong>Vælg materiale fil (.xls, .xlsx)</strong></label>
+                    <div class="upload-area">
+                        <InputFile OnChange="MaterialUploadFile" accept=".xls,.xlsx" />
+                    </div>
+                </div>
+            </div>
+
+            <div class="form-floating-group">
+                <InputText id="name" class="form-control" @bind-Value="aProject.Name" />
+                <label for="name">Navn</label>
+            </div>
+                
+            <div class="form-grid">
+                <div class="form-floating-group">
+                    <InputNumber id="svend" class="form-control" @bind-Value="aProject.SvendTimePris" />
+                    <label for="svend">Svend sats</label>
+                </div>
+                <div class="form-floating-group">
+                    <InputNumber id="lærling" class="form-control" @bind-Value="aProject.LærlingTimePris" />
+                    <label for="lærling">Lærling sats</label>
+                </div>
+                <div class="form-floating-group">
+                    <InputNumber id="konsulent" class="form-control" @bind-Value="aProject.KonsulentTimePris" />
+                    <label for="konsulent">Konsulent sats</label>
+                </div>
+                <div class="form-floating-group">
+                    <InputNumber id="arbejdsmand" class="form-control" @bind-Value="aProject.ArbjedsmandTimePris" />
+                    <label for="konsulent">Arbejdsmand sats</label>
+                </div>
+            </div>
+                
+            <div class="">
+                <div class="">
+                    <button type="submit" class="opretbtn">Opret</button>
+                </div>
+            </div>
+            
+        </EditForm>
+        
+        
+    </div>
+</div>
+
+
+@code {
+    Project aProject = new();
+
+    IBrowserFile? timeFile;
+    IBrowserFile? materialeFile;
+
+    public async Task UploadFile(InputFileChangeEventArgs e)
+    {
+        var file = e.File;
+        var stream = file.OpenReadStream(10000000);
+
+        using var content = new MultipartFormDataContent();
+        content.Add(new StreamContent(stream), "file", file.Name);
+
+        var result = await http.PostAsync("http://localhost:5028/api/uploadexcel", content);
+
+
+    }
+
+    public async Task MaterialUploadFile(InputFileChangeEventArgs e)
+    {
+        var file = e.File;
+        var stream = file.OpenReadStream(10000000);
+
+        using var content = new MultipartFormDataContent();
+        content.Add(new StreamContent(stream), "file", file.Name);
+
+        var result = await http.PostAsync("http://localhost:5028/api/materialuploadexcel", content);
+    }
+
+
+    private async Task OnClickCreate()
+    {
+        var response = await http.PostAsJsonAsync("http://localhost:5028/api/createproject", aProject);
+
+        if (response.IsSuccessStatusCode)
+        {
+            var newProjectId = await response.Content.ReadFromJsonAsync<int>();
+
+            if (timeFile != null)
+            {
+                await UploadFileToApi(timeFile, newProjectId, "api/uploadexcel");
+            }
+
+            if (materialeFile != null)
+            {
+                await UploadFileToApi(materialeFile, newProjectId, "api/materialuploadexcel");
+            }
+
+        }
+
+        aProject = new();
+        Nav.NavigateTo("/");
+    }
+
+    private async Task UploadFileToApi(IBrowserFile file, int projectId, string endpoint)
+    {
+        var stream = file.OpenReadStream(10000000);
+        using var content = new MultipartFormDataContent();
+        content.Add(new StreamContent(stream), "file", file.Name);
+
+        await http.PostAsync($"http://localhost:5028/{endpoint}?projectId={projectId}", content);
+    }
+}
+</file>
+
+<file path="Server/Program.cs">
+using Server.Repositories;
+using Server.Repositories.ExcelRepos;
+using Server.Repositories.User;
+using Server.Service;
+var builder = WebApplication.CreateBuilder(args);
+// Add services to the container.
+System.Text.Encoding.RegisterProvider(System.Text.CodePagesEncodingProvider.Instance);
+builder.Services.AddSingleton<ICreateUserRepoSQL, CreateUserRepoSQL>();
+builder.Services.AddSingleton<IExcelRepo, ExcelRepo>();
+builder.Services.AddSingleton<IMaterialExcelRepo, MaterialExcelRepo>();
+builder.Services.AddSingleton<ICreateProjectRepo, CreateProjectRepo>();
+builder.Services.AddControllers();
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("policy",
+        policy =>
+        {
+            policy.AllowAnyOrigin();
+            policy.AllowAnyMethod();
+            policy.AllowAnyHeader();
+        });
+});
+// Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
+builder.Services.AddOpenApi();
+var app = builder.Build();
+// Configure the HTTP request pipeline.
+if (app.Environment.IsDevelopment())
+{
+    app.MapOpenApi();
+}
+app.UseCors("policy");
+//app.UseHttpsRedirection();
+app.UseAuthorization();
+app.MapControllers();
+app.Run();
 </file>
 
 <file path="Client/Layout/NavMenu.razor">
