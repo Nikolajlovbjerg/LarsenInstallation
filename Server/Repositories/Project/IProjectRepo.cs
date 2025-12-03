@@ -1,4 +1,7 @@
-﻿using Core;
+﻿
+using Core;
+using System.Collections.Generic;
+/*
 namespace Server.Repositories
 {
     public interface IProjectRepo
@@ -7,5 +10,4 @@ namespace Server.Repositories
         void Add(Project p);
         void DeleteById(int id);
     }
-
-}
+}*/
