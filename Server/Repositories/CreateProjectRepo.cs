@@ -16,7 +16,7 @@ namespace Server.Repositories
             "Ssl Mode=Require;" +
             "Trust Server Certificate=true;";
 
-        
+
         public int Add(Project pro) //Er en int fordi vi retunere et int
         {
             var result = new List<Project>();
@@ -64,15 +64,103 @@ namespace Server.Repositories
                 command.Parameters.Add(paramArb);
                 paramArb.Value = pro.ArbjedsmandTimePris;
 
-                var newProjectId = (int)command.ExecuteScalar(); 
+                var newProjectId = (int)command.ExecuteScalar();
                 return newProjectId; //retunere det nye id
 
                 command.ExecuteNonQuery();
             }
         }
-        
-        
-        
+
+
+        public Calculation? GetProjectDetails(int projectId)
+        {
+            using var conn = new NpgsqlConnection(conString);
+            conn.Open();
+            
+            var dto = new Calculation();
+
+            using (var command = new NpgsqlCommand("SELECT * FROM projects WHERE projectid = @id", conn))
+            {
+                command.Parameters.AddWithValue("id", projectId);
+                using var reader = command.ExecuteReader();
+                if (reader.Read())
+                {
+                    dto.project = new Project
+                    {
+                        ProjectId = reader.GetInt32(0),
+                        Name = reader.GetString(1),
+                        DateCreated = reader.GetDateTime(2),
+                        SvendTimePris = reader.GetInt32(3),
+                        LærlingTimePris = reader.GetInt32(4),
+                        KonsulentTimePris = reader.GetInt32(5),
+                        ArbjedsmandTimePris = reader.GetInt32(6)
+                    };
+                }
+                else return null;
+            }
+
+            using (var command = new NpgsqlCommand("SELECT * FROM projectmaterials WHERE projectid = @id", conn))
+            {
+                command.Parameters.AddWithValue("id", projectId);
+                using var reader = command.ExecuteReader();
+                while (reader.Read())
+                {
+                    var m = new ProjectMaterial
+                    {
+                        ProjectId = reader.GetInt32(0),
+                        MaterialsId = reader.GetInt32(1),
+                        Beskrivelse = reader.GetString(2),
+                        Kostpris = reader.GetDecimal(3),
+                        Antal = reader.GetDecimal(4),
+                        Total = reader.GetDecimal(5),
+                        Avance = reader.GetDecimal(6),
+                        Dækningsgrad = reader.GetDecimal(7),
+
+                    };
+                    dto.Materials.Add(m);
+
+                    dto.TotalKostPrisMaterialer += (m.Kostpris * m.Antal);
+                    dto.TotalPrisMaterialer += m.Total;
+                    
+                }
+            }
+
+
+            using (var command = new NpgsqlCommand("SELECT * FROM projecthours WHERE projectid = @id", conn))
+            {
+                command.Parameters.AddWithValue("id", projectId);
+                using var reader = command.ExecuteReader();
+                while (reader.Read())
+                {
+                    var h = new ProjectHour
+                    {
+                        ProjectId = reader.GetInt32(0),
+                        HourId = reader.GetInt32(1),
+                        Dato = reader.GetDateTime(2),
+                        Timer = reader.GetDecimal(3),
+                        Type = reader.GetString(4),
+                        Kostpris = reader.GetDecimal(5),
+                    };
+                    dto.Hours.Add(h);
+                    
+                    dto.TotalKostPrisTimer += h.Kostpris;
+
+                    decimal timeSats = dto.project.SvendTimePris;
+                    var type = h.Type.ToLower();
+
+                    if (type.Contains("svend")) timeSats = dto.project.SvendTimePris;
+                    else if (type.Contains("lærling")) timeSats = dto.project.LærlingTimePris;
+                    else if (type.Contains("konsulent")) timeSats = dto.project.KonsulentTimePris;
+                    else if (type.Contains("arbejdsmand")) timeSats = dto.project.ArbjedsmandTimePris;
+                    
+                    dto.TotalPrisTimer += (h.Timer * timeSats);
+
+                }
+            }
+            
+            return dto;
+        }
+
     }
 }
 

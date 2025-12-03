@@ -25,6 +25,23 @@ namespace Server.Controllers
             return Ok(newProjectId); //Ok er en hjælpe metode der fortæller klienten det lykkedes og giver svaret
         }
 
+        [HttpGet("{id}")]
+        public ActionResult<Calculation> GetProjectDetails(int id)
+        {
+            try
+            {
+                var result = crProj.GetProjectDetails(id);
+                if (result == null) return NotFound("Project not found");
+                {
+                    return Ok(result);
+                }
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500,  "Error: " + ex.Message);
+            }
 
+        }
+        
     }
 }
