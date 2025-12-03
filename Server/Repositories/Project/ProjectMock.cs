@@ -46,8 +46,8 @@ public class ProjectRepositoryMock : IProjectRepo
         });
         mProjects.Add(new Project
         {
-            ProjectId = 1,
-            Name = " i villa",
+            ProjectId = 2,
+            Name = " JumboLombo villa",
             DateCreated = DateTime.Now.AddDays(-7),
             SvendTimePris = 500,
             LærlingTimePris = 200,
@@ -57,7 +57,7 @@ public class ProjectRepositoryMock : IProjectRepo
             {
                 new House
                 {
-                    Name = "Hus 1",
+                    Name = "Hus 2",
                     CostCustomer = 20000,
                     CostCompany = 14000,
                     Hours = 80,
