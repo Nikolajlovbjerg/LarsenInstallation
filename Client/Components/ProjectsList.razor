@@ -12,7 +12,7 @@
                         
                         <div class="content">
                             <h5 class="card-title mb-1">Projekt @p.ProjectId - @p.Name</h5>
-                            <p class="card-text text-muted mb-2"><small>Dato Oprettet: @p.DateCreated.ToShortDateString()</small></p>
+                            <p class="card-text text-muted mb-2"><small>Dato Oprettet: @p.DateCreated.ToString("dd/MM/yyyy")</small></p>
                         </div>
 
                         <button class="btn btn-outline-primary flex-shrink-0" @onclick="@(() => OnSeeMore?.Invoke(p.ProjectId))">
