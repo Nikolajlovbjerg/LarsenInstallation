@@ -6,20 +6,9 @@
 
 <h3>Projekter</h3>
 
-<ProjectsList Projects="@projectList" OnSeeMore="@NavigateToDetails"></ProjectsList>
+<ProjectsList></ProjectsList>
 
 @code {
-    private List<Project> projectList = new();
-
-    protected override async Task OnInitializedAsync()
-    {
-        // Hent projekter via API
-        projectList = await Http.GetFromJsonAsync<List<Project>>("api/project");
-    }
-
-    private void NavigateToDetails(int projectId)
-    {
-        Navigation.NavigateTo($"/projects/{projectId}");
-    }
+   
 }
     
