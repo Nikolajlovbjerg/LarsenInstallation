@@ -1,47 +1,79 @@
 ﻿@using Core
+@inject HttpClient http
 @inject NavigationManager navMan
-@inject  HttpClient http
 
-<div class="row"> 
-    @if (projectlist != null)
+<div class="row">
+    @if (projectlist != null && projectlist.Count > 0)
     {
-        @foreach (var p in projectlist)
+        @foreach (var project in projectlist)
         {
-            <div class="col-12 mb-3"> 
+            <div class="col-12 mb-3">
                 <div class="card shadow-sm">
-                    
-                    <div class="card-body d-flex justify-content-between align-items-center">
-                        
-                        <div class="content">
-                            <h5 class="card-title mb-1">Projekt @p.ProjectId - @p.Name</h5>
-                            <p class="card-text text-muted mb-2"><small>Dato Oprettet: @p.DateCreated.ToString("dd/MM/yyyy")</small></p>
-                        </div>
-                        @*
-                        <button class="btn btn-outline-primary flex-shrink-0" @onclick="OnSeeMore()">
+                    <div class="card-body">
+                        <h5>@project.ProjectId - @project.Name</h5>
+                        <p>Oprettet: @project.DateCreated.ToString("dd/MM/yyyy")</p>
+
+                        @if (project.Calculations != null && project.Calculations.Count > 0)
+                        {
+                            <ul>
+                                @foreach (var calc in project.Calculations)
+                                {
+                                    <li>@calc.Type: @calc.TotalHours timer</li>
+                                }
+                            </ul>
+                        }
+                        else
+                        {
+                            <p>Ingen timer registreret for dette projekt.</p>
+                        }
+
+                        <button class="btn btn-outline-primary" @onclick="NavigateToProjectDetails">
                             Se mere
                         </button>
-                        *@
                     </div>
                 </div>
             </div>
         }
     }
+    else
+    {
+        <p>Indlæser projekter...</p>
+    }
 </div>
 
 @code {
-
-    private List<Project>? projectlist;
+    private List<Project> projectlist;
+    private List<Calculation> calculations;
 
     protected override async Task OnInitializedAsync()
     {
-            projectlist = await http.GetFromJsonAsync<List<Project>>("http://localhost:5028/api/projectlist");
-        
+        // Hent projekter fra API
+        projectlist = await http.GetFromJsonAsync<List<Project>>("http://localhost:5028/api/projectlist");
+
+        // Hent beregninger fra API
+        calculations = await http.GetFromJsonAsync<List<Calculation>>("http://localhost:5028/api/projecthours");
+
+        // Gruppér beregninger pr. projekt uden arrow-funktion og method chaining
+        if (projectlist != null && calculations != null)
+        {
+            foreach (var project in projectlist)
+            {
+                project.Calculations = new List<Calculation>();
+
+                foreach (var calc in calculations)
+                {
+                    if (calc.ProjectId == project.ProjectId)
+                    {
+                        project.Calculations.Add(calc);
+                    }
+                }
+            }
+        }
     }
 
-    public void NavigateToDetails(int id)
+    private void NavigateToProjectDetails()
     {
-        // Bruger NavigationManager til at navigere til detaljesiden
-        navMan.NavigateTo($"/projects/{id}"); 
+        // Her kan du implementere navigation til projektdetaljeside
+        // fx navMan.NavigateTo("/projects/" + projectId);
     }
-
 }

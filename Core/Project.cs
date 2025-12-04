@@ -17,4 +17,7 @@ public class Project
     public int KonsulentTimePris { get; set; }
     
     public int ArbejdsmandTimePris { get; set; }
+
+    public List<Calculation> Calculations { get; set; } = new List<Calculation>();
+
 }

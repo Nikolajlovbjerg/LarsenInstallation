@@ -2,6 +2,8 @@ namespace Core
 {
     public class Calculation
     {
+        public int CalcId { get; set; }
+        public int ProjectId { get; set; }
         // Stamdata
         public Project Project { get; set; }
 
@@ -22,5 +24,8 @@ namespace Core
         public decimal SamletTotalPris => TotalPrisMaterialer + TotalPrisTimer;
         public decimal Dækningsgrad => SamletTotalPris > 0 ? (Dækningsbidrag/SamletTotalPris) * 100 : 0;
         public decimal Dækningsbidrag => SamletTotalPris - SamletKostPris;
+        
+        public string Type { get; set; }
+        public decimal TotalHours { get; set; }
     }
 }
