@@ -37,61 +37,32 @@ else
         </section>
 
         <hr class="divider"/>
-        @*
-        @foreach (var house in Project.Houses)
-        {
-            <section class="house-section">
-                <h3>Hus @house.Name</h3>
+
+        <section class="details-section">
+            <h4>Detaljer</h4>
+            
+            <div class="info-grid">
                 
-                <div class="info-grid compact">
-                    <div class="info-card">
-                        <p class="label">Pris kunde:</p>
-                        <p class="value">@(house.CostCustomer.ToString("C", new CultureInfo("da-DK")))</p>
-                    </div>
-                    <div class="info-card">
-                        <p class="label">Omkostninger:</p>
-                        <p class="value">@(house.CostCompany.ToString("C", new CultureInfo("da-DK")))</p>
-                    </div>
-                    <div class="info-card success">
-                        <p class="label">Overskud:</p>
-                        <p class="value">@((house.CostCustomer - house.CostCompany).ToString("C", new CultureInfo("da-DK")))</p>
-                    </div>
-                    <div class="info-card info">
-                        <p class="label">Mandetimer brugt:</p>
-                        <p class="value">@house.Hours timer</p>
-                    </div>
+                <div class="info-card info">
+                    <p class="label">Mandetimer:</p>
+                    <p class="value">@TotalHours kr.</p>
                 </div>
 
-                <div class="details-list-group">
-                    <div>
-                        <h4>Installationer</h4>
-                        <ul class="clean-list"> 
-                            @foreach (var inst in house.InstallationCosts)
-                            {
-                                <li>@inst.Key: <span>@inst.Value.ToString("C", new CultureInfo("da-DK"))</span></li>
-                            }
-                        </ul>
-                    </div>
-                    <div>
-                        <h4>Materialer</h4>
-                        <ul class="clean-list">
-                            @foreach (var mat in house.MaterialsUsed)
-                            {
-                                <li>@mat.Key: <span>@mat.Value stk</span></li>
-                            }
-                        </ul>
-                    </div>
+                <div class="info-card info">
+                    <p class="label">Materialer:</p>
+                    <p class="value">@TotalMaterials kr.</p>
                 </div>
-            </section>
-        }
 
+            </div>
+        </section>
         
     </div>
 }
-*@
-    </div>
-    
-        @code {
+
+@code {
     [Parameter] public Project? Project { get; set; }
-        }
-        }
+
+    //Skal hentes via ProjectRepo.GetTotalManHours(Project.ProjectId) det er bare temporary
+    private int TotalHours { get; set; } = 54321; // Dummy værdi 
+    private int TotalMaterials { get; set; } = 87653; // Dummy værdi
+}

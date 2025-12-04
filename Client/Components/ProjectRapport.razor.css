@@ -25,6 +25,11 @@
     color: #2964bc; /* Accentfarve */
 }
 
+.project-header h4 {
+    font-size: 2em;
+    color: #2964bc; /* Accentfarve */
+}
+
 .house-section h3, .overview-section h3, .time-usage-section h3, .details-list-group h4 {
     color: #2964bc;
     font-weight: 600;
@@ -106,3 +111,4 @@
     color: #2964bc;
     margin-left: 10px;
 }
+
