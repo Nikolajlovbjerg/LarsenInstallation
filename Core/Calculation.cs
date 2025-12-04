@@ -11,5 +11,7 @@ namespace Core
         public decimal TotalEarnings { get; set; }
 
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+        public string Type { get; set; }
+        public decimal TotalHours { get; set; }
     }
 }
