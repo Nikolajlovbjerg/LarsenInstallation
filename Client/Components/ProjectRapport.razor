@@ -1,6 +1,6 @@
 ﻿@using Core
 @using System.Globalization
-@*
+
 @if (Project == null)
 {
     <p class="error-message">Projektet blev ikke fundet!</p>
@@ -13,22 +13,22 @@ else
             <p class="created-date">Dato Oprettet: @Project.DateCreated.ToString("dd/MM/yyyy")</p>
         </header>
 
-        
+
         <section class="overview-section">
             <h3>Omkostninger</h3>
-            
+
             <div class="info-grid">
-                
+
                 <div class="info-card primary">
                     <p class="label">Total pris for kunden:</p>
                     <p class="value">@(Project.TotalCostCustomer.ToString("C", new CultureInfo("da-DK")))</p>
                 </div>
-                
+
                 <div class="info-card secondary">
                     <p class="label">Virksomhedens omkostninger:</p>
                     <p class="value">@(Project.TotalCostCompany.ToString("C", new CultureInfo("da-DK")))</p>
                 </div>
-                
+
                 <div class="info-card success">
                     <p class="label">Overskud:</p>
                     <p class="value">@((Project.TotalCostCustomer - Project.TotalCostCompany).ToString("C", new CultureInfo("da-DK")))</p>
@@ -36,8 +36,8 @@ else
             </div>
         </section>
 
-        <hr class="divider" />
-
+        <hr class="divider"/>
+        @*
         @foreach (var house in Project.Houses)
         {
             <section class="house-section">
@@ -85,23 +85,13 @@ else
             </section>
         }
 
-        <hr class="divider" />
-
-        <section class="time-usage-section">
-            <h3>Tidsforbrug for projekt</h3>
-            <div class="time-entries-list">
-                <h4>Detaljeret Tidslog</h4>
-                <ul class="clean-list time-log-list">
-                    @foreach (var entry in Project.TimeEntries)
-                    {
-                        <li>@entry.Date.ToShortDateString(): <span>@entry.Hours timer</span></li>
-                    }
-                </ul>
-            </div>
-        </section>
+        
     </div>
 }
 *@
-@code {
-    //[Parameter] public Project? Project { get; set; }
-}
+    </div>
+    
+        @code {
+    [Parameter] public Project? Project { get; set; }
+        }
+        }

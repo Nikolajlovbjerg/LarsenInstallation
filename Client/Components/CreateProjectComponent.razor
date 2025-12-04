@@ -58,6 +58,8 @@
                 </div>
             </div>
             
+          
+
         </EditForm>
     </div>
 </div>
@@ -130,4 +132,6 @@
         // Sender filen til det specifikke endpoint (API URL) med projectId som query parameter
         await http.PostAsync($"http://localhost:5028/{endpoint}?projectId={projectId}", content);
     }
+    
+
 }

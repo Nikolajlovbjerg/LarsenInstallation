@@ -15,5 +15,6 @@ public class Project
     public int KonsulentTimePris { get; set; }
     
     public int ArbejdsmandTimePris { get; set; }
-    
+    public int TotalCostCompany { get; set; }
+    public int TotalCostCustomer { get; set; }
 }

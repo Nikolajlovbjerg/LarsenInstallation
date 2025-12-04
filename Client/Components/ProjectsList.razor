@@ -7,6 +7,7 @@
     {
         @foreach (var p in projectlist)
         {
+            var currentProjectId = p.ProjectId;
             <div class="col-12 mb-3"> 
                 <div class="card shadow-sm">
                     
@@ -16,11 +17,11 @@
                             <h5 class="card-title mb-1">Projekt @p.ProjectId - @p.Name</h5>
                             <p class="card-text text-muted mb-2"><small>Dato Oprettet: @p.DateCreated.ToString("dd/MM/yyyy")</small></p>
                         </div>
-                        @*
-                        <button class="btn btn-outline-primary flex-shrink-0" @onclick="OnSeeMore()">
+                        
+                        <button class="btn btn-outline-primary flex-shrink-0" 
+                                @onclick="() => NavigateToDetails(currentProjectId)">
                             Se mere
                         </button>
-                        *@
                     </div>
                 </div>
             </div>
@@ -29,8 +30,12 @@
 </div>
 
 @code {
-
+    
+    [Parameter] public EventCallback OnSeeRequests { get; set; }
+    
     private List<Project>? projectlist;
+    private string ButtonText => "…";
+
 
     protected override async Task OnInitializedAsync()
     {
@@ -43,5 +48,4 @@
         // Bruger NavigationManager til at navigere til detaljesiden
         navMan.NavigateTo($"/projects/{id}"); 
     }
-
 }
