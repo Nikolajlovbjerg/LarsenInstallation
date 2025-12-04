@@ -13,5 +13,7 @@ namespace Server.Repositories
         Calculation? GetProjectDetails(int projectId);
         
         IEnumerable<Project> GetAllProjects();
+        
+        void Update(Project pro);
     }
 }

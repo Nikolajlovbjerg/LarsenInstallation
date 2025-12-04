@@ -11,6 +11,82 @@
     min-height: 350px;
 }
 
+/* Opdateret container til prikkerne */
+.price-badge {
+    position: absolute;
+    top: 12px;
+    right: 12px; /* Flyttet til højre som du ønskede */
+    z-index: 100; /* Sikrer at menuen ligger ovenpå alt andet */
+}
+
+/* Knappen selve prikkerne ligger i */
+.dots-btn {
+    background: rgba(255, 255, 255, 0.9);
+    border: none;
+    border-radius: 50%;
+    width: 32px;
+    height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    color: #333;
+    transition: 0.2s;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+}
+
+.dots-btn:hover {
+    background: #fff;
+    transform: scale(1.05);
+}
+
+/* Selve Dropdown boksen */
+.dropdown-menu {
+    position: absolute;
+    top: 100%; /* Lige under knappen */
+    right: 0;  /* Flugter med højre kant */
+    margin-top: 8px;
+    background: white;
+    border-radius: 8px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+    width: 150px;
+    padding: 5px 0;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    animation: fadeIn 0.2s ease-out;
+}
+
+/* Punkter i menuen */
+.dropdown-item {
+    background: none;
+    border: none;
+    text-align: left;
+    padding: 10px 16px;
+    font-size: 14px;
+    cursor: pointer;
+    width: 100%;
+    color: #333;
+    transition: background 0.2s;
+}
+
+.dropdown-item:hover {
+    background: #f5f5f5;
+}
+
+/* Specifik styling til slet-knappen hvis den skal være rød */
+.dropdown-item.danger {
+    color: #d32f2f;
+}
+
+.dropdown-item.danger:hover {
+    background: #fff0f0;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(-5px); }
+    to { opacity: 1; transform: translateY(0); }
+}
 .ad-media {
     position:relative;
     height: 220px;

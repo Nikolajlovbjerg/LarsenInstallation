@@ -50,7 +50,7 @@ namespace Server.Controllers
                 return BadRequest("No file uploaded");
             
             // Tjekker om filnavnet starter med "Work" (som i den gamle controller)
-            if (file.FileName.StartsWith("Work"))
+            if (file.FileName.StartsWith("case"))
             {
                 using Stream s = new MemoryStream();
                 file.CopyTo(s);
@@ -74,7 +74,7 @@ namespace Server.Controllers
                 return BadRequest("No file uploaded");
             
             // Tjekker om filnavnet starter med "Mater" (som i den gamle controller)
-            if (file.FileName.StartsWith("Mater"))
+            if (file.FileName.StartsWith("ordre"))
             {
                 using Stream s = new MemoryStream();
                 file.CopyTo(s);
@@ -89,6 +89,27 @@ namespace Server.Controllers
                 return Ok("Materials uploaded for project " + projectId);
             }
             return BadRequest("Invalid file name or format");
+        }
+        
+        [HttpPut("{id}")]
+        public IActionResult Update(int id, [FromBody] Project pro)
+        {
+            // Tjekker om ID i URL'en matcher ID i objektet
+            if (id != pro.ProjectId)
+            {
+                return BadRequest("ID mismatch");
+            }
+
+            try 
+            {
+                // Vi kalder Update metoden i dit repository (se trin 2)
+                crProj.Update(pro);
+                return Ok();
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, "Server fejl: " + ex.Message);
+            }
         }
         
     }

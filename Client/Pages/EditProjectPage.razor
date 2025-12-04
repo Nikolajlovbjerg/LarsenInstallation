@@ -1,0 +1,115 @@
+@using Core;
+@inject HttpClient http
+@inject NavigationManager Nav
+@page "/project/edit/{ProjectId:int}"
+
+<div class="create-page-back">
+<div class="create-con">
+<h3>Redigere projekt</h3>
+
+@if (_project == null)
+{
+    <p><em>Indlæser projektdata...</em></p>
+}
+else
+{
+        <EditForm Model="@_project" OnValidSubmit="HandleSubmit">
+                <DataAnnotationsValidator/>
+                <ValidationSummary/>
+
+                <div class="form-floating-group">
+                    <InputText id="name" class="form-control" @bind-Value="_project.Name"/>
+                    <label for="name">Navn</label>
+                </div>
+                <div class="form-floating-group">
+                    <InputText id="billede" class="form-control" @bind-Value="_project.ImageUrl"/>
+                    <label for="billede">Billede link</label>
+                </div>
+
+                <div class="form-grid">
+                    <div class="form-floating-group">
+                        <InputNumber id="svend" class="form-control" @bind-Value="_project.SvendTimePris"/>
+                        <label for="svend">Svend sats</label>
+                    </div>
+                    <div class="form-floating-group">
+                        <InputNumber id="lærling" class="form-control" @bind-Value="_project.LærlingTimePris"/>
+                        <label for="lærling">Lærling sats</label>
+                    </div>
+                    <div class="form-floating-group">
+                        <InputNumber id="konsulent" class="form-control" @bind-Value="_project.KonsulentTimePris"/>
+                        <label for="konsulent">Konsulent sats</label>
+                    </div>
+                    <div class="form-floating-group">
+                        <InputNumber id="arbejdsmand" class="form-control" @bind-Value="_project.ArbejdsmandTimePris"/>
+                        <label for="konsulent">Arbejdsmand sats</label>
+                    </div>
+                </div>
+
+                <div class="">
+                    <div class="">
+                        <button type="submit" class="opretbtn">Gem ændringer</button>
+                        <button type="button" class="cancelbtn" @onclick="Cancel">Annuller</button>
+                    </div>
+                </div>
+
+            </EditForm>
+}
+</div>
+</div>
+
+@code {
+    [Parameter] public int ProjectId { get; set; }
+
+    private Project?  _project;
+    
+    private string? errorText;
+
+    private async Task HandleSubmit()
+    {
+        if (_project == null) return;
+
+        _project.ProjectId = ProjectId; // sikkerhed: sørg for id matcher
+
+        try
+        {
+            var res = await http.PutAsJsonAsync($"http://localhost:5028/api/createproject/{ProjectId}", _project);
+
+            if (res.IsSuccessStatusCode)
+            {
+                Nav.NavigateTo("/");
+                return;
+            }
+
+            // Læs fejlbody — typisk indeholder den undtagelsesmeddelelse
+            var body = await res.Content.ReadAsStringAsync();
+            errorText = $"Fejl ved opdatering: {(int)res.StatusCode} {res.ReasonPhrase}. Server siger: {body}";
+            Console.WriteLine(errorText);
+        }
+        catch (HttpRequestException hrEx)
+        {
+            errorText = "Netværksfejl: " + hrEx.Message;
+            Console.WriteLine(errorText);
+        }
+        catch (Exception ex)
+        {
+            errorText = "Uventet fejl: " + ex.Message;
+            Console.WriteLine(errorText);
+        }
+    }
+
+    
+    protected override async Task OnInitializedAsync()
+    {
+        var result = await http.GetFromJsonAsync<Calculation>($"http://localhost:5028/api/createproject/{ProjectId}");
+        
+        if (result != null)
+        {
+            _project = result.Project;
+        }
+    }
+    
+    private void Cancel()
+    {
+        Nav.NavigateTo("/");
+    }
+}

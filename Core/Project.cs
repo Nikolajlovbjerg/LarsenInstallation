@@ -17,5 +17,4 @@ public class Project
     public int KonsulentTimePris { get; set; }
     
     public int ArbejdsmandTimePris { get; set; }
-    
 }

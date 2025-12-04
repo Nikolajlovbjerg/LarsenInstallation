@@ -210,7 +210,7 @@ namespace Server.Repositories
                             SvendTimePris = reader["svend_timepris"] == DBNull.Value ? 0 : Convert.ToInt32(reader["svend_timepris"]),
                             LærlingTimePris = reader["lærling_timepris"] == DBNull.Value ? 0 : Convert.ToInt32(reader["lærling_timepris"]),
                             KonsulentTimePris = reader["konsulent_timepris"] == DBNull.Value ? 0 : Convert.ToInt32(reader["konsulent_timepris"]),
-                            ArbjedsmandTimePris = reader["arbejdsmand_timepris"] == DBNull.Value ? 0 : Convert.ToInt32(reader["arbejdsmand_timepris"])
+                            ArbejdsmandTimePris = reader["arbejdsmand_timepris"] == DBNull.Value ? 0 : Convert.ToInt32(reader["arbejdsmand_timepris"])
                         };
                 
                         projects.Add(p);
@@ -244,7 +244,7 @@ namespace Server.Repositories
                         SvendTimePris = Convert.ToInt32(reader["svend_timepris"]),
                         LærlingTimePris = Convert.ToInt32(reader["lærling_timepris"]),
                         KonsulentTimePris = Convert.ToInt32(reader["konsulent_timepris"]),
-                        ArbjedsmandTimePris = Convert.ToInt32(reader["arbejdsmand_timepris"])
+                        ArbejdsmandTimePris = Convert.ToInt32(reader["arbejdsmand_timepris"])
                     };
                 }
                 else return null;
@@ -309,7 +309,7 @@ namespace Server.Repositories
                 decimal grundSats = 0;
                 if (normalType.Contains("lærling"))       grundSats = dto.Project.LærlingTimePris;
                 else if (normalType.Contains("konsulent")) grundSats = dto.Project.KonsulentTimePris;
-                else if (normalType.Contains("arbejdsmand")) grundSats = dto.Project.ArbjedsmandTimePris;
+                else if (normalType.Contains("arbejdsmand")) grundSats = dto.Project.ArbejdsmandTimePris;
                 else                                       grundSats = dto.Project.SvendTimePris;
 
                 // C. Gennemgå timerne og læg overtidstillæg på
@@ -335,6 +335,36 @@ namespace Server.Repositories
             return dto;
         }
 
+        public void Update(Project p)
+        {
+            using (var mConnection = new NpgsqlConnection(conString))
+            {
+                mConnection.Open();
+                var command = mConnection.CreateCommand();
+
+                // Her opdaterer vi navn, satser og billede hvor ID'et matcher
+                command.CommandText = @"UPDATE projects SET 
+                name = @name, 
+                billedeurl = @billedeurl,
+                svend_timepris = @svend, 
+                lærling_timepris = @lærling, 
+                konsulent_timepris = @konsulent, 
+                arbejdsmand_timepris = @arbejdsmand
+                WHERE projectid = @projectid";
+
+                // Tilføj parametre
+                command.Parameters.AddWithValue("projectid", p.ProjectId);
+                command.Parameters.AddWithValue("name", p.Name ?? ""); // Sikrer at vi ikke sender null
+                command.Parameters.AddWithValue("billedeurl", p.ImageUrl ?? "");
+                command.Parameters.AddWithValue("svend", p.SvendTimePris);
+                command.Parameters.AddWithValue("lærling", p.LærlingTimePris);
+                command.Parameters.AddWithValue("konsulent", p.KonsulentTimePris);
+                command.Parameters.AddWithValue("arbejdsmand", p.ArbejdsmandTimePris);
+
+                command.ExecuteNonQuery();
+            }
+        }
+        
     }
 }
 
