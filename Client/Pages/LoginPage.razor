@@ -96,12 +96,12 @@
                 // Hvis Users.Password er readonly eller lign., lav et lille DTO i stedet:
                 var safeUser = new { userObject.UserName, userObject.Role, /* evt. Id = userObject.Id */ };
                 await LocalStorage.SetItemAsync("user", safeUser);
-                Nav.NavigateTo("projects", forceLoad: true);
+                Nav.NavigateTo("/", forceLoad: true);
                 return;
             }
 
             await LocalStorage.SetItemAsync("user", userObject);
-            Nav.NavigateTo("projects", forceLoad: true);
+            Nav.NavigateTo("/", forceLoad: true);
         }
         catch (HttpRequestException)
         {

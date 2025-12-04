@@ -47,6 +47,8 @@ The content is organized as follows:
 Client/
   Components/
     CreateProjectComponent.razor
+    ProjectComponent.razor
+    ProjectGrid.razor
   Layout/
     MainLayout.razor
     NavMenu.razor
@@ -56,6 +58,7 @@ Client/
     Home.razor
     LoginPage.razor
     ProjectDetailsPage.razor
+    ProjectPage.razor
   Service/
     UserRepository.cs
   _Imports.razor
@@ -97,6 +100,97 @@ Server/
 <files>
 This section contains the contents of the repository's files.
 
+<file path="Client/Components/ProjectComponent.razor">
+@using Core
+@inject NavigationManager Nav
+
+
+
+<article class="ad-card">
+<div class="ad-media">
+    <img src="@Project.ImageUrl" alt="Project billede" />
+</div>
+
+<div class="ad-body">
+    <div class="ad-meta">@Project.DateCreated</div>
+    <div class="ad-title">@Project.Name</div>
+</div>
+
+<div class="ad-footer">
+    <strong><button class="MoreBtn" @onclick="() => GotoDetailPage()" >Se mere</button></strong>
+</div>
+</article>
+@code {
+    [Parameter] public Project Project { get; set; }
+
+
+    private Task GotoDetailPage()
+    {
+        var id = Project.ProjectId;
+        Nav.NavigateTo($"project/{id}");
+        return Task.CompletedTask;
+    }
+
+}
+</file>
+
+<file path="Client/Components/ProjectGrid.razor">
+@using Core
+
+
+<div class="ads-grid">
+    @if (Projects == null || !Projects.Any())
+    {
+        <p>Ingen projekter at vise.</p>
+    }
+    else
+    {
+        @foreach (var a in Projects)
+        {
+            <ProjectComponent Project="a" />
+        }
+    }
+</div>
+
+@code 
+{
+    [Parameter] public IEnumerable<Project> Projects { get; set; }
+}
+</file>
+
+<file path="Client/Pages/ProjectPage.razor">
+@page "/projectpage"
+@using Client.Components
+@using Core
+@inject HttpClient Http
+<h3>ProjectPage</h3>
+
+
+<section>
+    @if (_projects.Count == 0)
+    {
+        <p>Ingen produkter</p>
+    }
+    else
+    {
+        <ProjectGrid Projects="_projects" />
+    }
+      
+   
+</section>
+
+
+@code {
+    private List<Project>? _projects = new();
+    
+    
+    protected override async Task OnInitializedAsync()
+    {
+        _projects = await Http.GetFromJsonAsync<List<Project>>("http://localhost:5028/api/createproject");
+    }
+}
+</file>
+
 <file path="Client/Pages/CreateProjectPage.razor">
 @page "/CreateProjectPage"
 @using Client.Components
@@ -106,103 +200,6 @@ This section contains the contents of the repository's files.
 
 @code {
     
-}
-</file>
-
-<file path="Client/Pages/ProjectDetailsPage.razor">
-@page "/project/{Id:int}"
-@using Core
-@inject HttpClient Http
-
-<PageTitle>Projekt Detaljer</PageTitle>
-
-@if (details == null)
-{
-    <p><em>Indlæser beregninger...</em></p>
-}
-else
-{
-    <div class="container">
-        <div class="d-flex justify-content-between align-items-center mb-4">
-            <h1>@details.Project.Name</h1>
-            <span class="badge bg-secondary">Oprettet: @details.Project.DateCreated.ToShortDateString()</span>
-        </div>
-
-        <div class="row mb-4">
-            <div class="col-md-4">
-                <div class="card text-white bg-success mb-3">
-                    <div class="card-header">Samlet Salgspris</div>
-                    <div class="card-body">
-                        <h3 class="card-title">@details.SamletTotalPris.ToString("N2") kr.</h3>
-                        <p class="card-text">
-                            Materialer: @details.TotalPrisMaterialer.ToString("N0")<br/>
-                            Arbejdsløn: @details.TotalKostPrisTimer.ToString("N0")
-                        </p>
-                    </div>
-                </div>
-            </div>
-
-            <div class="col-md-4">
-                <div class="card text-dark bg-light mb-3">
-                    <div class="card-header">Samlet Kostpris</div>
-                    <div class="card-body">
-                        <h3 class="card-title">@details.SamletKostPris.ToString("N2") kr.</h3>
-                        <p class="card-text">
-                            Materialer: @details.TotalKostPrisMaterialer.ToString("N0")<br/>
-                            Lønudgift: @details.TotalKostPrisTimer.ToString("N0")
-                        </p>
-                    </div>
-                </div>
-            </div>
-
-            <div class="col-md-4">
-                <div class="card text-white bg-primary mb-3">
-                    <div class="card-header">Dækningsbidrag</div>
-                    <div class="card-body">
-                        <h3 class="card-title">@details.Dækningsbidrag.ToString("N2") kr.</h3>
-                        <p class="card-text">
-                            Dækningsgrad: <strong>@details.Dækningsgrad.ToString("N1") %</strong>
-                        </p>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <h3>Timeregistreringer (@details.TotalTimer timer)</h3>
-        <table class="table table-striped">
-            <thead>
-                <tr>
-                    <th>Dato</th>
-                    <th>Type</th>
-                    <th>Timer</th>
-                    <th>Kostpris</th>
-                </tr>
-            </thead>
-            <tbody>
-                @foreach (var h in details.Hours)
-                {
-                    <tr>
-                        <td>@(h.Dato?.ToShortDateString() ?? "-")</td>
-                        <td>@h.Type</td>
-                        <td>@h.Timer</td>
-                        <td>@h.Kostpris</td>
-                    </tr>
-                }
-            </tbody>
-        </table>
-    </div>
-}
-
-@code {
-    [Parameter]
-    public int id { get; set; }
-
-    private Calculation? details;
-
-    protected override async Task OnInitializedAsync()
-    {
-        details = await Http.GetFromJsonAsync<Calculation>($"api/createproject/{id}");
-    }
 }
 </file>
 
@@ -217,31 +214,6 @@ else
 @using Microsoft.JSInterop
 @using Client
 @using Client.Layout
-</file>
-
-<file path="Server/Repositories/ExcelRepos/IExcelRepo.cs">
-/*
-using Core;
-namespace Server.Repositories.ExcelRepos
-{
-    public interface IExcelRepo
-    {
-        void Add(ProjectHour proj);
-        Calculation GetHoursDetails();
-    }
-}
-*/
-</file>
-
-<file path="Server/Repositories/ExcelRepos/IMaterialExcelRepo.cs">
-using Core;
-namespace Server.Repositories.ExcelRepos
-{
-    public interface IMaterialExcelRepo
-    {
-        void Add(ProjectMaterial projmat);
-    }
-}
 </file>
 
 <file path="Server/Service/MaterialConverter.cs">
@@ -360,6 +332,103 @@ namespace Server.Service
 <h1>Velkommen til Larsen Installation</h1>
 </file>
 
+<file path="Client/Pages/ProjectDetailsPage.razor">
+@page "/project/{Id:int}"
+@using Core
+@inject HttpClient Http
+
+<PageTitle>Projekt Detaljer</PageTitle>
+
+@if (details == null)
+{
+    <p><em>Indlæser beregninger...</em></p>
+}
+else
+{
+    <div class="container">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h1>@details.Project.Name</h1>
+            <span class="badge bg-secondary">Oprettet: @details.Project.DateCreated.ToShortDateString()</span>
+        </div>
+
+        <div class="row mb-4">
+            <div class="col-md-4">
+                <div class="card text-white bg-success mb-3">
+                    <div class="card-header">Samlet Salgspris</div>
+                    <div class="card-body">
+                        <h3 class="card-title">@details.SamletTotalPris.ToString("N2") kr.</h3>
+                        <p class="card-text">
+                            Materialer: @details.TotalPrisMaterialer.ToString("N0")<br/>
+                            Arbejdsløn: @details.TotalPrisTimer.ToString("N0")
+                        </p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-md-4">
+                <div class="card text-dark bg-light mb-3">
+                    <div class="card-header">Samlet Kostpris</div>
+                    <div class="card-body">
+                        <h3 class="card-title">@details.SamletKostPris.ToString("N2") kr.</h3>
+                        <p class="card-text">
+                            Materialer: @details.TotalKostPrisMaterialer.ToString("N0")<br/>
+                            Lønudgift: @details.TotalKostPrisTimer.ToString("N0")
+                        </p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-md-4">
+                <div class="card text-white bg-primary mb-3">
+                    <div class="card-header">Dækningsbidrag</div>
+                    <div class="card-body">
+                        <h3 class="card-title">@details.Dækningsbidrag.ToString("N2") kr.</h3>
+                        <p class="card-text">
+                            Dækningsgrad: <strong>@details.Dækningsgrad.ToString("N1") %</strong>
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <h3>Timeregistreringer (@details.TotalTimer timer)</h3>
+        <table class="table table-striped">
+            <thead>
+                <tr>
+                    <th>Dato</th>
+                    <th>Type</th>
+                    <th>Timer</th>
+                    <th>Kostpris</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var h in details.Hours)
+                {
+                    <tr>
+                        <td>@(h.Dato?.ToShortDateString() ?? "-")</td>
+                        <td>@h.Type</td>
+                        <td>@h.Timer</td>
+                        <td>@h.Kostpris</td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+}
+
+@code {
+    [Parameter]
+    public int id { get; set; }
+
+    private Calculation? details;
+
+    protected override async Task OnInitializedAsync()
+    {
+        details = await Http.GetFromJsonAsync<Calculation>($"api/createproject/{id}");
+    }
+}
+</file>
+
 <file path="Client/App.razor">
 @inject Blazored.LocalStorage.ILocalStorageService LocalStorage
 @inject NavigationManager Nav
@@ -428,45 +497,11 @@ public class Project
     public int ProjectId { get; set; }
     public string Name { get; set; } = string.Empty;
     public DateTime DateCreated { get; set; } = DateTime.UtcNow;
+    public string ImageUrl { get; set; } = string.Empty;
     public int SvendTimePris { get; set; }
     public int LærlingTimePris { get; set; }
     public int KonsulentTimePris { get; set; }
     public int ArbjedsmandTimePris { get; set; }
-}
-</file>
-
-<file path="Core/ProjectHours.cs">
-namespace Core
-{
-    public class ProjectHour
-    {
-        public int HourId { get; set; }
-        public int ProjectId { get; set; }
-        public DateTime? Dato { get; set; }
-        public DateTime? Stoptid { get; set; }
-        public decimal Timer { get; set; }
-        public string? Type { get; set; }
-        public decimal Kostpris { get; set; }
-        public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
-    }
-}
-</file>
-
-<file path="Core/ProjectMaterial.cs">
-namespace Core
-{
-    public class ProjectMaterial
-    {
-        public int MaterialsId { get; set; }
-        public int ProjectId { get; set; }
-        public string? Beskrivelse { get; set; }
-        public decimal Kostpris { get; set; }
-        public decimal Antal { get; set; }
-        public decimal Total { get; set; }
-        public decimal Avance { get; set; }
-        public decimal Dækningsgrad { get; set; }
-        public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
-    }
 }
 </file>
 
@@ -519,170 +554,29 @@ namespace ServerApp.Controllers
 }
 </file>
 
-<file path="Server/Controllers/MaterialUploadController.cs">
+<file path="Server/Repositories/ExcelRepos/IExcelRepo.cs">
+/*
 using Core;
-using Microsoft.AspNetCore.Mvc;
-using Server.Repositories;
-using Server.Repositories.ExcelRepos;
-using Server.Service;
-namespace Server.Controllers
+namespace Server.Repositories.ExcelRepos
 {
-    [ApiController]
-    [Route("api/materialuploadexcel")]
-    public class MaterialUploadController : ControllerBase
+    public interface IExcelRepo
     {
-        private readonly ICreateProjectRepo MatExRepo;
-        public MaterialUploadController(ICreateProjectRepo MatExRepo)
-        {
-            this.MatExRepo = MatExRepo;
-        }
-        [HttpPost]
-        public IActionResult UploadMaterial(IFormFile? file, int projectId)
-        {
-            if (file == null || file.Length == 0)
-                return BadRequest("No file uploaded");
-            else if (file.FileName.StartsWith("Mater"))
-            {
-                Stream s = new MemoryStream();
-                file.CopyTo(s);
-                s.Position = 0;
-                List<ProjectMaterial> res = MaterialConverter.Convert(s);
-                foreach (var row in res)
-                {
-                    row.ProjectId = projectId;
-                    MatExRepo.Add(row);
-                }
-                return Ok("Material uploaded" + projectId);
-            }
-            return Ok();
-        }
+        void Add(ProjectHour proj);
+        Calculation GetHoursDetails();
     }
 }
+*/
 </file>
 
-<file path="Server/Controllers/UploadController.cs">
-using Core;
-using Microsoft.AspNetCore.Mvc;
-using Server.Repositories;
-using Server.Repositories.ExcelRepos;
-using Server.Service;
-namespace Server.Controllers
+<file path="Server/Repositories/ExcelRepos/IMaterialExcelRepo.cs">
+/*using Core;
+namespace Server.Repositories.ExcelRepos
 {
-    [ApiController]
-    [Route("api/uploadexcel")]
-    public class UploadController : ControllerBase
+    public interface IMaterialExcelRepo
     {
-        private readonly ICreateProjectRepo exRepo;
-        public UploadController(ICreateProjectRepo exRepo)
-        {
-            this.exRepo = exRepo;
-        }
-        [HttpPost]
-        public IActionResult UploadHour(IFormFile? file, int projectId) 
-            //ProjectId parameteren er der for at vi kan modtage id udefra
-        {
-            if (file == null || file.Length == 0) 
-                return BadRequest("No file uploaded");
-            else if (file.FileName.StartsWith("Work"))
-            {
-                    Stream s = new MemoryStream();
-                    file.CopyTo(s);
-                    s.Position = 0; //Går tilbage til starten så vi kan læse dataen. Fordi efter filen er indlæst vil den være i sidste kolonne
-                    List<ProjectHour> res = WorkerConverter.Convert(s);
-                foreach (var row1 in res)
-                {
-                    row1.ProjectId = projectId; //Her for id værdien
-                    exRepo.Add(row1);
-                }
-                return Ok("worker uploaded" + projectId);
-            }
-            return Ok();
-        }
-        [HttpGet("{id}")]
-        public ActionResult<Calculation> GetProjectDetails(int id)
-        {
-            try
-            {
-                var result = exRepo.GetProjectDetails(id);
-                if (result == null) return NotFound("Project not found");
-                {
-                    return Ok(result);
-                }
-            }
-            catch (Exception ex)
-            {
-                return StatusCode(500,  "Error: " + ex.Message);
-            }
-        }
+        void Add(ProjectMaterial projmat);
     }
-}
-</file>
-
-<file path="Server/Repositories/ExcelRepos/MaterialExcelRepo.cs">
-using Core;
-using Npgsql;
-using Server.PW1;
-using Server.Repositories.ExcelRepos;
-using Server.Repositories;
-namespace Server.Repositories.User
-{
-    public class MaterialExcelRepo : IMaterialExcelRepo
-    {
-        private const string conString =
-    "Host=ep-spring-unit-a2y1k0pd.eu-central-1.aws.neon.tech;" +
-    "Port=5432;" +
-    "Database=LarsenInstallation;" +
-    "Username=neondb_owner;" +
-    $"Password={PASSWORD.PW1};" +
-    "Ssl Mode=Require;" +
-    "Trust Server Certificate=true;";
-        public MaterialExcelRepo()
-        {
-        }
-        public void Add(ProjectMaterial projmat)
-        {
-            var result = new List<ProjectMaterial>();
-            using (var mConnection = new NpgsqlConnection(conString))
-            {
-                mConnection.Open();
-                var command = mConnection.CreateCommand();
-                command.CommandText = @"INSERT INTO projectmaterials
-                    (projectid, beskrivelse, kostpris, antal, total, avance, dækningsgrad) 
-                    VALUES (@projectid, @beskrivelse, @kostpris, @antal, @total, @avance, @dækningsgrad)";
-                var paramProjId = command.CreateParameter();
-                paramProjId.ParameterName = "projectid";
-                command.Parameters.Add(paramProjId);
-                paramProjId.Value = projmat.ProjectId;
-                Console.WriteLine(command.CommandText);
-                var paramBeskriv = command.CreateParameter();
-                paramBeskriv.ParameterName = "beskrivelse";
-                command.Parameters.Add(paramBeskriv);
-                paramBeskriv.Value = projmat.Beskrivelse;
-                var paramKost = command.CreateParameter();
-                paramKost.ParameterName = "kostpris";
-                command.Parameters.Add(paramKost);
-                paramKost.Value = projmat.Kostpris;
-                var paramAntal = command.CreateParameter();
-                paramAntal.ParameterName = "antal";
-                command.Parameters.Add(paramAntal);
-                paramAntal.Value = projmat.Antal;
-                var paramTotal = command.CreateParameter();
-                paramTotal.ParameterName = "total";
-                command.Parameters.Add(paramTotal);
-                paramTotal.Value = projmat.Total;
-                var PriceAvance = command.CreateParameter();
-                PriceAvance.ParameterName = "avance";
-                command.Parameters.Add(PriceAvance);
-                PriceAvance.Value = projmat.Avance;
-                var paramDaek = command.CreateParameter();
-                paramDaek.ParameterName = "dækningsgrad";
-                command.Parameters.Add(paramDaek);
-                paramDaek.Value = projmat.Dækningsgrad;
-                command.ExecuteNonQuery();
-            }
-        }
-    }
-}
+}*/
 </file>
 
 <file path="Server/Repositories/User/CreateUserRepoSQL.cs">
@@ -827,60 +721,130 @@ namespace Client.Service
 }
 </file>
 
-<file path="Core/Calculation.cs">
+<file path="Core/ProjectHours.cs">
 namespace Core
 {
-    public class Calculation
+    public class ProjectHour
     {
-        // Stamdata
-        public Project Project { get; set; }
-        // Lister af data
-        public List<ProjectHour> Hours { get; set; } = new();
-        public List<ProjectMaterial> Materials { get; set; } = new();
-        // Bregninger
-        public decimal TotalKostPrisMaterialer { get; set; }
-        public decimal TotalPrisMaterialer { get; set; }
-        public decimal TotalTimer { get; set; }
-        public decimal TotalKostPrisTimer { get; set; }
-        public decimal TotalPrisTimer { get; set; }
-        // Samlet
-        public decimal SamletKostPris => TotalKostPrisMaterialer + TotalKostPrisTimer;
-        public decimal SamletTotalPris => TotalPrisMaterialer + TotalPrisTimer;
-        public decimal Dækningsgrad => SamletTotalPris > 0 ? (Dækningsgrad/SamletTotalPris) * 100 : 0;
-        public decimal Dækningsbidrag => SamletTotalPris - SamletKostPris;
+        public int HourId { get; set; }
+        public int ProjectId { get; set; }
+        public string? Medarbejder { get; set; }
+        public DateTime? Dato { get; set; }
+        public DateTime? Stoptid { get; set; }
+        public decimal Timer { get; set; }
+        public string? Type { get; set; }
+        public decimal Kostpris { get; set; }
+        public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
     }
 }
 </file>
 
-<file path="Server/Controllers/CreateProjectController.cs">
+<file path="Core/ProjectMaterial.cs">
+namespace Core
+{
+    public class ProjectMaterial
+    {
+        public int MaterialsId { get; set; }
+        public int ProjectId { get; set; }
+        public string? Beskrivelse { get; set; }
+        public decimal Kostpris { get; set; }
+        public decimal Antal { get; set; }
+        public decimal Total { get; set; }
+        public decimal Avance { get; set; }
+        public decimal Dækningsgrad { get; set; }
+        public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+    }
+}
+</file>
+
+<file path="Server/Controllers/MaterialUploadController.cs">
+/*
 using Core;
 using Microsoft.AspNetCore.Mvc;
 using Server.Repositories;
-using Server.Repositories.User;
+using Server.Repositories.ExcelRepos;
+using Server.Service;
 namespace Server.Controllers
 {
     [ApiController]
-    [Route("api/createproject")]
-    public class CreateProjectController : ControllerBase
+    [Route("api/materialuploadexcel")]
+    public class MaterialUploadController : ControllerBase
     {
-        private ICreateProjectRepo crProj;
-        public CreateProjectController(ICreateProjectRepo crProj)
+        private readonly ICreateProjectRepo MatExRepo;
+        public MaterialUploadController(ICreateProjectRepo MatExRepo)
         {
-            this.crProj = crProj;
+            this.MatExRepo = MatExRepo;
         }
         [HttpPost]
-        public IActionResult Add(Project pro) //Fleksibel pakke. Bruges når man for en masse forskellige slags data.
-        //Det er et interface der giver dig lov til at retunere hvad som helst så længe der er et gyldigt http svar
+        public IActionResult UploadMaterial(IFormFile? file, int projectId)
         {
-            int newProjectId = crProj.Add(pro);
-            return Ok(newProjectId); //Ok er en hjælpe metode der fortæller klienten det lykkedes og giver svaret
+            if (file == null || file.Length == 0)
+                return BadRequest("No file uploaded");
+            else if (file.FileName.StartsWith("Mater"))
+            {
+                Stream s = new MemoryStream();
+                file.CopyTo(s);
+                s.Position = 0;
+                List<ProjectMaterial> res = MaterialConverter.Convert(s);
+                foreach (var row in res)
+                {
+                    row.ProjectId = projectId;
+                    MatExRepo.Add(row);
+                }
+                return Ok("Material uploaded" + projectId);
+            }
+            return Ok();
+        }
+    }
+}
+*/
+</file>
+
+<file path="Server/Controllers/UploadController.cs">
+/*
+using Core;
+using Microsoft.AspNetCore.Mvc;
+using Server.Repositories;
+using Server.Repositories.ExcelRepos;
+using Server.Service;
+namespace Server.Controllers
+{
+    [ApiController]
+    [Route("api/uploadexcel")]
+    public class UploadController : ControllerBase
+    {
+        private readonly ICreateProjectRepo exRepo;
+        public UploadController(ICreateProjectRepo exRepo)
+        {
+            this.exRepo = exRepo;
+        }
+        [HttpPost]
+        public IActionResult UploadHour(IFormFile? file, int projectId) 
+            //ProjectId parameteren er der for at vi kan modtage id udefra
+        {
+            if (file == null || file.Length == 0) 
+                return BadRequest("No file uploaded");
+            else if (file.FileName.StartsWith("Work"))
+            {
+                    Stream s = new MemoryStream();
+                    file.CopyTo(s);
+                    s.Position = 0; //Går tilbage til starten så vi kan læse dataen. Fordi efter filen er indlæst vil den være i sidste kolonne
+                    List<ProjectHour> res = WorkerConverter.Convert(s);
+                foreach (var row1 in res)
+                {
+                    row1.ProjectId = projectId; //Her for id værdien
+                    exRepo.Add(row1);
+                }
+                return Ok("worker uploaded" + projectId);
+            }
+            return Ok();
         }
         [HttpGet("{id}")]
         public ActionResult<Calculation> GetProjectDetails(int id)
         {
             try
             {
-                var result = crProj.GetProjectDetails(id);
+                var result = exRepo.GetProjectDetails(id);
                 if (result == null) return NotFound("Project not found");
                 {
                     return Ok(result);
@@ -893,9 +857,10 @@ namespace Server.Controllers
         }
     }
 }
+*/
 </file>
 
-<file path="Server/Repositories/ExcelRepos/ExcelRepo.cs">
+<file path="Server/Repositories/ExcelRepos/MaterialExcelRepo.cs">
 /*
 using Core;
 using Npgsql;
@@ -904,7 +869,7 @@ using Server.Repositories.ExcelRepos;
 using Server.Repositories;
 namespace Server.Repositories.User
 {
-    public class ExcelRepo : IExcelRepo
+    public class MaterialExcelRepo : IMaterialExcelRepo
     {
         private const string conString =
     "Host=ep-spring-unit-a2y1k0pd.eu-central-1.aws.neon.tech;" +
@@ -914,64 +879,54 @@ namespace Server.Repositories.User
     $"Password={PASSWORD.PW1};" +
     "Ssl Mode=Require;" +
     "Trust Server Certificate=true;";
-        public ExcelRepo()
+        public MaterialExcelRepo()
         {
         }
-        public void AddHour(ProjectHour proj)
+        public void Add(ProjectMaterial projmat)
         {
-            var result = new List<ProjectHour>();
+            var result = new List<ProjectMaterial>();
             using (var mConnection = new NpgsqlConnection(conString))
             {
                 mConnection.Open();
                 var command = mConnection.CreateCommand();
-                command.CommandText = @"INSERT INTO projecthours
-                    (projectid, dato, stoptid, timer, type, kostpris) 
-                    VALUES (@projectid, @dato, @stoptid, @timer, @type, @kostpris)";
+                command.CommandText = @"INSERT INTO projectmaterials
+                    (projectid, beskrivelse, kostpris, antal, total, avance, dækningsgrad) 
+                    VALUES (@projectid, @beskrivelse, @kostpris, @antal, @total, @avance, @dækningsgrad)";
                 var paramProjId = command.CreateParameter();
                 paramProjId.ParameterName = "projectid";
                 command.Parameters.Add(paramProjId);
-                paramProjId.Value = proj.ProjectId;
+                paramProjId.Value = projmat.ProjectId;
                 Console.WriteLine(command.CommandText);
-                var paramDato = command.CreateParameter();
-                paramDato.ParameterName = "dato";
-                command.Parameters.Add(paramDato);
-                paramDato.Value = proj.Dato;
-                var paramStop = command.CreateParameter();
-                paramStop.ParameterName = "stoptid";
-                command.Parameters.Add(paramStop);
-                paramStop.Value = proj.Stoptid;
-                var paramTimer = command.CreateParameter();
-                paramTimer.ParameterName = "timer";
-                command.Parameters.Add(paramTimer);
-                paramTimer.Value = proj.Timer;
-                var paramType = command.CreateParameter();
-                paramType.ParameterName = "type";
-                command.Parameters.Add(paramType);
-                paramType.Value = proj.Type;
+                var paramBeskriv = command.CreateParameter();
+                paramBeskriv.ParameterName = "beskrivelse";
+                command.Parameters.Add(paramBeskriv);
+                paramBeskriv.Value = projmat.Beskrivelse;
                 var paramKost = command.CreateParameter();
                 paramKost.ParameterName = "kostpris";
                 command.Parameters.Add(paramKost);
-                paramKost.Value = proj.Kostpris;
+                paramKost.Value = projmat.Kostpris;
+                var paramAntal = command.CreateParameter();
+                paramAntal.ParameterName = "antal";
+                command.Parameters.Add(paramAntal);
+                paramAntal.Value = projmat.Antal;
+                var paramTotal = command.CreateParameter();
+                paramTotal.ParameterName = "total";
+                command.Parameters.Add(paramTotal);
+                paramTotal.Value = projmat.Total;
+                var PriceAvance = command.CreateParameter();
+                PriceAvance.ParameterName = "avance";
+                command.Parameters.Add(PriceAvance);
+                PriceAvance.Value = projmat.Avance;
+                var paramDaek = command.CreateParameter();
+                paramDaek.ParameterName = "dækningsgrad";
+                command.Parameters.Add(paramDaek);
+                paramDaek.Value = projmat.Dækningsgrad;
                 command.ExecuteNonQuery();
             }
         }
     }
 }
 */
-</file>
-
-<file path="Server/Repositories/ICreateProjectRepo.cs">
-using Core;
-namespace Server.Repositories
-{
-    public interface ICreateProjectRepo
-    {
-        int Add(Project pro);
-        void AddHour(ProjectHour proj);
-        void AddMaterials(ProjectMaterial projmat);
-        Calculation? GetProjectDetails(int projectId);
-    }
-}
 </file>
 
 <file path="Client/Pages/LoginPage.razor">
@@ -1073,12 +1028,12 @@ namespace Server.Repositories
                 // Hvis Users.Password er readonly eller lign., lav et lille DTO i stedet:
                 var safeUser = new { userObject.UserName, userObject.Role, /* evt. Id = userObject.Id */ };
                 await LocalStorage.SetItemAsync("user", safeUser);
-                Nav.NavigateTo("projects", forceLoad: true);
+                Nav.NavigateTo("projectpage", forceLoad: true);
                 return;
             }
 
             await LocalStorage.SetItemAsync("user", userObject);
-            Nav.NavigateTo("projects", forceLoad: true);
+            Nav.NavigateTo("projectpage", forceLoad: true);
         }
         catch (HttpRequestException)
         {
@@ -1092,6 +1047,203 @@ namespace Server.Repositories
         {
             isLoading = false;
         }
+    }
+}
+</file>
+
+<file path="Core/Calculation.cs">
+namespace Core
+{
+    public class Calculation
+    {
+        // Stamdata
+        public Project Project { get; set; }
+        // Lister af data
+        public List<ProjectHour> Hours { get; set; } = new();
+        public List<ProjectMaterial> Materials { get; set; } = new();
+        // Bregninger
+        public decimal TotalKostPrisMaterialer { get; set; }
+        public decimal TotalPrisMaterialer { get; set; }
+        public decimal TotalTimer { get; set; }
+        public decimal TotalKostPrisTimer { get; set; }
+        public decimal TotalPrisTimer { get; set; }
+        // Samlet
+        public decimal SamletKostPris => TotalKostPrisMaterialer + TotalKostPrisTimer;
+        public decimal SamletTotalPris => TotalPrisMaterialer + TotalPrisTimer;
+        public decimal Dækningsgrad => SamletTotalPris > 0 ? (Dækningsbidrag/SamletTotalPris) * 100 : 0;
+        public decimal Dækningsbidrag => SamletTotalPris - SamletKostPris;
+    }
+}
+</file>
+
+<file path="Server/Controllers/CreateProjectController.cs">
+using Core;
+using Microsoft.AspNetCore.Mvc;
+using Server.Repositories;
+using Server.Service;
+using System.IO;
+namespace Server.Controllers
+{
+    [ApiController]
+    [Route("api/createproject")]
+    public class CreateProjectController : ControllerBase
+    {
+        private ICreateProjectRepo crProj;
+        public CreateProjectController(ICreateProjectRepo crProj)
+        {
+            this.crProj = crProj;
+        }
+        [HttpGet] 
+        public ActionResult<IEnumerable<Project>> GetAllProjects()
+        {
+            var projects = crProj.GetAllProjects();
+            return Ok(projects);
+        }
+        [HttpPost]
+        public IActionResult Add(Project pro) //Fleksibel pakke. Bruges når man for en masse forskellige slags data.
+        //Det er et interface der giver dig lov til at retunere hvad som helst så længe der er et gyldigt http svar
+        {
+            int newProjectId = crProj.Add(pro);
+            return Ok(newProjectId); //Ok er en hjælpe metode der fortæller klienten det lykkedes og giver svaret
+        }
+        [HttpGet("{id}")]
+        public ActionResult<Calculation> GetProjectDetails(int id)
+        {
+            try
+            {
+                var result = crProj.GetProjectDetails(id);
+                if (result == null) return NotFound("Project not found");
+                {
+                    return Ok(result);
+                }
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500,  "Error: " + ex.Message);
+            }
+        }
+        [HttpPost("uploadhours")]
+        public IActionResult UploadHours(IFormFile? file, int projectId)
+        {
+            if (file == null || file.Length == 0)
+                return BadRequest("No file uploaded");
+            // Tjekker om filnavnet starter med "Work" (som i den gamle controller)
+            if (file.FileName.StartsWith("Work"))
+            {
+                using Stream s = new MemoryStream();
+                file.CopyTo(s);
+                s.Position = 0;
+                List<ProjectHour> res = WorkerConverter.Convert(s);
+                foreach (var row in res)
+                {
+                    row.ProjectId = projectId;
+                    crProj.AddHour(row); // Bruger AddHour fra interfacet
+                }
+                return Ok("Worker hours uploaded for project " + projectId);
+            }
+            return BadRequest("Invalid file name or format");
+        }
+        [HttpPost("uploadmaterials")]
+        public IActionResult UploadMaterials(IFormFile? file, int projectId)
+        {
+            if (file == null || file.Length == 0)
+                return BadRequest("No file uploaded");
+            // Tjekker om filnavnet starter med "Mater" (som i den gamle controller)
+            if (file.FileName.StartsWith("Mater"))
+            {
+                using Stream s = new MemoryStream();
+                file.CopyTo(s);
+                s.Position = 0;
+                List<ProjectMaterial> res = MaterialConverter.Convert(s);
+                foreach (var row in res)
+                {
+                    row.ProjectId = projectId;
+                    crProj.AddMaterials(row); // Bruger AddMaterials fra interfacet
+                }
+                return Ok("Materials uploaded for project " + projectId);
+            }
+            return BadRequest("Invalid file name or format");
+        }
+    }
+}
+</file>
+
+<file path="Server/Repositories/ExcelRepos/ExcelRepo.cs">
+/*
+using Core;
+using Npgsql;
+using Server.PW1;
+using Server.Repositories.ExcelRepos;
+using Server.Repositories;
+namespace Server.Repositories.User
+{
+    public class ExcelRepo : IExcelRepo
+    {
+        private const string conString =
+    "Host=ep-spring-unit-a2y1k0pd.eu-central-1.aws.neon.tech;" +
+    "Port=5432;" +
+    "Database=LarsenInstallation;" +
+    "Username=neondb_owner;" +
+    $"Password={PASSWORD.PW1};" +
+    "Ssl Mode=Require;" +
+    "Trust Server Certificate=true;";
+        public ExcelRepo()
+        {
+        }
+        public void AddHour(ProjectHour proj)
+        {
+            var result = new List<ProjectHour>();
+            using (var mConnection = new NpgsqlConnection(conString))
+            {
+                mConnection.Open();
+                var command = mConnection.CreateCommand();
+                command.CommandText = @"INSERT INTO projecthours
+                    (projectid, dato, stoptid, timer, type, kostpris) 
+                    VALUES (@projectid, @dato, @stoptid, @timer, @type, @kostpris)";
+                var paramProjId = command.CreateParameter();
+                paramProjId.ParameterName = "projectid";
+                command.Parameters.Add(paramProjId);
+                paramProjId.Value = proj.ProjectId;
+                Console.WriteLine(command.CommandText);
+                var paramDato = command.CreateParameter();
+                paramDato.ParameterName = "dato";
+                command.Parameters.Add(paramDato);
+                paramDato.Value = proj.Dato;
+                var paramStop = command.CreateParameter();
+                paramStop.ParameterName = "stoptid";
+                command.Parameters.Add(paramStop);
+                paramStop.Value = proj.Stoptid;
+                var paramTimer = command.CreateParameter();
+                paramTimer.ParameterName = "timer";
+                command.Parameters.Add(paramTimer);
+                paramTimer.Value = proj.Timer;
+                var paramType = command.CreateParameter();
+                paramType.ParameterName = "type";
+                command.Parameters.Add(paramType);
+                paramType.Value = proj.Type;
+                var paramKost = command.CreateParameter();
+                paramKost.ParameterName = "kostpris";
+                command.Parameters.Add(paramKost);
+                paramKost.Value = proj.Kostpris;
+                command.ExecuteNonQuery();
+            }
+        }
+    }
+}
+*/
+</file>
+
+<file path="Server/Repositories/ICreateProjectRepo.cs">
+using Core;
+namespace Server.Repositories
+{
+    public interface ICreateProjectRepo
+    {
+        int Add(Project pro);
+        void AddHour(ProjectHour proj);
+        void AddMaterials(ProjectMaterial projmat);
+        Calculation? GetProjectDetails(int projectId);
+        IEnumerable<Project> GetAllProjects();
     }
 }
 </file>
@@ -1260,13 +1412,17 @@ namespace Server.Repositories
                 mConnection.Open();
                 var command = mConnection.CreateCommand();
                 command.CommandText = @"INSERT INTO projects
-                    (name, datecreated, svend_timepris, lærling_timepris, konsulent_timepris, arbejdsmand_timepris) 
-                    VALUES (@name, @datecreated, @svend_timepris, @lærling_timepris, @konsulent_timepris, @arbejdsmand_timepris)          
+                    (name, billedeurl ,datecreated, svend_timepris, lærling_timepris, konsulent_timepris, arbejdsmand_timepris) 
+                    VALUES (@name, @billedeurl ,@datecreated, @svend_timepris, @lærling_timepris, @konsulent_timepris, @arbejdsmand_timepris)          
                     RETURNING projectid"; //Retunering query som sender projectid tilbage
                 var paramStop = command.CreateParameter();
                 paramStop.ParameterName = "name";
                 command.Parameters.Add(paramStop);
                 paramStop.Value = pro.Name;
+                var paramBillede = command.CreateParameter();
+                paramBillede.ParameterName = "billedeurl";
+                command.Parameters.Add(paramBillede);
+                paramBillede.Value = pro.ImageUrl;
                 var paramTimer = command.CreateParameter();
                 paramTimer.ParameterName = "datecreated";
                 command.Parameters.Add(paramTimer);
@@ -1300,12 +1456,16 @@ namespace Server.Repositories
                 mConnection.Open();
                 var command = mConnection.CreateCommand();
                 command.CommandText = @"INSERT INTO projecthours
-                    (projectid, dato, stoptid, timer, type, kostpris) 
-                    VALUES (@projectid, @dato, @stoptid, @timer, @type, @kostpris)";
+                    (projectid, medarbejder, dato, stoptid, timer, type, kostpris) 
+                    VALUES (@projectid, @medarbejder, @dato, @stoptid, @timer, @type, @kostpris)";
                 var paramProjId = command.CreateParameter();
                 paramProjId.ParameterName = "projectid";
                 command.Parameters.Add(paramProjId);
                 paramProjId.Value = proj.ProjectId;
+                var paramMed = command.CreateParameter();
+                paramMed.ParameterName = "medarbejder";
+                paramMed.Value = proj.Medarbejder ?? (object)DBNull.Value;
+                command.Parameters.Add(paramMed);
                 Console.WriteLine(command.CommandText);
                 var paramDato = command.CreateParameter();
                 paramDato.ParameterName = "dato";
@@ -1372,6 +1532,36 @@ namespace Server.Repositories
                 command.ExecuteNonQuery();
             }
         }
+        public IEnumerable<Project> GetAllProjects()
+        {
+            var projects = new List<Project>();
+            using (var conn = new NpgsqlConnection(conString))
+            {
+                conn.Open();
+                // Vi henter alle projekter, sorteret med nyeste først (valgfrit, men brugervenligt)
+                string query = "SELECT * FROM projects ORDER BY datecreated DESC";
+                using (var command = new NpgsqlCommand(query, conn))
+                using (var reader = command.ExecuteReader())
+                {
+                    while (reader.Read())
+                    {
+                        var p = new Project
+                        {
+                            ProjectId = Convert.ToInt32(reader["projectid"]),
+                            Name = reader["name"] == DBNull.Value ? "Ukendt" : reader["name"].ToString(),
+                            DateCreated = reader["datecreated"] == DBNull.Value ? DateTime.MinValue : Convert.ToDateTime(reader["datecreated"]),
+                            ImageUrl = reader["imageurl"] == DBNull.Value ? string.Empty : reader["imageurl"].ToString(),
+                            SvendTimePris = reader["svend_timepris"] == DBNull.Value ? 0 : Convert.ToInt32(reader["svend_timepris"]),
+                            LærlingTimePris = reader["lærling_timepris"] == DBNull.Value ? 0 : Convert.ToInt32(reader["lærling_timepris"]),
+                            KonsulentTimePris = reader["konsulent_timepris"] == DBNull.Value ? 0 : Convert.ToInt32(reader["konsulent_timepris"]),
+                            ArbjedsmandTimePris = reader["arbejdsmand_timepris"] == DBNull.Value ? 0 : Convert.ToInt32(reader["arbejdsmand_timepris"])
+                        };
+                        projects.Add(p);
+                    }
+                }
+            }
+            return projects;
+        }
         public Calculation? GetProjectDetails(int projectId)
         {
             using var conn = new NpgsqlConnection(conString);
@@ -1385,13 +1575,14 @@ namespace Server.Repositories
                 {
                     dto.Project = new Project
                     {
-                        ProjectId = reader.GetInt32(0),
-                        Name = reader.GetString(1),
-                        DateCreated = reader.GetDateTime(2),
-                        SvendTimePris = reader.GetInt32(3),
-                        LærlingTimePris = reader.GetInt32(4),
-                        KonsulentTimePris = reader.GetInt32(5),
-                        ArbjedsmandTimePris = reader.GetInt32(6)
+                        ProjectId = Convert.ToInt32(reader["projectid"]),
+                        Name = reader["name"].ToString(),
+                        DateCreated = Convert.ToDateTime(reader["datecreated"]),
+                        // Her henter vi satserne som skal ganges med timerne senere
+                        SvendTimePris = Convert.ToInt32(reader["svend_timepris"]),
+                        LærlingTimePris = Convert.ToInt32(reader["lærling_timepris"]),
+                        KonsulentTimePris = Convert.ToInt32(reader["konsulent_timepris"]),
+                        ArbjedsmandTimePris = Convert.ToInt32(reader["arbejdsmand_timepris"])
                     };
                 }
                 else return null;
@@ -1404,14 +1595,13 @@ namespace Server.Repositories
                 {
                     var m = new ProjectMaterial
                     {
-                        ProjectId = reader.GetInt32(0),
-                        MaterialsId = reader.GetInt32(1),
-                        Beskrivelse = reader.GetString(2),
-                        Kostpris = reader.GetDecimal(3),
-                        Antal = reader.GetDecimal(4),
-                        Total = reader.GetDecimal(5),
-                        Avance = reader.GetDecimal(6),
-                        Dækningsgrad = reader.GetDecimal(7),
+                        ProjectId = Convert.ToInt32(reader["projectid"]),
+                        Beskrivelse = reader["beskrivelse"] == DBNull.Value ? "" : reader["beskrivelse"].ToString(),
+                        Kostpris = Convert.ToDecimal(reader["kostpris"]),
+                        Antal = Convert.ToDecimal(reader["antal"]),
+                        Total = Convert.ToDecimal(reader["total"]),
+                        Avance = Convert.ToDecimal(reader["avance"]),
+                        Dækningsgrad = Convert.ToDecimal(reader["dækningsgrad"]),
                     };
                     dto.Materials.Add(m);
                     dto.TotalKostPrisMaterialer += (m.Kostpris * m.Antal);
@@ -1424,26 +1614,48 @@ namespace Server.Repositories
                 using var reader = command.ExecuteReader();
                 while (reader.Read())
                 {
-                    var h = new ProjectHour
+                    dto.Hours.Add(new ProjectHour
                     {
-                        ProjectId = reader.GetInt32(0),
-                        HourId = reader.GetInt32(1),
-                        Dato = reader.GetDateTime(2),
-                        Timer = reader.GetDecimal(3),
-                        Type = reader.GetString(4),
-                        Kostpris = reader.GetDecimal(5),
-                    };
-                    dto.Hours.Add(h);
-                    dto.TotalKostPrisTimer += h.Kostpris;
-                    decimal timeSats = dto.Project.SvendTimePris;
-                    var type = h.Type.ToLower();
-                    if (type.Contains("svend")) timeSats = dto.Project.SvendTimePris;
-                    else if (type.Contains("lærling")) timeSats = dto.Project.LærlingTimePris;
-                    else if (type.Contains("konsulent")) timeSats = dto.Project.KonsulentTimePris;
-                    else if (type.Contains("arbejdsmand")) timeSats = dto.Project.ArbjedsmandTimePris;
-                    dto.TotalPrisTimer += (h.Timer * timeSats);
+                        ProjectId = Convert.ToInt32(reader["projectid"]),
+                        // Henter navnet så vi kan koble overtid med rollen
+                        Medarbejder = reader["medarbejder"] == DBNull.Value ? "Ukendt" : reader["medarbejder"].ToString(),
+                        Dato = reader["dato"] == DBNull.Value ? null : Convert.ToDateTime(reader["dato"]),
+                        Stoptid = reader["stoptid"] == DBNull.Value ? null : Convert.ToDateTime(reader["stoptid"]),
+                        Timer = Convert.ToDecimal(reader["timer"]),
+                        Type = reader["type"] == DBNull.Value ? "" : reader["type"].ToString(),
+                        Kostpris = Convert.ToDecimal(reader["kostpris"]),
+                    });
                 }
             }
+            // 4. BEREGN PRISER PÅ TIMER (Logik med LINQ)
+            // Vi grupperer pr. medarbejder for at finde ud af, om de er Svend eller Lærling
+            foreach (var group in dto.Hours.GroupBy(x => x.Medarbejder))
+            {
+                // A. Find rollen: Kig efter den første linje, der IKKE er overtid.
+                var normalType = group
+                    .FirstOrDefault(h => !h.Type.ToLower().Contains("overtid"))?
+                    .Type.ToLower() ?? "svend"; // Fallback til Svend hvis intet findes
+                // B. Find grundsatsen baseret på rollen
+                decimal grundSats = 0;
+                if (normalType.Contains("lærling"))       grundSats = dto.Project.LærlingTimePris;
+                else if (normalType.Contains("konsulent")) grundSats = dto.Project.KonsulentTimePris;
+                else if (normalType.Contains("arbejdsmand")) grundSats = dto.Project.ArbjedsmandTimePris;
+                else                                       grundSats = dto.Project.SvendTimePris;
+                // C. Gennemgå timerne og læg overtidstillæg på
+                foreach (var h in group)
+                {
+                    decimal faktor = 1.0m;
+                    string typeLower = h.Type.ToLower();
+                    if (typeLower.Contains("overtid 1")) faktor = 1.5m; // 50% ekstra
+                    else if (typeLower.Contains("overtid 2")) faktor = 2.0m; // 100% ekstra
+                    // Beregn og gem
+                    decimal salgsPrisForRække = h.Timer * grundSats * faktor;
+                    dto.TotalPrisTimer += salgsPrisForRække;
+                    dto.TotalKostPrisTimer += h.Kostpris;
+                }
+            }
+            // Opdater total timer til visning
+            dto.TotalTimer = dto.Hours.Sum(h => h.Timer);
             return dto;
         }
     }
@@ -1502,6 +1714,12 @@ namespace Server.Repositories
                     <InputNumber id="arbejdsmand" class="form-control" @bind-Value="aProject.ArbjedsmandTimePris" />
                     <label for="konsulent">Arbejdsmand sats</label>
                 </div>
+
+                <div class="form-floating-group">
+                    <InputText id="billede" class="form-control" @bind-Value="aProject.ImageUrl" />
+                    <label for="billede">Billede link</label>
+                </div>
+                
             </div>
                 
             <div class="">
@@ -1553,13 +1771,13 @@ namespace Server.Repositories
             // 4. Hvis der er valgt en Time-fil, upload den nu med det nye ID
             if (timeFile != null)
             {
-                await UploadFileToApi(timeFile, newProjectId, "api/uploadexcel");
+                await UploadFileToApi(timeFile, newProjectId, "api/createproject/uploadhours");
             }
 
             // 5. Hvis der er valgt en Materiale-fil, upload den nu med det nye ID
             if (materialeFile != null)
             {
-                await UploadFileToApi(materialeFile, newProjectId, "api/materialuploadexcel");
+                await UploadFileToApi(materialeFile, newProjectId, "api/createproject/uploadmaterials");
             }
         }
 
@@ -1587,44 +1805,6 @@ namespace Server.Repositories
 }
 </file>
 
-<file path="Server/Program.cs">
-using Server.Repositories;
-using Server.Repositories.ExcelRepos;
-using Server.Repositories.User;
-using Server.Service;
-var builder = WebApplication.CreateBuilder(args);
-// Add services to the container.
-System.Text.Encoding.RegisterProvider(System.Text.CodePagesEncodingProvider.Instance);
-builder.Services.AddSingleton<ICreateUserRepoSQL, CreateUserRepoSQL>();
-builder.Services.AddSingleton<IExcelRepo, ExcelRepo>();
-builder.Services.AddSingleton<IMaterialExcelRepo, MaterialExcelRepo>();
-builder.Services.AddSingleton<ICreateProjectRepo, CreateProjectRepo>();
-builder.Services.AddControllers();
-builder.Services.AddCors(options =>
-{
-    options.AddPolicy("policy",
-        policy =>
-        {
-            policy.AllowAnyOrigin();
-            policy.AllowAnyMethod();
-            policy.AllowAnyHeader();
-        });
-});
-// Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
-builder.Services.AddOpenApi();
-var app = builder.Build();
-// Configure the HTTP request pipeline.
-if (app.Environment.IsDevelopment())
-{
-    app.MapOpenApi();
-}
-app.UseCors("policy");
-//app.UseHttpsRedirection();
-app.UseAuthorization();
-app.MapControllers();
-app.Run();
-</file>
-
 <file path="Client/Layout/NavMenu.razor">
 @using Core
 @inject Blazored.LocalStorage.ILocalStorageService LocalStorage
@@ -1648,10 +1828,10 @@ app.Run();
 <div class="@NavMenuCssClass nav-scrollable" @onclick="ToggleNavMenu">
     <nav class="nav flex-column h-100">
         <div class="nav-item px-3">
-            <NavLink class="nav-link" href="projects" Match="NavLinkMatch.All">
+            <NavLink class="nav-link" href="projectpage" Match="NavLinkMatch.All">
                 <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-folder" viewBox="0 0 16 16">
                     <path d="M.54 3.87.5 3a2 2 0 0 1 2-2h3.672a2 2 0 0 1 1.414.586l.828.828A2 2 0 0 0 9.828 3h3.982a2 2 0 0 1 1.992 2.181l-.637 7A2 2 0 0 1 13.174 14H2.826a2 2 0 0 1-1.991-1.819l-.637-7a2 2 0 0 1 .342-1.31zM2.19 4a1 1 0 0 0-.996 1.09l.637 7a1 1 0 0 0 .995.91h10.348a1 1 0 0 0 .995-.91l.637-7A1 1 0 0 0 13.81 4zm4.69-1.707A1 1 0 0 0 6.172 2H2.5a1 1 0 0 0-1 .981l.006.139q.323-.119.684-.12h5.396z"/>
-                </svg> Projects
+                </svg> Projekter
             </NavLink>
         </div>
         <div class="nav-item px-3">
@@ -1698,6 +1878,41 @@ app.Run();
         loggedIn = await LocalStorage.GetItemAsync<Users?>("user");
     }
 }
+</file>
+
+<file path="Server/Program.cs">
+using Server.Repositories;
+using Server.Repositories.User;
+using Server.Service;
+var builder = WebApplication.CreateBuilder(args);
+// Add services to the container.
+System.Text.Encoding.RegisterProvider(System.Text.CodePagesEncodingProvider.Instance);
+builder.Services.AddSingleton<ICreateUserRepoSQL, CreateUserRepoSQL>();
+builder.Services.AddSingleton<ICreateProjectRepo, CreateProjectRepo>();
+builder.Services.AddControllers();
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("policy",
+        policy =>
+        {
+            policy.AllowAnyOrigin();
+            policy.AllowAnyMethod();
+            policy.AllowAnyHeader();
+        });
+});
+// Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
+builder.Services.AddOpenApi();
+var app = builder.Build();
+// Configure the HTTP request pipeline.
+if (app.Environment.IsDevelopment())
+{
+    app.MapOpenApi();
+}
+app.UseCors("policy");
+//app.UseHttpsRedirection();
+app.UseAuthorization();
+app.MapControllers();
+app.Run();
 </file>
 
 </files>

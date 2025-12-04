@@ -1,0 +1,30 @@
+@page "/"
+@using Client.Components
+@using Core
+@inject HttpClient Http
+<h3>Mine projekter</h3>
+
+
+<section>
+    @if (_projects.Count == 0)
+    {
+        <p>Ingen produkter</p>
+    }
+    else
+    {
+        <ProjectGrid Projects="_projects" />
+    }
+      
+   
+</section>
+
+
+@code {
+    private List<Project>? _projects = new();
+    
+    
+    protected override async Task OnInitializedAsync()
+    {
+        _projects = await Http.GetFromJsonAsync<List<Project>>("http://localhost:5028/api/createproject");
+    }
+}

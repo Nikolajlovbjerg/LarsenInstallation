@@ -18,6 +18,13 @@ namespace Server.Controllers
             this.crProj = crProj;
         }
 
+        [HttpGet] 
+        public ActionResult<IEnumerable<Project>> GetAllProjects()
+        {
+            var projects = crProj.GetAllProjects();
+            return Ok(projects);
+        }
+            
         [HttpPost]
         public IActionResult Add(Project pro) //Fleksibel pakke. Bruges når man for en masse forskellige slags data.
         //Det er et interface der giver dig lov til at retunere hvad som helst så længe der er et gyldigt http svar
@@ -29,19 +36,11 @@ namespace Server.Controllers
         [HttpGet("{id}")]
         public ActionResult<Calculation> GetProjectDetails(int id)
         {
-            try
-            {
                 var result = crProj.GetProjectDetails(id);
                 if (result == null) return NotFound("Project not found");
                 {
                     return Ok(result);
                 }
-            }
-            catch (Exception ex)
-            {
-                return StatusCode(500,  "Error: " + ex.Message);
-            }
-
         }
         
         [HttpPost("uploadhours")]

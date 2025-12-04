@@ -11,5 +11,7 @@ namespace Server.Repositories
         void AddMaterials(ProjectMaterial projmat);
         
         Calculation? GetProjectDetails(int projectId);
+        
+        IEnumerable<Project> GetAllProjects();
     }
 }

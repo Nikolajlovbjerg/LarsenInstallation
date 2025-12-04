@@ -27,8 +27,8 @@ namespace Server.Repositories
                 mConnection.Open();
                 var command = mConnection.CreateCommand();
                 command.CommandText = @"INSERT INTO projects
-                    (name, datecreated, svend_timepris, lærling_timepris, konsulent_timepris, arbejdsmand_timepris) 
-                    VALUES (@name, @datecreated, @svend_timepris, @lærling_timepris, @konsulent_timepris, @arbejdsmand_timepris)          
+                    (name, billedeurl ,datecreated, svend_timepris, lærling_timepris, konsulent_timepris, arbejdsmand_timepris) 
+                    VALUES (@name, @billedeurl ,@datecreated, @svend_timepris, @lærling_timepris, @konsulent_timepris, @arbejdsmand_timepris)          
                     RETURNING projectid"; //Retunering query som sender projectid tilbage
 
 
@@ -36,6 +36,11 @@ namespace Server.Repositories
                 paramStop.ParameterName = "name";
                 command.Parameters.Add(paramStop);
                 paramStop.Value = pro.Name;
+                
+                var paramBillede = command.CreateParameter();
+                paramBillede.ParameterName = "billedeurl";
+                command.Parameters.Add(paramBillede);
+                paramBillede.Value = pro.ImageUrl;
 
                 var paramTimer = command.CreateParameter();
                 paramTimer.ParameterName = "datecreated";
@@ -81,13 +86,18 @@ namespace Server.Repositories
                 mConnection.Open();
                 var command = mConnection.CreateCommand();
                 command.CommandText = @"INSERT INTO projecthours
-                    (projectid, dato, stoptid, timer, type, kostpris) 
-                    VALUES (@projectid, @dato, @stoptid, @timer, @type, @kostpris)";
+                    (projectid, medarbejder, dato, stoptid, timer, type, kostpris) 
+                    VALUES (@projectid, @medarbejder, @dato, @stoptid, @timer, @type, @kostpris)";
 
                 var paramProjId = command.CreateParameter();
                 paramProjId.ParameterName = "projectid";
                 command.Parameters.Add(paramProjId);
                 paramProjId.Value = proj.ProjectId;
+                
+                var paramMed = command.CreateParameter();
+                paramMed.ParameterName = "medarbejder";
+                paramMed.Value = proj.Medarbejder ?? (object)DBNull.Value;
+                command.Parameters.Add(paramMed);
 
                 Console.WriteLine(command.CommandText);
                 var paramDato = command.CreateParameter();
@@ -174,7 +184,42 @@ namespace Server.Repositories
                 command.ExecuteNonQuery();
             }
         }
+
+        public IEnumerable<Project> GetAllProjects()
+        {
+            var projects = new List<Project>();
+
+            using (var conn = new NpgsqlConnection(conString))
+            {
+                conn.Open();
         
+                // Vi henter alle projekter, sorteret med nyeste først (valgfrit, men brugervenligt)
+                string query = "SELECT * FROM projects ORDER BY datecreated DESC";
+
+                using (var command = new NpgsqlCommand(query, conn))
+                using (var reader = command.ExecuteReader())
+                {
+                    while (reader.Read())
+                    {
+                        var p = new Project
+                        {
+                            ProjectId = Convert.ToInt32(reader["projectid"]),
+                            Name = reader["name"] == DBNull.Value ? "Ukendt" : reader["name"].ToString(),
+                            DateCreated = reader["datecreated"] == DBNull.Value ? DateTime.MinValue : Convert.ToDateTime(reader["datecreated"]),
+                            ImageUrl = reader["billedeurl"] == DBNull.Value ? string.Empty : reader["billedeurl"].ToString(),
+                            SvendTimePris = reader["svend_timepris"] == DBNull.Value ? 0 : Convert.ToInt32(reader["svend_timepris"]),
+                            LærlingTimePris = reader["lærling_timepris"] == DBNull.Value ? 0 : Convert.ToInt32(reader["lærling_timepris"]),
+                            KonsulentTimePris = reader["konsulent_timepris"] == DBNull.Value ? 0 : Convert.ToInt32(reader["konsulent_timepris"]),
+                            ArbjedsmandTimePris = reader["arbejdsmand_timepris"] == DBNull.Value ? 0 : Convert.ToInt32(reader["arbejdsmand_timepris"])
+                        };
+                
+                        projects.Add(p);
+                    }
+                }
+            }
+
+            return projects;
+        }
        
         
         public Calculation? GetProjectDetails(int projectId)
@@ -192,13 +237,14 @@ namespace Server.Repositories
                 {
                     dto.Project = new Project
                     {
-                        ProjectId = reader.GetInt32(0),
-                        Name = reader.GetString(1),
-                        DateCreated = reader.GetDateTime(2),
-                        SvendTimePris = reader.GetInt32(3),
-                        LærlingTimePris = reader.GetInt32(4),
-                        KonsulentTimePris = reader.GetInt32(5),
-                        ArbjedsmandTimePris = reader.GetInt32(6)
+                        ProjectId = Convert.ToInt32(reader["projectid"]),
+                        Name = reader["name"].ToString(),
+                        ImageUrl = reader["billedeurl"] == DBNull.Value ? string.Empty : reader["billedeurl"].ToString(),
+                        DateCreated = Convert.ToDateTime(reader["datecreated"]),
+                        SvendTimePris = Convert.ToInt32(reader["svend_timepris"]),
+                        LærlingTimePris = Convert.ToInt32(reader["lærling_timepris"]),
+                        KonsulentTimePris = Convert.ToInt32(reader["konsulent_timepris"]),
+                        ArbjedsmandTimePris = Convert.ToInt32(reader["arbejdsmand_timepris"])
                     };
                 }
                 else return null;
@@ -212,14 +258,13 @@ namespace Server.Repositories
                 {
                     var m = new ProjectMaterial
                     {
-                        ProjectId = reader.GetInt32(0),
-                        MaterialsId = reader.GetInt32(1),
-                        Beskrivelse = reader.GetString(2),
-                        Kostpris = reader.GetDecimal(3),
-                        Antal = reader.GetDecimal(4),
-                        Total = reader.GetDecimal(5),
-                        Avance = reader.GetDecimal(6),
-                        Dækningsgrad = reader.GetDecimal(7),
+                        ProjectId = Convert.ToInt32(reader["projectid"]),
+                        Beskrivelse = reader["beskrivelse"] == DBNull.Value ? "" : reader["beskrivelse"].ToString(),
+                        Kostpris = Convert.ToDecimal(reader["kostpris"]),
+                        Antal = Convert.ToDecimal(reader["antal"]),
+                        Total = Convert.ToDecimal(reader["total"]),
+                        Avance = Convert.ToDecimal(reader["avance"]),
+                        Dækningsgrad = Convert.ToDecimal(reader["dækningsgrad"]),
 
                     };
                     dto.Materials.Add(m);
@@ -237,31 +282,55 @@ namespace Server.Repositories
                 using var reader = command.ExecuteReader();
                 while (reader.Read())
                 {
-                    var h = new ProjectHour
+                    dto.Hours.Add(new ProjectHour
                     {
-                        ProjectId = reader.GetInt32(0),
-                        HourId = reader.GetInt32(1),
-                        Dato = reader.GetDateTime(2),
-                        Timer = reader.GetDecimal(3),
-                        Type = reader.GetString(4),
-                        Kostpris = reader.GetDecimal(5),
-                    };
-                    dto.Hours.Add(h);
-                    
-                    dto.TotalKostPrisTimer += h.Kostpris;
-
-                    decimal timeSats = dto.Project.SvendTimePris;
-                    var type = h.Type.ToLower();
-
-                    if (type.Contains("svend")) timeSats = dto.Project.SvendTimePris;
-                    else if (type.Contains("lærling")) timeSats = dto.Project.LærlingTimePris;
-                    else if (type.Contains("konsulent")) timeSats = dto.Project.KonsulentTimePris;
-                    else if (type.Contains("arbejdsmand")) timeSats = dto.Project.ArbjedsmandTimePris;
-                    
-                    dto.TotalPrisTimer += (h.Timer * timeSats);
-
+                        ProjectId = Convert.ToInt32(reader["projectid"]),
+                        // Henter navnet så vi kan koble overtid med rollen
+                        Medarbejder = reader["medarbejder"] == DBNull.Value ? "Ukendt" : reader["medarbejder"].ToString(),
+                        Dato = reader["dato"] == DBNull.Value ? null : Convert.ToDateTime(reader["dato"]),
+                        Stoptid = reader["stoptid"] == DBNull.Value ? null : Convert.ToDateTime(reader["stoptid"]),
+                        Timer = Convert.ToDecimal(reader["timer"]),
+                        Type = reader["type"] == DBNull.Value ? "" : reader["type"].ToString(),
+                        Kostpris = Convert.ToDecimal(reader["kostpris"]),
+                    });
                 }
             }
+
+            // 4. BEREGN PRISER PÅ TIMER (Logik med LINQ)
+            // Vi grupperer pr. medarbejder for at finde ud af, om de er Svend eller Lærling
+            foreach (var group in dto.Hours.GroupBy(x => x.Medarbejder))
+            {
+                // A. Find rollen: Kig efter den første linje, der IKKE er overtid.
+                var normalType = group
+                    .FirstOrDefault(h => !h.Type.ToLower().Contains("overtid"))?
+                    .Type.ToLower() ?? "svend"; // Fallback til Svend hvis intet findes
+
+                // B. Find grundsatsen baseret på rollen
+                decimal grundSats = 0;
+                if (normalType.Contains("lærling"))       grundSats = dto.Project.LærlingTimePris;
+                else if (normalType.Contains("konsulent")) grundSats = dto.Project.KonsulentTimePris;
+                else if (normalType.Contains("arbejdsmand")) grundSats = dto.Project.ArbjedsmandTimePris;
+                else                                       grundSats = dto.Project.SvendTimePris;
+
+                // C. Gennemgå timerne og læg overtidstillæg på
+                foreach (var h in group)
+                {
+                    decimal faktor = 1.0m;
+                    string typeLower = h.Type.ToLower();
+
+                    if (typeLower.Contains("overtid 1")) faktor = 1.5m; // 50% ekstra
+                    else if (typeLower.Contains("overtid 2")) faktor = 2.0m; // 100% ekstra
+
+                    // Beregn og gem
+                    decimal salgsPrisForRække = h.Timer * grundSats * faktor;
+                    
+                    dto.TotalPrisTimer += salgsPrisForRække;
+                    dto.TotalKostPrisTimer += h.Kostpris;
+                }
+            }
+
+            // Opdater total timer til visning
+            dto.TotalTimer = dto.Hours.Sum(h => h.Timer);
             
             return dto;
         }
