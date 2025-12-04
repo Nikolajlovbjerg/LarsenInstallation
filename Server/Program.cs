@@ -1,5 +1,4 @@
 using Server.Repositories;
-using Server.Repositories.ExcelRepos;
 using Server.Repositories.Proj;
 using Server.Repositories.User;
 using Server.Service;
@@ -11,8 +10,6 @@ System.Text.Encoding.RegisterProvider(System.Text.CodePagesEncodingProvider.Inst
 
 
 builder.Services.AddSingleton<ICreateUserRepoSQL, CreateUserRepoSQL>();
-builder.Services.AddSingleton<IExcelRepo, ExcelRepo>();
-builder.Services.AddSingleton<IMaterialExcelRepo, MaterialExcelRepo>();
 builder.Services.AddSingleton<ICreateProjectRepo, CreateProjectRepo>();
 
 builder.Services.AddSingleton<IProjectRepo, ProjectRepositorySQL>();

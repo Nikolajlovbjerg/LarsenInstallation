@@ -50,6 +50,12 @@
                     <InputNumber id="arbejdsmand" class="form-control" @bind-Value="aProject.ArbejdsmandTimePris" />
                     <label for="konsulent">Arbejdsmand sats</label>
                 </div>
+
+                <div class="form-floating-group">
+                    <InputText id="billede" class="form-control" @bind-Value="aProject.ImageUrl" />
+                    <label for="billede">Billede link</label>
+                </div>
+                
             </div>
                 
             <div class="">
@@ -99,13 +105,13 @@
             // 4. Hvis der er valgt en Time-fil, upload den nu med det nye ID
             if (timeFile != null)
             {
-                await UploadFileToApi(timeFile, newProjectId, "api/uploadexcel");
+                await UploadFileToApi(timeFile, newProjectId, "api/createproject/uploadhours");
             }
 
             // 5. Hvis der er valgt en Materiale-fil, upload den nu med det nye ID
             if (materialeFile != null)
             {
-                await UploadFileToApi(materialeFile, newProjectId, "api/materialuploadexcel");
+                await UploadFileToApi(materialeFile, newProjectId, "api/createproject/uploadmaterials");
             }
         }
 

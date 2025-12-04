@@ -8,6 +8,8 @@ public class Project
     
     public DateTime DateCreated { get; set; } = DateTime.UtcNow;
     
+    public string ImageUrl { get; set; } = string.Empty;
+    
     public int SvendTimePris { get; set; }
     
     public int LærlingTimePris { get; set; }

@@ -1,0 +1,21 @@
+@using Core
+
+
+<div class="ads-grid">
+    @if (Projects == null || !Projects.Any())
+    {
+        <p>Ingen projekter at vise.</p>
+    }
+    else
+    {
+        @foreach (var a in Projects)
+        {
+            <ProjectComponent Project="a" />
+        }
+    }
+</div>
+
+@code 
+{
+    [Parameter] public IEnumerable<Project> Projects { get; set; }
+}
