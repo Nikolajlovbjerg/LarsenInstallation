@@ -28,26 +28,56 @@ else
 
         @if (showClientView)
         {
-            /* --- KUNDEVISNING --- */
-            /* Viser kun den store opsummering og skjuler tabellen */
-            <div class="card text-white bg-success mb-4 shadow">
-                <div class="card-header">Tilbudsoversigt</div>
-                <div class="card-body text-center">
-                    <h2 class="display-4 fw-bold">@details.SamletTotalPris.ToString("N2") kr.</h2>
-                    <p class="lead">Inkl. materialer og arbejdstimer</p>
-                    <hr />
-                    <div class="row mt-3">
-                        <div class="col-md-4">
-                            <h5>Materialer (Total)</h5>
-                            <p class="fs-4">@details.TotalPrisMaterialer.ToString("N2") kr.</p>
+            /* ========================================== */
+            /* KUNDEVISNING (Opdelt i bokse)              */
+            /* ========================================== */
+
+            <div class="card text-white bg-success mb-4 shadow text-center">
+                <div class="card-body py-4">
+                    <h2 class="display-3 fw-bold">@details.SamletTotalPris.ToString("N2") kr.</h2>
+                    <p class="fs-5 mb-0">Samlet tilbudspris</p>
+                </div>
+            </div>
+
+            <div class="row mb-5">
+                <div class="col-md-4">
+                    <div class="card h-100 shadow-sm text-center border-success">
+                        <div class="card-header bg-transparent border-success fw-bold text-success">
+                            Materialer
                         </div>
-                        <div class="col-md-4">
-                            <h5>Arbejdsløn (Total)</h5>
-                            <p class="fs-4">@details.TotalPrisTimer.ToString("N2") kr.</p>
+                        <div class="card-body d-flex align-items-center justify-content-center">
+                            <div>
+                                <h3 class="card-title text-dark">@details.TotalPrisMaterialer.ToString("N2") kr.</h3>
+                                <small class="text-muted">Salg af materialer</small>
+                            </div>
                         </div>
-                        <div class="col-md-4">
-                            <h5>Estimeret tid</h5>
-                            <p class="fs-4">@details.TotalTimer.ToString("N2") timer</p>
+                    </div>
+                </div>
+
+                <div class="col-md-4">
+                    <div class="card h-100 shadow-sm text-center border-success">
+                        <div class="card-header bg-transparent border-success fw-bold text-success">
+                            Arbejdsløn
+                        </div>
+                        <div class="card-body d-flex align-items-center justify-content-center">
+                            <div>
+                                <h3 class="card-title text-dark">@details.TotalPrisTimer.ToString("N2") kr.</h3>
+                                <small class="text-muted">Total for timer</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-md-4">
+                    <div class="card h-100 shadow-sm text-center border-success">
+                        <div class="card-header bg-transparent border-success fw-bold text-success">
+                            Estimeret tid
+                        </div>
+                        <div class="card-body d-flex align-items-center justify-content-center">
+                            <div>
+                                <h3 class="card-title text-dark">@details.TotalTimer.ToString("N2") timer</h3>
+                                <small class="text-muted">Samlet tidsforbrug</small>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -55,7 +85,9 @@ else
         }
         else
         {
-            /* --- INTERN VISNING --- */
+            /* ========================================== */
+            /* INTERN VISNING (Originale data + DB)       */
+            /* ========================================== */
             <div class="row mb-4">
                 <div class="col-md-4">
                     <div class="card text-white bg-success mb-3 h-100">
@@ -132,9 +164,7 @@ else
     public int Id { get; set; }
 
     private Calculation? details;
-    
-    // Styrer visningen
-    private bool showClientView = false; 
+    private bool showClientView = false;
 
     protected override async Task OnInitializedAsync()
     {
