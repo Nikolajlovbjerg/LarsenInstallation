@@ -44,12 +44,12 @@ namespace ServerApp.Controllers
             userRepo.Delete(id);
         }
 
-        [HttpDelete]
+        /*[HttpDelete]
         [Route("delete")]
         public void DeleteByQuery([FromQuery] int id)
         {
             userRepo.Delete(id);
-        }
+        }*/
 
 
 
