@@ -49,7 +49,7 @@ namespace Server.Controllers
             if (file == null || file.Length == 0)
                 return BadRequest("No file uploaded");
             
-            // Tjekker om filnavnet starter med "Work" (som i den gamle controller)
+            // Tjekker om filnavnet starter med "case" (som i den gamle controller)
             if (file.FileName.StartsWith("case"))
             {
                 using Stream s = new MemoryStream();
@@ -74,7 +74,7 @@ namespace Server.Controllers
                 return BadRequest("No file uploaded");
             
             // Tjekker om filnavnet starter med "Mater" (som i den gamle controller)
-            if (file.FileName.StartsWith("ordre"))
+            if (file.FileName.StartsWith("ordrematerialer"))
             {
                 using Stream s = new MemoryStream();
                 file.CopyTo(s);

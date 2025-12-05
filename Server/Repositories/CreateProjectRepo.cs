@@ -26,10 +26,12 @@ namespace Server.Repositories
             {
                 mConnection.Open();
                 var command = mConnection.CreateCommand();
-                command.CommandText = @"INSERT INTO projects
-                    (name, billedeurl ,datecreated, svend_timepris, lærling_timepris, konsulent_timepris, arbejdsmand_timepris) 
-                    VALUES (@name, @billedeurl ,@datecreated, @svend_timepris, @lærling_timepris, @konsulent_timepris, @arbejdsmand_timepris)          
-                    RETURNING projectid"; //Retunering query som sender projectid tilbage
+                command.CommandText = @"
+                    INSERT INTO projects
+                        (name, billedeurl ,datecreated, svend_timepris, lærling_timepris, konsulent_timepris, arbejdsmand_timepris) 
+                    VALUES 
+                        (@name, @billedeurl ,@datecreated, @svend_timepris, @lærling_timepris, @konsulent_timepris, @arbejdsmand_timepris)          
+                        RETURNING projectid"; //Retunering query som sender projectid tilbage
 
 
                 var paramStop = command.CreateParameter();
@@ -78,16 +80,15 @@ namespace Server.Repositories
 
         public void AddHour(ProjectHour proj)
         {
-            var result = new List<ProjectHour>();
-
-
             using (var mConnection = new NpgsqlConnection(conString))
             {
                 mConnection.Open();
                 var command = mConnection.CreateCommand();
-                command.CommandText = @"INSERT INTO projecthours
-                    (projectid, medarbejder, dato, stoptid, timer, type, kostpris) 
-                    VALUES (@projectid, @medarbejder, @dato, @stoptid, @timer, @type, @kostpris)";
+                command.CommandText = @"
+                    INSERT INTO projecthours
+                        (projectid, medarbejder, dato, stoptid, timer, type, kostpris) 
+                    VALUES 
+                        (@projectid, @medarbejder, @dato, @stoptid, @timer, @type, @kostpris)";
 
                 var paramProjId = command.CreateParameter();
                 paramProjId.ParameterName = "projectid";
@@ -133,16 +134,15 @@ namespace Server.Repositories
         
         public void AddMaterials(ProjectMaterial projmat)
         {
-            var result = new List<ProjectMaterial>();
-
-
             using (var mConnection = new NpgsqlConnection(conString))
             {
                 mConnection.Open();
                 var command = mConnection.CreateCommand();
-                command.CommandText = @"INSERT INTO projectmaterials
-                    (projectid, beskrivelse, kostpris, antal, total, avance, dækningsgrad) 
-                    VALUES (@projectid, @beskrivelse, @kostpris, @antal, @total, @avance, @dækningsgrad)";
+                command.CommandText = @"
+                    INSERT INTO projectmaterials
+                        (projectid, beskrivelse, kostpris, antal, total, avance, dækningsgrad) 
+                    VALUES 
+                        (@projectid, @beskrivelse, @kostpris, @antal, @total, @avance, @dækningsgrad)";
 
 
                 var paramProjId = command.CreateParameter();
@@ -194,7 +194,9 @@ namespace Server.Repositories
                 conn.Open();
         
                 // Vi henter alle projekter, sorteret med nyeste først (valgfrit, men brugervenligt)
-                string query = "SELECT * FROM projects ORDER BY datecreated DESC";
+                string query = "SELECT * FROM projects " +
+                               "ORDER BY datecreated " +
+                               "DESC";
 
                 using (var command = new NpgsqlCommand(query, conn))
                 using (var reader = command.ExecuteReader())
@@ -229,7 +231,9 @@ namespace Server.Repositories
             
             var dto = new Calculation();
 
-            using (var command = new NpgsqlCommand("SELECT * FROM projects WHERE projectid = @id", conn))
+            using (var command = new NpgsqlCommand("SELECT * FROM projects " +
+                                                            "WHERE " +
+                                                            "projectid = @id", conn))
             {
                 command.Parameters.AddWithValue("id", projectId);
                 using var reader = command.ExecuteReader();
@@ -250,7 +254,9 @@ namespace Server.Repositories
                 else return null;
             }
 
-            using (var command = new NpgsqlCommand("SELECT * FROM projectmaterials WHERE projectid = @id", conn))
+            using (var command = new NpgsqlCommand("SELECT * FROM projectmaterials " +
+                                                            "WHERE " +
+                                                            "projectid = @id", conn))
             {
                 command.Parameters.AddWithValue("id", projectId);
                 using var reader = command.ExecuteReader();
@@ -276,7 +282,9 @@ namespace Server.Repositories
             }
 
 
-            using (var command = new NpgsqlCommand("SELECT * FROM projecthours WHERE projectid = @id", conn))
+            using (var command = new NpgsqlCommand("SELECT * FROM projecthours " +
+                                                            "WHERE " +
+                                                            "projectid = @id", conn))
             {
                 command.Parameters.AddWithValue("id", projectId);
                 using var reader = command.ExecuteReader();
@@ -307,10 +315,14 @@ namespace Server.Repositories
 
                 // B. Find grundsatsen baseret på rollen
                 decimal grundSats = 0;
-                if (normalType.Contains("lærling"))       grundSats = dto.Project.LærlingTimePris;
-                else if (normalType.Contains("konsulent")) grundSats = dto.Project.KonsulentTimePris;
-                else if (normalType.Contains("arbejdsmand")) grundSats = dto.Project.ArbejdsmandTimePris;
-                else                                       grundSats = dto.Project.SvendTimePris;
+                if (normalType.Contains("lærling"))       
+                    grundSats = dto.Project.LærlingTimePris;
+                else if (normalType.Contains("konsulent")) 
+                    grundSats = dto.Project.KonsulentTimePris;
+                else if (normalType.Contains("arbejdsmand")) 
+                    grundSats = dto.Project.ArbejdsmandTimePris;
+                else                                       
+                    grundSats = dto.Project.SvendTimePris;
 
                 // C. Gennemgå timerne og læg overtidstillæg på
                 foreach (var h in group)
@@ -343,13 +355,14 @@ namespace Server.Repositories
                 var command = mConnection.CreateCommand();
 
                 // Her opdaterer vi navn, satser og billede hvor ID'et matcher
-                command.CommandText = @"UPDATE projects SET 
-                name = @name, 
-                billedeurl = @billedeurl,
-                svend_timepris = @svend, 
-                lærling_timepris = @lærling, 
-                konsulent_timepris = @konsulent, 
-                arbejdsmand_timepris = @arbejdsmand
+                command.CommandText = @"
+                UPDATE projects SET 
+                    name = @name, 
+                    billedeurl = @billedeurl,
+                    svend_timepris = @svend, 
+                    lærling_timepris = @lærling, 
+                    konsulent_timepris = @konsulent, 
+                    arbejdsmand_timepris = @arbejdsmand
                 WHERE projectid = @projectid";
 
                 // Tilføj parametre

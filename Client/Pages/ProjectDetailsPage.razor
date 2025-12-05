@@ -57,27 +57,6 @@ else
         </div>
 
         <h3>Timeregistreringer (@details.TotalTimer timer)</h3>
-        <table class="table table-striped">
-            <thead>
-                <tr>
-                    <th>Dato</th>
-                    <th>Type</th>
-                    <th>Timer</th>
-                    <th>Kostpris</th>
-                </tr>
-            </thead>
-            <tbody>
-                @foreach (var h in details.Hours)
-                {
-                    <tr>
-                        <td>@(h.Dato?.ToShortDateString() ?? "-")</td>
-                        <td>@h.Type</td>
-                        <td>@h.Timer</td>
-                        <td>@h.Kostpris</td>
-                    </tr>
-                }
-            </tbody>
-        </table>
     </div>
 }
 

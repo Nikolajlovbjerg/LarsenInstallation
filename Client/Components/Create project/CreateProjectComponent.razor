@@ -125,7 +125,7 @@
     {
         // Åbner en strøm til læsning af filen. 
         // 10000000 bytes = ca. 10 MB grænse. Filer større end dette vil fejle.
-        var stream = file.OpenReadStream(10000000);
+        var stream = file.OpenReadStream(100000000);
 
         // Opretter en 'container' til filen, ligesom en HTML <form>
         using var content = new MultipartFormDataContent();

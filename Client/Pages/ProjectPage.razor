@@ -1,4 +1,5 @@
 @page "/"
+@using Client.Components
 @using Client.Components.Projects
 @using Core
 @inject HttpClient Http
@@ -14,8 +15,6 @@
     {
         <ProjectGrid Projects="_projects" />
     }
-      
-   
 </section>
 
 

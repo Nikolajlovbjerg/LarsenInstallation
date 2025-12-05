@@ -32,12 +32,10 @@ namespace Server.Service
                 p.Kostpris = Decimal.Parse(row[2].ToString());
                 p.Antal = Decimal.Parse(row[4].ToString());
                 p.Total = Decimal.Parse(row[17].ToString());
-                p.Avance = decimal.Parse(row[19].ToString());
+                p.Avance = Decimal.Parse(row[19].ToString());
                 p.Dækningsgrad = Decimal.Parse(row[20].ToString());
 
-
-                // other fields here...
-
+                
                 result.Add(p);
                 Console.WriteLine($"Beskrivelse= {p.Beskrivelse}, Kostpris = {p.Kostpris} Antal = {p.Antal}, Total = {p.Total}  Avance = {p.Avance}, dækningsgrad = {p.Dækningsgrad}");
                 row_no++;
