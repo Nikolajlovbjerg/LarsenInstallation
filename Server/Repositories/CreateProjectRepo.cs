@@ -376,8 +376,20 @@ namespace Server.Repositories
 
                 command.ExecuteNonQuery();
             }
+
         }
-        
+        public void Delete(int id)
+        {
+            using (var mConnection = new NpgsqlConnection(conString))
+            {
+                mConnection.Open();
+                var command = mConnection.CreateCommand();
+
+                command.CommandText = $"DELETE FROM projects WHERE projectid={id}";
+                command.ExecuteNonQuery();
+            }
+        }
+
     }
 }
 

@@ -111,6 +111,13 @@ namespace Server.Controllers
                 return StatusCode(500, "Server fejl: " + ex.Message);
             }
         }
-        
+
+        [HttpDelete]
+        [Route("delete/{id:int}")]
+        public void Delete(int id)
+        {
+            crProj.Delete(id);
+        }
+
     }
 }

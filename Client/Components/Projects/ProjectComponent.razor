@@ -1,5 +1,6 @@
 @using Core
 @inject NavigationManager Nav
+@inject HttpClient http
 
 
 
@@ -58,10 +59,15 @@
         await Task.Delay(200); 
         _showMenu = false;
     }
-    
-    private void DeleteProject()
+
+    private async Task DeleteProject()
     {
-        
+        var id = Project.ProjectId;
+
+        var response = await http.DeleteAsync($"http://localhost:5028/api/createproject/delete/{id}");
+
+        Nav.NavigateTo("/", forceLoad: true);
+
     }
     
     

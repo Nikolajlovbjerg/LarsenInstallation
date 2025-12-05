@@ -15,5 +15,7 @@ namespace Server.Repositories
         IEnumerable<Project> GetAllProjects();
         
         void Update(Project pro);
+
+        void Delete(int id);
     }
 }
