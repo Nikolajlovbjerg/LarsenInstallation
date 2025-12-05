@@ -34,11 +34,7 @@ else
             HourGroups="GetHoursByType()" 
             MaterialGroups="@(showClientView ? GetMaterialsByCategory() : GetAllMaterialsGrouped())" 
             IsClientView="showClientView" />
-
-        @if (!showClientView)
-        {
-            <TimeLog Hours="details.Hours" />
-        }
+        
     </div>
 }
 
