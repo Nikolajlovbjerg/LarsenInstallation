@@ -32,6 +32,10 @@
                 <InputText id="name" class="form-control" @bind-Value="aProject.Name" />
                 <label for="name">Navn</label>
             </div>
+            <div class="form-floating-group">
+                <InputText id="billede" class="form-control" @bind-Value="aProject.ImageUrl" />
+                <label for="billede">Billede link</label>
+            </div>
                 
             <div class="form-grid">
                 <div class="form-floating-group">
@@ -49,11 +53,6 @@
                 <div class="form-floating-group">
                     <InputNumber id="arbejdsmand" class="form-control" @bind-Value="aProject.ArbejdsmandTimePris" />
                     <label for="konsulent">Arbejdsmand sats</label>
-                </div>
-
-                <div class="form-floating-group">
-                    <InputText id="billede" class="form-control" @bind-Value="aProject.ImageUrl" />
-                    <label for="billede">Billede link</label>
                 </div>
                 
             </div>

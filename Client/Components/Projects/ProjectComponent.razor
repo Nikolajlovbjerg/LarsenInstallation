@@ -17,7 +17,7 @@
             @if (_showMenu)
             {
                 <div class="dropdown-menu">
-                    <button class="dropdown-item" @onclick="GotoDetailPage">Rediger</button>
+                    <button class="dropdown-item" @onclick="GotoEditPage">Rediger</button>
                     <button class="dropdown-item danger" @onclick="DeleteProject">Slet projekt</button>
                 </div>
             }
@@ -42,6 +42,13 @@
     {
         var id = Project.ProjectId;
         Nav.NavigateTo($"project/{id}");
+        return Task.CompletedTask;
+    }
+    
+    private Task GotoEditPage()
+    {
+        var id = Project.ProjectId;
+        Nav.NavigateTo($"project/edit/{id}");
         return Task.CompletedTask;
     }
 

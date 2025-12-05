@@ -23,4 +23,8 @@
       <Folder Include="PW1\" />
     </ItemGroup>
 
+    <ItemGroup>
+      <_ContentIncludedByDefault Remove="Components\Users\UserComponent.razor" />
+    </ItemGroup>
+
 </Project>
