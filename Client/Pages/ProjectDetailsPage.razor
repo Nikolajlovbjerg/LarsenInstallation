@@ -39,7 +39,7 @@ else
                 </div>
             </div>
 
-            <div class="row mb-5">
+            <div class="row mb-4">
                 <div class="col-md-4">
                     <div class="card h-100 shadow-sm text-center border-success">
                         <div class="card-header bg-transparent border-success fw-bold text-success">
@@ -79,6 +79,48 @@ else
                                 <small class="text-muted">Samlet tidsforbrug</small>
                             </div>
                         </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="row mb-5">
+                <div class="col-md-6">
+                    <div class="card h-100 shadow-sm border-success">
+                        <div class="card-header bg-transparent border-success fw-bold text-success">
+                            Timeoversigt
+                        </div>
+                        <ul class="list-group list-group-flush">
+                            @foreach (var group in GetHoursByType())
+                            {
+                                <li class="list-group-item d-flex justify-content-between align-items-center">
+                                    <span>@group.Type</span>
+                                    <span class="badge bg-success rounded-pill">@group.Total.ToString("N2") t</span>
+                                </li>
+                            }
+                        </ul>
+                    </div>
+                </div>
+
+                <div class="col-md-6">
+                    <div class="card h-100 shadow-sm border-success">
+                        <div class="card-header bg-transparent border-success fw-bold text-success">
+                            Væsentligste materialer (Top 5)
+                        </div>
+                        <ul class="list-group list-group-flush">
+                            @foreach (var mat in GetTopMaterials())
+                            {
+                                <li class="list-group-item d-flex justify-content-between align-items-center">
+                                    <span class="text-truncate" style="max-width: 70%;" title="@mat.Beskrivelse">
+                                        @mat.Beskrivelse
+                                    </span>
+                                    <span class="fw-bold">@mat.Total.ToString("N2") kr.</span>
+                                </li>
+                            }
+                            @if (!details.Materials.Any())
+                            {
+                                <li class="list-group-item text-muted text-center">Ingen materialer registreret</li>
+                            }
+                        </ul>
                     </div>
                 </div>
             </div>
@@ -169,5 +211,41 @@ else
     protected override async Task OnInitializedAsync()
     {
         details = await Http.GetFromJsonAsync<Calculation>($"api/createproject/{Id}");
+    }
+
+    // Hjælpemetode til at gruppere timer (Svend, Lærling etc.)
+    private List<HourGroup> GetHoursByType()
+    {
+        if (details?.Hours == null) return new List<HourGroup>();
+
+        return details.Hours
+            .GroupBy(h => {
+                var t = h.Type?.ToLower() ?? "";
+                if (t.Contains("lærling")) return "Lærling";
+                if (t.Contains("konsulent")) return "Konsulent";
+                if (t.Contains("arbejdsmand")) return "Arbejdsmand";
+                return "Svend"; // Standard kategori
+            })
+            .Select(g => new HourGroup { Type = g.Key, Total = g.Sum(x => x.Timer) })
+            .OrderByDescending(x => x.Total)
+            .ToList();
+    }
+
+    // Hjælpemetode til at hente Top 5 dyreste materialer
+    private List<ProjectMaterial> GetTopMaterials()
+    {
+        if (details?.Materials == null) return new List<ProjectMaterial>();
+
+        return details.Materials
+            .OrderByDescending(m => m.Total) // Sorterer efter dyreste totalpris
+            .Take(5)
+            .ToList();
+    }
+
+    // Simpel klasse til gruppering (kun til visning her)
+    public class HourGroup
+    {
+        public string Type { get; set; } = "";
+        public decimal Total { get; set; }
     }
 }
