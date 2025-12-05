@@ -10,7 +10,7 @@
     {
         @foreach (var a in Projects)
         {
-            <ProjectComponent Project="a" />
+            <ProjectComponent Project="a" OnDelete="OnDelete" />
         }
     }
 </div>
@@ -18,4 +18,5 @@
 @code 
 {
     [Parameter] public IEnumerable<Project> Projects { get; set; }
+    [Parameter] public EventCallback<int> OnDelete { get; set; }
 }

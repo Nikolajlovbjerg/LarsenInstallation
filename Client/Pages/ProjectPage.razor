@@ -1,5 +1,4 @@
 @page "/"
-@using Client.Components
 @using Client.Components.Projects
 @using Core
 @inject HttpClient Http
@@ -13,7 +12,7 @@
     }
     else
     {
-        <ProjectGrid Projects="_projects"/>
+        <ProjectGrid Projects="_projects" OnDelete="DeleteProject"/>
     }
 </section>
 
@@ -27,6 +26,13 @@
         _projects = await Http.GetFromJsonAsync<List<Project>>("http://localhost:5028/api/createproject");
     }
 
-
+    private async Task DeleteProject(int id)
+    {
+        // Sletter et specifik projekt via API'et
+        await Http.DeleteAsync($"http://localhost:5028/api/createproject/delete/{id}");
+		
+        // Henter den opdaterede liste, så hjemmeside opdateres bagefter
+        _projects = await Http.GetFromJsonAsync<List<Project>>($"http://localhost:5028/api/createproject");
+    }
    
 }

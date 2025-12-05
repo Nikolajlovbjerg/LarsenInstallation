@@ -36,8 +36,8 @@
 
 @code {
     [Parameter] public Project Project { get; set; }
-
-
+    [Parameter] public EventCallback<int> OnDelete { get; set; }
+    
     private Task GotoDetailPage()
     {
         var id = Project.ProjectId;
@@ -62,12 +62,7 @@
 
     private async Task DeleteProject()
     {
-        var id = Project.ProjectId;
-
-        var response = await http.DeleteAsync($"http://localhost:5028/api/createproject/delete/{id}");
-
-        Nav.NavigateTo("/", forceLoad: true);
-
+        if (OnDelete.HasDelegate) await OnDelete.InvokeAsync(Project.ProjectId);
     }
     
     
