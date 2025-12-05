@@ -140,9 +140,9 @@ namespace Server.Repositories
                 var command = mConnection.CreateCommand();
                 command.CommandText = @"
                     INSERT INTO projectmaterials
-                        (projectid, beskrivelse, kostpris, antal, total, avance, dækningsgrad) 
+                        (projectid, beskrivelse, kostpris, antal, leverandør, total, avance, dækningsgrad) 
                     VALUES 
-                        (@projectid, @beskrivelse, @kostpris, @antal, @total, @avance, @dækningsgrad)";
+                        (@projectid, @beskrivelse, @kostpris, @antal, @leverandør ,@total, @avance, @dækningsgrad)";
 
 
                 var paramProjId = command.CreateParameter();
@@ -165,6 +165,11 @@ namespace Server.Repositories
                 paramAntal.ParameterName = "antal";
                 command.Parameters.Add(paramAntal);
                 paramAntal.Value = projmat.Antal;
+                
+                var paramLev = command.CreateParameter();
+                paramLev.ParameterName = "leverandør";
+                command.Parameters.Add(paramLev);
+                paramLev.Value = projmat.Leverandør;
 
                 var paramTotal = command.CreateParameter();
                 paramTotal.ParameterName = "total";
@@ -269,6 +274,7 @@ namespace Server.Repositories
                         Kostpris = Convert.ToDecimal(reader["kostpris"]),
                         Antal = Convert.ToDecimal(reader["antal"]),
                         Total = Convert.ToDecimal(reader["total"]),
+                        Leverandør = reader["leverandør"] == DBNull.Value ? "" : reader["leverandør"].ToString(),
                         Avance = Convert.ToDecimal(reader["avance"]),
                         Dækningsgrad = Convert.ToDecimal(reader["dækningsgrad"]),
 

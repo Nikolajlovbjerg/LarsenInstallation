@@ -31,6 +31,7 @@ namespace Server.Service
                 p.Beskrivelse = row[1].ToString();
                 p.Kostpris = Decimal.Parse(row[2].ToString());
                 p.Antal = Decimal.Parse(row[4].ToString());
+                p.Leverandør = row[8].ToString();
                 p.Total = Decimal.Parse(row[17].ToString());
                 p.Avance = Decimal.Parse(row[19].ToString());
                 p.Dækningsgrad = string.IsNullOrEmpty(row[20].ToString()) ? 0 : decimal.Parse(row[20].ToString());
