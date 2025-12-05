@@ -12,83 +12,132 @@ else
 {
     <div class="container">
         <div class="d-flex justify-content-between align-items-center mb-4">
-            <h1>@details.Project.Name</h1>
-            <span class="badge bg-secondary">Oprettet: @details.Project.DateCreated.ToShortDateString()</span>
-        </div>
-
-        <div class="row mb-4">
-            <div class="col-md-4">
-                <div class="card text-white bg-success mb-3">
-                    <div class="card-header">Total pris</div>
-                    <div class="card-body">
-                        <h3 class="card-title">@details.SamletTotalPris.ToString("N2") kr.</h3>
-                        <p class="card-text">
-                            Materialer: @details.TotalPrisMaterialer.ToString("N0")<br/>
-                            Arbejdsløn: @details.TotalPrisTimer.ToString("N0")
-                        </p>
-                    </div>
-                </div>
+            <div>
+                <h1>@details.Project.Name</h1>
+                <span class="badge bg-secondary">Oprettet: @details.Project.DateCreated.ToShortDateString()</span>
             </div>
 
-            <div class="col-md-4">
-                <div class="card text-dark bg-light mb-3">
-                    <div class="card-header">Samlet Kostpris</div>
-                    <div class="card-body">
-                        <h3 class="card-title">@details.SamletKostPris.ToString("N2") kr.</h3>
-                        <p class="card-text">
-                            Materialer: @details.TotalKostPrisMaterialer.ToString("N0")<br/>
-                            Lønudgift: @details.TotalKostPrisTimer.ToString("N0")
-                        </p>
-                    </div>
-                </div>
-            </div>
-
-            <div class="col-md-4">
-                <div class="card text-white bg-primary mb-3">
-                    <div class="card-header">Dækningsbidrag</div>
-                    <div class="card-body">
-                        <h3 class="card-title">@details.Dækningsbidrag.ToString("N2") kr.</h3>
-                        <p class="card-text">
-                            Dækningsgrad: <strong>@details.Dækningsgrad.ToString("N1") %</strong>
-                        </p>
-                    </div>
-                </div>
+            <div class="form-check form-switch">
+                <input class="form-check-input" type="checkbox" role="switch" id="clientViewSwitch" 
+                       @bind="showClientView" style="cursor: pointer; width: 3em; height: 1.5em;">
+                <label class="form-check-label ms-2 fw-bold" for="clientViewSwitch" style="padding-top: 4px;">
+                    @(showClientView ? "Kundevisning: AKTIV" : "Kundevisning: Inaktiv")
+                </label>
             </div>
         </div>
 
-        <h3>Timeregistreringer (@details.TotalTimer timer)</h3>
-        <table class="table table-striped">
-            <thead>
-                <tr>
-                    <th>Dato</th>
-                    <th>Type</th>
-                    <th>Timer</th>
-                    <th>Kostpris</th>
-                </tr>
-            </thead>
-            <tbody>
-                @foreach (var h in details.Hours)
-                {
-                    <tr>
-                        <td>@(h.Dato?.ToShortDateString() ?? "-")</td>
-                        <td>@h.Type</td>
-                        <td>@h.Timer</td>
-                        <td>@h.Kostpris</td>
-                    </tr>
-                }
-            </tbody>
-        </table>
+        @if (showClientView)
+        {
+            /* --- KUNDEVISNING --- */
+            /* Viser kun den store opsummering og skjuler tabellen */
+            <div class="card text-white bg-success mb-4 shadow">
+                <div class="card-header">Tilbudsoversigt</div>
+                <div class="card-body text-center">
+                    <h2 class="display-4 fw-bold">@details.SamletTotalPris.ToString("N2") kr.</h2>
+                    <p class="lead">Inkl. materialer og arbejdstimer</p>
+                    <hr />
+                    <div class="row mt-3">
+                        <div class="col-md-4">
+                            <h5>Materialer (Total)</h5>
+                            <p class="fs-4">@details.TotalPrisMaterialer.ToString("N2") kr.</p>
+                        </div>
+                        <div class="col-md-4">
+                            <h5>Arbejdsløn (Total)</h5>
+                            <p class="fs-4">@details.TotalPrisTimer.ToString("N2") kr.</p>
+                        </div>
+                        <div class="col-md-4">
+                            <h5>Estimeret tid</h5>
+                            <p class="fs-4">@details.TotalTimer.ToString("N2") timer</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        }
+        else
+        {
+            /* --- INTERN VISNING --- */
+            <div class="row mb-4">
+                <div class="col-md-4">
+                    <div class="card text-white bg-success mb-3 h-100">
+                        <div class="card-header">Total pris (Salgspris)</div>
+                        <div class="card-body">
+                            <h3 class="card-title">@details.SamletTotalPris.ToString("N2") kr.</h3>
+                            <p class="card-text">
+                                Materialer: @details.TotalPrisMaterialer.ToString("N0")<br />
+                                Arbejdsløn: @details.TotalPrisTimer.ToString("N0")
+                            </p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-md-4">
+                    <div class="card text-dark bg-light mb-3 h-100">
+                        <div class="card-header">Samlet Kostpris (Internt)</div>
+                        <div class="card-body">
+                            <h3 class="card-title">@details.SamletKostPris.ToString("N2") kr.</h3>
+                            <p class="card-text">
+                                Materialer: @details.TotalKostPrisMaterialer.ToString("N0")<br />
+                                Lønudgift: @details.TotalKostPrisTimer.ToString("N0")
+                            </p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-md-4">
+                    <div class="card text-white bg-primary mb-3 h-100">
+                        <div class="card-header">Dækningsbidrag</div>
+                        <div class="card-body">
+                            <h3 class="card-title">@details.Dækningsbidrag.ToString("N2") kr.</h3>
+                            <p class="card-text">
+                                Dækningsgrad: <strong>@details.Dækningsgrad.ToString("N1") %</strong>
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        }
+        
+        @if (!showClientView)
+        {
+            <div class="mt-5">
+                <h3>Timeregistreringer (@details.TotalTimer timer)</h3>
+                <table class="table table-striped table-hover">
+                    <thead>
+                        <tr>
+                            <th>Dato</th>
+                            <th>Type</th>
+                            <th>Timer</th>
+                            <th>Kostpris</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var h in details.Hours)
+                        {
+                            <tr>
+                                <td>@(h.Dato?.ToShortDateString() ?? "-")</td>
+                                <td>@h.Type</td>
+                                <td>@h.Timer</td>
+                                <td>@h.Kostpris</td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        }
     </div>
 }
 
 @code {
     [Parameter]
-    public int id { get; set; }
+    public int Id { get; set; }
 
     private Calculation? details;
+    
+    // Styrer visningen
+    private bool showClientView = false; 
 
     protected override async Task OnInitializedAsync()
     {
-        details = await Http.GetFromJsonAsync<Calculation>($"api/createproject/{id}");
+        details = await Http.GetFromJsonAsync<Calculation>($"api/createproject/{Id}");
     }
 }
