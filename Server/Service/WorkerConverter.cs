@@ -28,6 +28,7 @@ namespace Server.Service
             {
                 var row = ds.Tables[0].Rows[row_no];
                 ProjectHour p = new ProjectHour();
+                p.Medarbejder = row[0].ToString();
                 p.Dato = DateTime.Parse(row[1].ToString());
                 p.Stoptid = DateTime.Parse(row[2].ToString());
                 p.Timer = Decimal.Parse(row[5].ToString());
