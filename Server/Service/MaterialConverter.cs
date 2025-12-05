@@ -33,7 +33,7 @@ namespace Server.Service
                 p.Antal = Decimal.Parse(row[4].ToString());
                 p.Total = Decimal.Parse(row[17].ToString());
                 p.Avance = Decimal.Parse(row[19].ToString());
-                p.Dækningsgrad = Decimal.Parse(row[20].ToString());
+                p.Dækningsgrad = string.IsNullOrEmpty(row[20].ToString()) ? 0 : decimal.Parse(row[20].ToString());
 
                 
                 result.Add(p);
