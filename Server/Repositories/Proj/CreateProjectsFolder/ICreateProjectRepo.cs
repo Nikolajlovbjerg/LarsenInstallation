@@ -1,6 +1,6 @@
 ﻿using Core;
 
-namespace Server.Repositories
+namespace Server.Repositories.Proj.CreateProjectsFolder
 {
     public interface ICreateProjectRepo
     {

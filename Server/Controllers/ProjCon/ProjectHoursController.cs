@@ -1,16 +1,16 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using Core;
-using Server.Repositories;
+using Server.Repositories.Proj.HourCalculator;
 
-namespace Server.Controllers
+namespace Server.Controllers.ProjCon
 {
     [ApiController]
     [Route("api/projecthours")]
     public class ProjecthoursController : ControllerBase
     {
-        private readonly IProjectRepo _projectRepo;
+        private readonly IProjectHourCalcRepo _projectRepo;
 
-        public ProjecthoursController(IProjectRepo projectRepo)
+        public ProjecthoursController(IProjectHourCalcRepo projectRepo)
         {
             _projectRepo = projectRepo;
         }

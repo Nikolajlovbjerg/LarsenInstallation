@@ -1,9 +1,8 @@
 ﻿using Core;
 using Npgsql;
 using Server.PW1;
-using Server.Repositories;
 
-namespace Server.Repositories
+namespace Server.Repositories.Proj.CreateProjectsFolder
 {
     public class CreateProjectRepo : ICreateProjectRepo
     {
@@ -281,7 +280,7 @@ namespace Server.Repositories
                     };
                     dto.Materials.Add(m);
 
-                    dto.TotalKostPrisMaterialer += (m.Kostpris * m.Antal);
+                    dto.TotalKostPrisMaterialer += m.Kostpris * m.Antal;
                     dto.TotalPrisMaterialer += m.Total;
                     
                 }

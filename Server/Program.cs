@@ -1,5 +1,5 @@
-using Server.Repositories;
-using Server.Repositories.Proj;
+using Server.Repositories.Proj.CreateProjectsFolder;
+using Server.Repositories.Proj.HourCalculator;
 using Server.Repositories.User;
 using Server.Service;
 
@@ -12,7 +12,7 @@ System.Text.Encoding.RegisterProvider(System.Text.CodePagesEncodingProvider.Inst
 builder.Services.AddSingleton<ICreateUserRepoSQL, CreateUserRepoSQL>();
 builder.Services.AddSingleton<ICreateProjectRepo, CreateProjectRepo>();
 
-builder.Services.AddSingleton<IProjectRepo, ProjectRepositorySQL>();
+builder.Services.AddSingleton<IProjectHourCalcRepo, ProjectHourCalcRepositorySQL>();
 
 builder.Services.AddControllers();
 
