@@ -14,11 +14,7 @@ namespace Server.Repositories.User
     $"Password={PASSWORD.PW1};" +
     "Ssl Mode=Require;" +
     "Trust Server Certificate=true;";
-
-        public CreateUserRepoSQL()
-        {
-
-        }
+        
         public List<Users> GetAll()
         {
             var result = new List<Users>();
