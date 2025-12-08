@@ -1,5 +1,6 @@
 @page "/adminuser"
 @using Core
+@using Client.Service
 @inject HttpClient Http
 @inject NavigationManager Nav
 
@@ -67,16 +68,16 @@
 
     protected override async Task OnInitializedAsync()
     {
-        _users = await Http.GetFromJsonAsync<List<Users>>("http://localhost:5028/api/user");
+        _users = await Http.GetFromJsonAsync<List<Users>>($"{Server.Url}user");
     }
 
     private async Task DeleteUser(int id)
     {
-        var response = await Http.DeleteAsync($"http://localhost:5028/api/user/delete/{id}");
+        var response = await Http.DeleteAsync($"{Server.Url}user/delete/{id}");
     
         if (response.IsSuccessStatusCode)
         {
-            _users = await Http.GetFromJsonAsync<List<Users>>("http://localhost:5028/api/user");
+            _users = await Http.GetFromJsonAsync<List<Users>>($"{Server.Url}user");
         }
     }
 

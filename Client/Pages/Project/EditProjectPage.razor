@@ -1,4 +1,5 @@
-@using Core;
+@using Core
+@using Client.Service
 @inject HttpClient http
 @inject NavigationManager Nav
 @page "/project/edit/{ProjectId:int}"
@@ -72,7 +73,7 @@ else
 
         try
         {
-            var res = await http.PutAsJsonAsync($"http://localhost:5028/api/project/{ProjectId}", _project);
+            var res = await http.PutAsJsonAsync($"{Server.Url}project/{ProjectId}", _project);
 
             if (res.IsSuccessStatusCode)
             {
@@ -100,7 +101,7 @@ else
     
     protected override async Task OnInitializedAsync()
     {
-        var result = await http.GetFromJsonAsync<Calculation>($"http://localhost:5028/api/project/{ProjectId}");
+        var result = await http.GetFromJsonAsync<Calculation>($"{Server.Url}project/{ProjectId}");
         
         if (result != null)
         {
