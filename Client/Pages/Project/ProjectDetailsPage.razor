@@ -1,5 +1,6 @@
 @page "/project/{Id:int}"
 @using Core
+@using Client.Service
 @using System.Globalization
 @using Client.Components.ProjectDetails
 @inject HttpClient Http
@@ -46,7 +47,7 @@ else
 
     protected override async Task OnInitializedAsync()
     {
-        details = await Http.GetFromJsonAsync<Calculation>($"api/createproject/{Id}");
+        details = await Http.GetFromJsonAsync<Calculation>($"{Server.Url}createproject/{Id}");
     }
 
     // --- LOGIK TIL DATABEHANDLING ---
