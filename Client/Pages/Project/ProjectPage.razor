@@ -30,7 +30,7 @@
     private async Task DeleteProject(int id)
     {
         // Sletter et specifik projekt via API'et
-        await Http.DeleteAsync($"{Server.Url}project/delete/{id}");
+        await Http.DeleteAsync($"{Server.Url}project/{id}");
 		
         // Henter den opdaterede liste, så hjemmeside opdateres bagefter
         _projects = await Http.GetFromJsonAsync<List<Project>>($"{Server.Url}project");
