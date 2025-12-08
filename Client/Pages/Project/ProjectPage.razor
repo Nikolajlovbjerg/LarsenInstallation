@@ -1,6 +1,7 @@
 @page "/"
 @using Client.Components.Projects
 @using Core
+@using Client.Service
 @inject HttpClient Http
 <h3>Mine projekter</h3>
 
@@ -23,16 +24,16 @@
 
     protected override async Task OnInitializedAsync()
     {
-        _projects = await Http.GetFromJsonAsync<List<Project>>("http://localhost:5028/api/project");
+        _projects = await Http.GetFromJsonAsync<List<Project>>($"{Server.Url}project");
     }
 
     private async Task DeleteProject(int id)
     {
         // Sletter et specifik projekt via API'et
-        await Http.DeleteAsync($"http://localhost:5028/api/project/delete/{id}");
+        await Http.DeleteAsync($"{Server.Url}project/{id}");
 		
         // Henter den opdaterede liste, så hjemmeside opdateres bagefter
-        _projects = await Http.GetFromJsonAsync<List<Project>>($"http://localhost:5028/api/project");
+        _projects = await Http.GetFromJsonAsync<List<Project>>($"{Server.Url}project");
     }
    
 }

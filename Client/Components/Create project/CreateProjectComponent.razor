@@ -1,4 +1,5 @@
 @using Core
+@using Client.Service
 @inject Client.Service.ProjectService ProjectService
 @inject NavigationManager Nav
 @inject HttpClient http
@@ -93,7 +94,7 @@
     private async Task OnClickCreate()
     {
         // 1. Send projektdata (tekst/tal) til API'et for at oprette rækken i databasen
-        var response = await http.PostAsJsonAsync("http://localhost:5028/api/project", aProject);
+        var response = await http.PostAsJsonAsync($"{Server.Url}project", aProject);
 
         // 2. Tjek om oprettelsen gik godt (HTTP status 200-299)
         if (response.IsSuccessStatusCode)

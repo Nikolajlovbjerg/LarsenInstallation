@@ -1,5 +1,6 @@
 ﻿@page "/adduser"
 @using Core
+@using Client.Service
 @inject HttpClient http
 @inject NavigationManager navMan
 
@@ -56,7 +57,8 @@
 
     private async Task HandleValidSubmit()
     {
-        var response = await http.PostAsJsonAsync("http://localhost:5028/api/user", _user);
+        // Sender POST request direkte til API'et
+        var response = await http.PostAsJsonAsync($"{Server.Url}user", _user);
 
         if (response.IsSuccessStatusCode)
         {
