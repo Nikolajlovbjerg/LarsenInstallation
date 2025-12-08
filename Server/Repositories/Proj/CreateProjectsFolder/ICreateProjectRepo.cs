@@ -1,4 +1,4 @@
-﻿using Core;
+﻿/*using Core;
 
 namespace Server.Repositories.Proj.CreateProjectsFolder
 {
@@ -18,4 +18,4 @@ namespace Server.Repositories.Proj.CreateProjectsFolder
 
         void Delete(int id);
     }
-}
+}*/

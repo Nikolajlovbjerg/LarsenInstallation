@@ -1,4 +1,5 @@
-﻿using Core;
+﻿/*
+using Core;
 using Npgsql;
 using Server.PW1;
 
@@ -397,6 +398,7 @@ namespace Server.Repositories.Proj.CreateProjectsFolder
 
     }
 }
+*/
 
 
 

@@ -23,16 +23,16 @@
 
     protected override async Task OnInitializedAsync()
     {
-        _projects = await Http.GetFromJsonAsync<List<Project>>("http://localhost:5028/api/createproject");
+        _projects = await Http.GetFromJsonAsync<List<Project>>("http://localhost:5028/api/project");
     }
 
     private async Task DeleteProject(int id)
     {
         // Sletter et specifik projekt via API'et
-        await Http.DeleteAsync($"http://localhost:5028/api/createproject/delete/{id}");
+        await Http.DeleteAsync($"http://localhost:5028/api/project/delete/{id}");
 		
         // Henter den opdaterede liste, så hjemmeside opdateres bagefter
-        _projects = await Http.GetFromJsonAsync<List<Project>>($"http://localhost:5028/api/createproject");
+        _projects = await Http.GetFromJsonAsync<List<Project>>($"http://localhost:5028/api/project");
     }
    
 }

@@ -1,6 +1,9 @@
-using Server.Repositories.Proj.CreateProjectsFolder;
-using Server.Repositories.Proj.HourCalculator;
+/*using Server.Repositories.Proj.CreateProjectsFolder;
+using Server.Repositories.Proj.HourCalculator;*/
 using Server.Repositories.User;
+using Server.Repositories.HourRepositories;
+using Server.Repositories.MaterialRepositories;
+using Server.Repositories.ProjectRepositories;
 using Server.Service;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -9,10 +12,16 @@ var builder = WebApplication.CreateBuilder(args);
 System.Text.Encoding.RegisterProvider(System.Text.CodePagesEncodingProvider.Instance);
 
 
-builder.Services.AddSingleton<ICreateUserRepoSQL, CreateUserRepoSQL>();
-builder.Services.AddSingleton<ICreateProjectRepo, CreateProjectRepo>();
+builder.Services.AddScoped<IProjectRepositorySQL, ProjectRepositorySQL>();
+builder.Services.AddScoped<IHourRepositorySQL, HourRepositorySQL>();
+builder.Services.AddScoped<IMaterialRepositorySQL, MaterialRepositorySQL>();
 
-builder.Services.AddSingleton<IProjectHourCalcRepo, ProjectHourCalcRepositorySQL>();
+builder.Services.AddScoped<ProjectCalculationsService>();
+
+builder.Services.AddSingleton<ICreateUserRepoSQL, CreateUserRepoSQL>();
+/*builder.Services.AddSingleton<ICreateProjectRepo, CreateProjectRepo>();
+
+builder.Services.AddSingleton<IProjectHourCalcRepo, ProjectHourCalcRepositorySQL>();*/
 
 builder.Services.AddControllers();
 
