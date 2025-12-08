@@ -100,7 +100,7 @@ else
     
     protected override async Task OnInitializedAsync()
     {
-        var result = await http.GetFromJsonAsync<Calculation>($"http://localhost:5028/api/createproject/{ProjectId}");
+        var result = await http.GetFromJsonAsync<Calculation>($"http://localhost:5028/api/project/{ProjectId}");
         
         if (result != null)
         {

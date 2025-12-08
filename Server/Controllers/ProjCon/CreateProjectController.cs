@@ -1,4 +1,5 @@
-﻿using Core;
+﻿/*
+using Core;
 using Microsoft.AspNetCore.Mvc;
 using Server.Repositories.Proj.CreateProjectsFolder;
 using Server.Service;
@@ -121,3 +122,4 @@ namespace Server.Controllers.ProjCon
 
     }
 }
+*/
