@@ -9,15 +9,14 @@ public class Project
     public DateTime DateCreated { get; set; } = DateTime.UtcNow;
     
     public string ImageUrl { get; set; } = string.Empty;
-    
-    public int SvendTimePris { get; set; }
-    
-    public int LærlingTimePris { get; set; }
-    
-    public int KonsulentTimePris { get; set; }
-    
-    public int ArbejdsmandTimePris { get; set; }
 
-    public List<Calculation> Calculations { get; set; } = new List<Calculation>();
+    public int SvendTimePris { get; set; } = 572;
+
+    public int LærlingTimePris { get; set; } = 395;
+
+    public int KonsulentTimePris { get; set; } = 995;
+
+    public int ArbejdsmandTimePris { get; set; } = 515;
+    
 
 }
