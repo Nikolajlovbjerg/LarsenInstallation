@@ -72,7 +72,7 @@ else
 
         try
         {
-            var res = await http.PutAsJsonAsync($"http://localhost:5028/api/createproject/{ProjectId}", _project);
+            var res = await http.PutAsJsonAsync($"http://localhost:5028/api/project/{ProjectId}", _project);
 
             if (res.IsSuccessStatusCode)
             {
