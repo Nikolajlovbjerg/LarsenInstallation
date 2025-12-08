@@ -1,3 +1,4 @@
+/*
 using Server.PW1;
 using Npgsql;
 using Core;
@@ -93,3 +94,4 @@ namespace Server.Repositories.Proj.HourCalculator
         }
     }
 }
+*/

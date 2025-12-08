@@ -93,7 +93,7 @@
     private async Task OnClickCreate()
     {
         // 1. Send projektdata (tekst/tal) til API'et for at oprette rækken i databasen
-        var response = await http.PostAsJsonAsync("http://localhost:5028/api/createproject", aProject);
+        var response = await http.PostAsJsonAsync("http://localhost:5028/api/project", aProject);
 
         // 2. Tjek om oprettelsen gik godt (HTTP status 200-299)
         if (response.IsSuccessStatusCode)
@@ -104,13 +104,13 @@
             // 4. Hvis der er valgt en Time-fil, upload den nu med det nye ID
             if (timeFile != null)
             {
-                await UploadFileToApi(timeFile, newProjectId, "api/createproject/uploadhours");
+                await UploadFileToApi(timeFile, newProjectId, "api/projecthours/upload");
             }
 
             // 5. Hvis der er valgt en Materiale-fil, upload den nu med det nye ID
             if (materialeFile != null)
             {
-                await UploadFileToApi(materialeFile, newProjectId, "api/createproject/uploadmaterials");
+                await UploadFileToApi(materialeFile, newProjectId, "api/projectmaterials/upload");
             }
         }
 

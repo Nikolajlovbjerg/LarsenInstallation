@@ -1,4 +1,4 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿/*using Microsoft.AspNetCore.Mvc;
 using Core;
 using Server.Repositories.Proj.HourCalculator;
 
@@ -21,4 +21,4 @@ namespace Server.Controllers.ProjCon
             return _projectRepo.GetCalculations();
         }
     }
-}
+}*/

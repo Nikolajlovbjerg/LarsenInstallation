@@ -1,4 +1,5 @@
-﻿using Core;
+﻿/*
+using Core;
 namespace Server.Repositories.Proj.HourCalculator
 {
     public interface IProjectHourCalcRepo
@@ -10,3 +11,4 @@ namespace Server.Repositories.Proj.HourCalculator
     }
 
 }
+*/
