@@ -29,9 +29,9 @@ else
             </div>
         </div>
 
-        <ProjektOverblik Details="details" IsClientView="showClientView" />
+        <PrisOverblik Details="details" IsClientView="showClientView" />
 
-        <KategoriLister 
+        <RessourceOverblik 
             HourGroups="GetHoursByType()" 
             MaterialGroups="@(showClientView ? GetMaterialsByCategory() : GetAllMaterialsGrouped())" 
             IsClientView="showClientView" />
@@ -47,7 +47,7 @@ else
 
     protected override async Task OnInitializedAsync()
     {
-        details = await Http.GetFromJsonAsync<Calculation>($"/api/project/{Id}");
+        details = await Http.GetFromJsonAsync<Calculation>($"api/project/{Id}");
     }
 
     // --- LOGIK TIL DATABEHANDLING ---
