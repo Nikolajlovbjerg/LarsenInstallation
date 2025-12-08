@@ -3,56 +3,70 @@
 @inject HttpClient http
 @inject NavigationManager navMan
 
-<PageTitle>Add User</PageTitle>
+<PageTitle>Opret Bruger</PageTitle>
 
-<h3>Add User</h3>
+<div class="d-flex justify-content-center">
+    <div class="create-con">
+        <h3>Opret Ny Bruger</h3>
 
-<EditForm Model="@_user" OnValidSubmit="@HandleValidSubmit" class="row p-3">
-    <DataAnnotationsValidator />
-    <ValidationSummary />
-
-    <div class="col-md-12 mb-3">
-        <label for="UserName">User Name</label>
-        <InputText id="UserName" @bind-Value="_user.UserName" class="form-control" />
-    </div>
-
-    <div class="col-md-12 mb-3">
-        <label for="Password">Password</label>
-        <InputText id="Password" @bind-Value="_user.Password" class="form-control" type="password" />
-    </div>
-
-    <div class="col-md-12 mb-3">
-        <label for="Role">Role</label>
-        <InputSelect id="Role" @bind-Value="_user.Role" class="form-select" >
-
-            @foreach (var r in roles)
+        <EditForm Model="@_user" OnValidSubmit="@HandleValidSubmit">
+            <DataAnnotationsValidator />
+            
+            @* Viser kun fejl hvis der er nogen *@
+            @if (context.GetValidationMessages().Any())
             {
-                <option value="@r">@r</option>
+                <div class="alert alert-danger">
+                    <ValidationSummary />
+                </div>
             }
-        </InputSelect>
-    </div>
 
-    <div class="col-12 mb-3">
-        <button type="submit" class="btn btn-primary">Add User</button>
+            <div class="form-grid">
+                <div class="form-floating-group">
+                    <InputText id="UserName" @bind-Value="_user.UserName" class="form-control" placeholder=" " />
+                    <label for="UserName">Brugernavn</label>
+                </div>
+
+                <div class="form-floating-group">
+                    <InputText id="Password" type="password" @bind-Value="_user.Password" class="form-control" placeholder=" " />
+                    <label for="Password">Adgangskode</label>
+                </div>
+            </div>
+
+            <div class="form-floating-group">
+                <InputSelect id="Role" @bind-Value="_user.Role" class="form-control form-select-styled">
+                    @foreach (var r in roles)
+                    {
+                        <option value="@r">@r</option>
+                    }
+                </InputSelect>
+                <label for="Role">Rolle</label>
+            </div>
+
+            <div class="d-flex gap-3 mt-4">
+                <button type="submit" class="opretbtn">Opret Bruger</button>
+                <button type="button" class="cancelbtn" @onclick="Cancel">Annuller</button>
+            </div>
+        </EditForm>
     </div>
-</EditForm>
+</div>
 
 @code {
-    private Users _user = new();
-
+    private Users _user = new() { Role = "Bruger" }; // Sætter default rolle
     private string[] roles = ["Bruger", "Admin"];
 
     private async Task HandleValidSubmit()
     {
-        // Sender POST request direkte til API'et
         var response = await http.PostAsJsonAsync("http://localhost:5028/api/user", _user);
 
         if (response.IsSuccessStatusCode)
         {
-            // Clear form
             _user = new Users();
-            // Naviger tilbage til brugersiden (juster route som ønsket)
-            navMan.NavigateTo("/");
+            navMan.NavigateTo("adminuser");
         }
+    }
+
+    private void Cancel()
+    {
+        navMan.NavigateTo("adminuser");
     }
 }

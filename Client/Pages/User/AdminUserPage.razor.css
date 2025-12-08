@@ -9,6 +9,26 @@
     margin-bottom: 2rem;
     border-bottom: 2px solid #eee;
     padding-bottom: 1rem;
+
+    /* Flexbox properties til at styre layout */
+    display: flex;
+    justify-content: space-between; /* Skubber elementer ud til hver sin side */
+    align-items: center; /* Centrerer dem vertikalt */
+}
+
+/* Styling til den nye opret-knap */
+.btn-create {
+    background-color: #051026;
+    color: white;
+    padding: 8px 16px;
+    border-radius: 6px;
+    border: none;
+    transition: background-color 0.2s;
+}
+
+.btn-create:hover {
+    background-color: #0a1f4a;
+    color: white;
 }
 
 .header-section h3 {

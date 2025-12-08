@@ -7,6 +7,9 @@
 <div class="admin-container">
     <div class="header-section">
         <h3>Brugeradministration</h3>
+        <button class="btn btn-create" @onclick="CreateUser">
+            <i class="bi bi-plus-lg"></i> Opret ny bruger
+        </button>
     </div>
 
     @if (_users == null)
@@ -90,5 +93,10 @@
             _ => "bg-secondary"
         };
     }
-    
+
+    private void CreateUser()
+    {
+        Nav.NavigateTo("adduser");
+    }
+
 }
