@@ -79,28 +79,44 @@ else
     {
         if (details?.Materials == null) return new List<ProjectMaterial>();
 
+        // Prioriteret liste: De øverste kategorier tjekkes først.
         var categories = new Dictionary<string, string[]>
         {
+            // 1. KNX & SMART HOME (Fang alt intelligent udstyr her)
+            { "KNX", new[] {
+                "knx", "dali", "ihc", "smart",          // Systemnavne
+                "sensor", "pir", "tilstedeværelse",     // Sensorer
+                "touch", "skærm", "panel", "display",   // Betjening
+                "gateway", "interface", "strømforsyning", // Systemkomponenter
+                "termostat", "ventil", "motor", "spjæld" // Varme/Ventilation i smart-kontekst
+            }},
+
+            // 2. STANDARD KATEGORIER
             { "Belysning", new[] { "spot", "lampe", "led", "lys", "armatur", "pendel", "driver", "dæmper", "skinne" } },
             { "Kabler & Rør", new[] { "kabel", "ledning", "rør", "nkt", "pvi", "flex", "5x1,5", "3x1,5", "5x2,5" } },
             { "Installation", new[] { "stikkontakt", "afbryder", "underlag", "dåse", "fuga", "opus", "ramme", "tangent" } },
-            { "Sikringer & Tavler", new[] { "tavle", "sikring", "hpfi", "rce", "automatsikring" } }
         };
 
         return details.Materials
-            .GroupBy(m => {
+            .GroupBy(m =>
+            {
                 string desc = m.Beskrivelse?.ToLower() ?? "";
+
+                // Loop gennem kategorierne i rækkefølge
                 foreach (var category in categories)
                 {
+                    // Hvis et af nøgleordene findes i beskrivelsen, vælg denne kategori og stop.
                     if (category.Value.Any(keyword => desc.Contains(keyword))) return category.Key;
                 }
+
                 return "Øvrige materialer";
             })
-            .Select(g => new ProjectMaterial 
-            { 
-                Beskrivelse = g.Key, 
+            .Select(g => new ProjectMaterial
+            {
+                Beskrivelse = g.Key,
                 Total = g.Sum(x => x.Total)
             })
+            // Sorter efter pris (Dyreste øverst), eller skift til .OrderBy(x => x.Beskrivelse) for alfabetisk
             .OrderByDescending(m => m.Total)
             .ToList();
     }
