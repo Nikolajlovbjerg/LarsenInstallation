@@ -52,15 +52,13 @@
         return Task.CompletedTask;
     }
 
-    // Boolean til at styre menuen
     private bool _showMenu = false;
 
     private void ToggleMenu()
     {
         _showMenu = !_showMenu;
     }
-
-    // Lukker menuen hvis man klikker væk (med en lille forsinkelse så klikket registreres)
+    
     private async Task CloseMenuDelayed()
     {
         await Task.Delay(200); 
