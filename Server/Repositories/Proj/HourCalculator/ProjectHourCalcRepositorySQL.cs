@@ -2,9 +2,9 @@ using Server.PW1;
 using Npgsql;
 using Core;
 
-namespace Server.Repositories.Proj
+namespace Server.Repositories.Proj.HourCalculator
 {
-    public class ProjectRepositorySQL : IProjectRepo
+    public class ProjectHourCalcRepositorySQL : IProjectHourCalcRepo
     {
         // Forbindelsesstreng til PostgreSQL
         private const string conString =

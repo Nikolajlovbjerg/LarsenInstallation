@@ -1,7 +1,7 @@
 ﻿using Core;
-namespace Server.Repositories
+namespace Server.Repositories.Proj.HourCalculator
 {
-    public interface IProjectRepo
+    public interface IProjectHourCalcRepo
     {
         List<Project> GetAll();
 

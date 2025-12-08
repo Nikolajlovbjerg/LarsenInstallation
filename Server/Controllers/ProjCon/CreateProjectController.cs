@@ -1,10 +1,10 @@
 ﻿using Core;
 using Microsoft.AspNetCore.Mvc;
-using Server.Repositories;
+using Server.Repositories.Proj.CreateProjectsFolder;
 using Server.Service;
 using System.IO;
 
-namespace Server.Controllers
+namespace Server.Controllers.ProjCon
 {
     [ApiController]
     [Route("api/createproject")]
