@@ -28,9 +28,9 @@ else
             </div>
         </div>
 
-        <ProjektOverblik Details="details" IsClientView="showClientView" />
+        <PrisOverblik Details="details" IsClientView="showClientView" />
 
-        <KategoriLister 
+        <RessourceOverblik 
             HourGroups="GetHoursByType()" 
             MaterialGroups="@(showClientView ? GetMaterialsByCategory() : GetAllMaterialsGrouped())" 
             IsClientView="showClientView" />

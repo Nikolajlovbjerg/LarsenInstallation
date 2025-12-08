@@ -3,18 +3,18 @@
 
 @if (Details != null)
 {
-    /* --- 1. TOP BANNER --- */
+    // TOP BANNER
     <div class="card text-white mb-4 shadow text-center" style="@(IsClientView ? "background-color: #071226;" : "background-color: #071226;")">
         <div class="card-body py-4">
             @if (IsClientView)
             {
-                /* KUNDEVISNING: Kun den store samlede pris */
+                // KUNDEVISNING: Kun den store samlede pris
                 <h2 class="display-3 fw-bold">@Details.SamletTotalPris.ToString("N2") kr.</h2>
                 <p class="fs-5 mb-0">Samlet tilbudspris</p>
             }
             else
             {
-                /* INTERN VISNING: Fokus på fortjeneste */
+                // INTERN VISNING: Fokus på fortjeneste
                 <div class="row text-center divide-cols">
                     <div class="col-md-4">
                         <h6 class="text-white-50">SALG TOTAL</h6>
@@ -34,7 +34,7 @@
         </div>
     </div>
 
-    /* --- 2. DE 3 BOKSE --- */
+    // DE 3 BOKSE
     <div class="row mb-4">
 
         <div class="col-md-4">
