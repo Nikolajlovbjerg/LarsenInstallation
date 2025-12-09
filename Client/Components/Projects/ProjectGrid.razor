@@ -1,10 +1,10 @@
-@using Core
+@*@using Core
 
 
 <div class="ads-grid">
     @if (Projects == null || !Projects.Any())
     {
-        <p>Ingen projekter at vise.</p>
+        <p></p>
     }
     else
     {
@@ -17,6 +17,6 @@
 
 @code 
 {
-    [Parameter] public IEnumerable<Project> Projects { get; set; }
+    [Parameter] public IEnumerable<Project>? Projects { get; set; }
     [Parameter] public EventCallback<int> OnDelete { get; set; }
-}
+}*@

@@ -1,3 +1,4 @@
+/*
 :host { display:block; }
 
 .ad-card {
@@ -11,15 +12,15 @@
     min-height: 350px;
 }
 
-/* Opdateret container til prikkerne */
+!* Opdateret container til prikkerne *!
 .price-badge {
     position: absolute;
     top: 12px;
-    right: 12px; /* Flyttet til højre som du ønskede */
-    z-index: 100; /* Sikrer at menuen ligger ovenpå alt andet */
+    right: 12px; !* Flyttet til højre som du ønskede *!
+    z-index: 100; !* Sikrer at menuen ligger ovenpå alt andet *!
 }
 
-/* Knappen selve prikkerne ligger i */
+!* Knappen selve prikkerne ligger i *!
 .dots-btn {
     background: rgba(255, 255, 255, 0.9);
     border: none;
@@ -40,11 +41,11 @@
     transform: scale(1.05);
 }
 
-/* Selve Dropdown boksen */
+!* Selve Dropdown boksen *!
 .dropdown-menu {
     position: absolute;
-    top: 100%; /* Lige under knappen */
-    right: 0;  /* Flugter med højre kant */
+    top: 100%; !* Lige under knappen *!
+    right: 0;  !* Flugter med højre kant *!
     margin-top: 8px;
     background: white;
     border-radius: 8px;
@@ -57,7 +58,7 @@
     animation: fadeIn 0.2s ease-out;
 }
 
-/* Punkter i menuen */
+!* Punkter i menuen *!
 .dropdown-item {
     background: none;
     border: none;
@@ -74,7 +75,7 @@
     background: #f5f5f5;
 }
 
-/* Specifik styling til slet-knappen hvis den skal være rød */
+!* Specifik styling til slet-knappen hvis den skal være rød *!
 .dropdown-item.danger {
     color: #d32f2f;
 }
@@ -133,7 +134,7 @@
 }
 
 .MoreBtn {
-    background: #1d1e3c;                /* mørk blå – matcher dine focus borders */
+    background: #1d1e3c;                !* mørk blå – matcher dine focus borders *!
     color: white;
     padding: 6px 12px;
     font-size: 16px;
@@ -155,7 +156,7 @@
 }
 
 .DelBtn {
-    background: #880000;                /* mørk blå – matcher dine focus borders */
+    background: #880000;                !* mørk blå – matcher dine focus borders *!
     color: white;
     padding: 6px 12px;
     font-size: 16px;
@@ -174,4 +175,145 @@
 
 .DelBtn:active {
     transform: translateY(0);
+}
+*/
+
+
+     /* Container for at lave scroll hvis tabellen er for bred */
+ .table-container {
+     width: 100%;
+     overflow-x: auto;
+     background: white;
+     border-radius: 8px;
+     box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+ }
+
+.styled-table {
+    width: 100%;
+    border-collapse: collapse;
+    min-width: 600px; /* Sikrer at den ikke bliver mast */
+}
+
+.styled-table th {
+    background-color: #f8f9fa;
+    padding: 12px 16px;
+    text-align: left;
+    font-weight: 600;
+    color: #333;
+    border-bottom: 2px solid #eee;
+}
+
+.styled-table td {
+    padding: 12px 16px;
+    border-bottom: 1px solid #eee;
+    vertical-align: middle;
+}
+
+/* Billede styling */
+.project-info-cell {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.img-wrapper img {
+    width: 40px;
+    height: 40px;
+    border-radius: 6px;
+    object-fit: cover;
+    border: 1px solid #ddd;
+}
+
+.project-name {
+    font-weight: 500;
+    color: #071226;
+}
+
+.date-cell {
+    color: #666;
+    font-size: 0.9rem;
+}
+
+/* Action kolonne (højre side) */
+.action-cell {
+    text-align: right;
+    display: flex;
+    justify-content: flex-end;
+    align-items: center;
+    gap: 10px;
+}
+
+/* "Se detaljer" knap styling */
+.btn-details {
+    background: transparent;
+    border: 1px solid #071226;
+    color: #071226;
+    padding: 4px 12px;
+    border-radius: 4px;
+    font-size: 0.85rem;
+    transition: all 0.2s;
+}
+
+.btn-details:hover {
+    background: #071226;
+    color: white;
+}
+
+/* Menu Wrapper og Knap */
+.menu-wrapper {
+    position: relative; /* Vigtig for at dropdown placeres rigtigt */
+}
+
+.dots-btn-table {
+    background: none;
+    border: none;
+    padding: 4px;
+    cursor: pointer;
+    color: #666;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.dots-btn-table:hover {
+    background-color: #f0f0f0;
+    color: #000;
+}
+
+/* Dropdown styling */
+.table-dropdown {
+    position: absolute;
+    right: 0;
+    top: 100%;
+    background: white;
+    border: 1px solid #ddd;
+    border-radius: 6px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+    z-index: 100;
+    min-width: 140px;
+    padding: 4px 0;
+}
+
+.dropdown-item {
+    display: block;
+    width: 100%;
+    padding: 8px 12px;
+    text-align: left;
+    background: none;
+    border: none;
+    font-size: 0.9rem;
+    cursor: pointer;
+}
+
+.dropdown-item:hover {
+    background-color: #f8f9fa;
+}
+
+.dropdown-item.danger {
+    color: #dc3545;
+}
+
+.dropdown-item.danger:hover {
+    background-color: #fff5f5;
 }

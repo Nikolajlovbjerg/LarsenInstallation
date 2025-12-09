@@ -21,7 +21,7 @@ namespace Client.Service
 
             try
             {
-                response = await _http.PostAsJsonAsync("/api/user/login", login);
+                response = await _http.PostAsJsonAsync("api/user/login", login);
             }
             catch (Exception)
             {

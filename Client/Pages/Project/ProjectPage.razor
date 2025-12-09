@@ -1,39 +1,126 @@
 @page "/"
-@using Client.Components.Projects
 @using Core
 @using Client.Service
 @inject HttpClient Http
-<h3>Mine projekter</h3>
+@inject NavigationManager Nav
 
+<div class="admin-container">
+    <div class="header-section">
+        <h3>Mine projekter</h3>
+    </div>
 
-<section>
-    @if (_projects.Count == 0)
+    @if (_projects == null)
     {
-        <p>Ingen produkter</p>
+        <div class="loading-state">
+            <div class="spinner-border text-primary" role="status"></div>
+            <p>Indlæser projekter...</p>
+        </div>
+    }
+    else if (_projects.Count == 0)
+    {
+        <div class="empty-state">
+            <p>Ingen projekter fundet.</p>
+        </div>
     }
     else
     {
-        <ProjectGrid Projects="_projects" OnDelete="DeleteProject"/>
-    }
-</section>
+        <div class="table-card">
+            <table class="clean-table">
+                <tbody>
+                    @foreach (var project in _projects)
+                    {
+                        <tr>
+                            @* BILLEDE OG NAVN *@
+                            <td class="cell-main">
+                                <div class="project-flex">
+                                    <img src="@project.ImageUrl" alt="img" 
+                                         onerror="this.src='https://placehold.co/100?text=No+Img'" />
+                                    <div class="text-group">
+                                        <span class="name">@project.Name</span>
+                                        <span class="sub-id">ID: #@project.ProjectId</span>
+                                    </div>
+                                </div>
+                            </td>
 
+                            @* DATO *@
+                            <td class="cell-date">
+                                <span class="date-tag">
+                                    @project.DateCreated.ToString("dd. MMM yyyy")
+                                </span>
+                            </td>
+
+                            @* KNAPPER *@
+                            <td class="cell-action">
+                                <div class="action-flex">
+                                    <button class="btn-simple" @onclick="() => GotoDetails(project.ProjectId)">
+                                        Se detaljer
+                                    </button>
+
+                                    <div class="menu-container">
+                                        <button class="btn-dots" 
+                                                @onclick="() => ToggleMenu(project.ProjectId)" 
+                                                @onfocusout="CloseMenuDelayed">
+                                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-three-dots" viewBox="0 0 16 16">
+                                                <path d="M3 9.5a1.5 1.5 0 1 1 0-3 1.5 1.5 0 0 1 0 3m5 0a1.5 1.5 0 1 1 0-3 1.5 1.5 0 0 1 0 3m5 0a1.5 1.5 0 1 1 0-3 1.5 1.5 0 0 1 0 3"/>
+                                            </svg>
+                                        </button>
+                                        
+                                        @if (_activeMenuId == project.ProjectId)
+                                        {
+                                            <div class="dropdown-popover">
+                                                <button @onclick="() => GotoEdit(project.ProjectId)">
+                                                    <i class="bi bi-pencil"></i> Rediger
+                                                </button>
+                                                <button class="danger" @onclick="() => DeleteProject(project.ProjectId)">
+                                                    <i class="bi bi-trash"></i> Slet
+                                                </button>
+                                            </div>
+                                        }
+                                    </div>
+                                </div>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    }
+</div>
 
 @code {
-    private List<Project>? _projects = new();
-
+    private List<Project>? _projects;
+    private int? _activeMenuId = null;
 
     protected override async Task OnInitializedAsync()
     {
-        _projects = await Http.GetFromJsonAsync<List<Project>>($"{Server.Url}project");
+        try 
+        {
+            _projects = await Http.GetFromJsonAsync<List<Project>>($"{Server.Url}project");
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Fejl: {ex.Message}");
+        }
+    }
+    
+    private void GotoDetails(int id) => Nav.NavigateTo($"project/{id}");
+    private void GotoEdit(int id) => Nav.NavigateTo($"project/edit/{id}");
+
+    private void ToggleMenu(int id) => _activeMenuId = (_activeMenuId == id) ? null : id;
+
+    private async Task CloseMenuDelayed()
+    {
+        await Task.Delay(200);
+        _activeMenuId = null;
     }
 
     private async Task DeleteProject(int id)
     {
-        // Sletter et specifik projekt via API'et
-        await Http.DeleteAsync($"{Server.Url}project/{id}");
-		
-        // Henter den opdaterede liste, så hjemmeside opdateres bagefter
-        _projects = await Http.GetFromJsonAsync<List<Project>>($"{Server.Url}project");
+        var response = await Http.DeleteAsync($"{Server.Url}project/{id}");
+        if (response.IsSuccessStatusCode)
+        {
+            _projects = await Http.GetFromJsonAsync<List<Project>>($"{Server.Url}project");
+            _activeMenuId = null;
+        }
     }
-   
 }
