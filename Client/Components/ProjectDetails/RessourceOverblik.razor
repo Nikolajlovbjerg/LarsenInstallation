@@ -2,6 +2,7 @@
 @namespace Client.Components.ProjectDetails
 
 <div class="row mb-5">
+    <!-- Timer -->
     <div class="col-md-6 mb-3">
         <div class="card h-100 shadow-sm" style="border-color: #071226;">
             <div class="card-header bg-transparent fw-bold" style="border-color: #071226; color: #071226;">
@@ -12,28 +13,38 @@
                 {
                     <li class="list-group-item d-flex justify-content-between align-items-center">
                         <span>@group.Type</span>
-                        <span class="badge rounded-pill" style="background-color: #071226;">@group.Total.ToString("N2") t</span>
+                        <span class="badge rounded-pill" style="background-color: #071226;">
+                            @group.Total.ToString("N2") t
+                        </span>
                     </li>
                 }
             </ul>
         </div>
     </div>
 
+    <!-- Materialer (ALTID kategori-liste fra serveren) -->
     <div class="col-md-6 mb-3">
-        <div class="card h-100 shadow-sm" style="border-color: #071226; max-height: 500px; display:flex; flex-direction:column;">
-            <div class="card-header bg-transparent fw-bold" style="border-color: #071226; color: #071226;">
-                Materialer @(IsClientView ? "fordelt på kategorier" : "(Salgspriser pr. kategori)")
+        <div class="card h-100 shadow-sm"
+             style="border-color: #071226; max-height: 500px; display:flex; flex-direction:column;">
+
+            <div class="card-header bg-transparent fw-bold"
+                 style="border-color: #071226; color: #071226;">
+                Materialer fordelt på kategorier
             </div>
+
             <div style="overflow-y: auto; flex: 1;">
                 <ul class="list-group list-group-flush">
-                    @foreach (var mat in MaterialGroups)
+                    @if (MaterialGroups.Any())
                     {
-                        <li class="list-group-item d-flex justify-content-between align-items-center">
-                            <span>@mat.Beskrivelse</span>
-                            <span class="fw-bold">@mat.Total.ToString("N2") kr.</span>
-                        </li>
+                        @foreach (var mat in MaterialGroups)
+                        {
+                            <li class="list-group-item d-flex justify-content-between align-items-center">
+                                <span>@mat.Beskrivelse</span>
+                                <span class="fw-bold">@mat.Total.ToString("N2") kr.</span>
+                            </li>
+                        }
                     }
-                    @if (!MaterialGroups.Any())
+                    else
                     {
                         <li class="list-group-item text-muted text-center">Ingen materialer registreret</li>
                     }
@@ -44,7 +55,10 @@
 </div>
 
 @code {
-    [Parameter] public List<Client.Pages.Project.ProjectDetailsPage.HourGroup> HourGroups { get; set; } = new();
+    [Parameter] public List<HourGroupDto> HourGroups { get; set; } = new();
+
+    // ALTID kategori-liste fra serveren
     [Parameter] public List<ProjectMaterial> MaterialGroups { get; set; } = new();
+
     [Parameter] public bool IsClientView { get; set; }
 }

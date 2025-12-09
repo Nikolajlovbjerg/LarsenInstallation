@@ -10,14 +10,14 @@
             {
                 // KUNDEVISNING: Kun den store samlede pris
                 <h2 class="display-3 fw-bold">@Details.SamletTotalPris.ToString("N2") kr.</h2>
-                <p class="fs-5 mb-0">Samlet tilbudspris</p>
+                <p class="fs-5 mb-0">Total Pris</p>
             }
             else
             {
                 // INTERN VISNING: Fokus på fortjeneste
                 <div class="row text-center divide-cols">
                     <div class="col-md-4">
-                        <h6 class="text-white-50">SALG TOTAL</h6>
+                        <h6 class="text-white-50">TOTAL PRIS</h6>
                         <h2>@Details.SamletTotalPris.ToString("N2") kr.</h2>
                     </div>
                     <div class="col-md-4" style="border-left: 1px solid rgba(255,255,255,0.2); border-right: 1px solid rgba(255,255,255,0.2);">
@@ -25,7 +25,7 @@
                         <h2>@Details.SamletKostPris.ToString("N2") kr.</h2>
                     </div>
                     <div class="col-md-4">
-                        <h6 class="text-white">DÆKNINGSBIDRAG</h6>
+                        <h6 class="text-white">FORTJENESTE</h6>
                         <h2 class="text-white">@Details.Dækningsbidrag.ToString("N2") kr.</h2>
                         <span class="badge bg-light text-success">DG: @Details.Dækningsgrad.ToString("N1") %</span>
                     </div>
@@ -88,7 +88,7 @@
         <div class="col-md-4">
             <div class="card h-100 shadow-sm text-center" style="border-color: #071226;">
                 <div class="card-header bg-transparent fw-bold" style="border-color: #071226; color: #071226;">
-                    Estimeret tid
+                    Tid
                 </div>
                 <div class="card-body d-flex align-items-center justify-content-center flex-column">
                     <h3 class="card-title text-dark">@Details.TotalTimer.ToString("N2") timer</h3>
