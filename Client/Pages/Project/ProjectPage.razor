@@ -4,7 +4,10 @@
 @inject HttpClient Http
 @inject NavigationManager Nav
 
-<div class="admin-container">
+
+
+
+@*<div class="admin-container">
     <div class="header-section">
         <h3>Mine projekter</h3>
     </div>
@@ -30,7 +33,7 @@
                     @foreach (var project in _projects)
                     {
                         <tr>
-                            @* BILLEDE OG NAVN *@
+                            $1$ BILLEDE OG NAVN #1#
                             <td class="cell-main">
                                 <div class="project-flex">
                                     <img src="@project.ImageUrl" alt="img" 
@@ -42,14 +45,14 @@
                                 </div>
                             </td>
 
-                            @* DATO *@
+                            $1$ DATO #1#
                             <td class="cell-date">
                                 <span class="date-tag">
                                     @project.DateCreated.ToString("dd. MMM yyyy")
                                 </span>
                             </td>
 
-                            @* KNAPPER *@
+                            $1$ KNAPPER #1#
                             <td class="cell-action">
                                 <div class="action-flex">
                                     <button class="btn-simple" @onclick="() => GotoDetails(project.ProjectId)">
@@ -85,7 +88,7 @@
             </table>
         </div>
     }
-</div>
+</div>*@
 
 @code {
     private List<Project>? _projects;
