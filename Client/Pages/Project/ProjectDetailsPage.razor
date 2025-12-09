@@ -4,12 +4,13 @@
 @using Client.Components.ProjectDetails
 @using Client.Service
 @inject HttpClient Http
+@inject ProjectService ProjectService
 
 <PageTitle>Projekt Detaljer</PageTitle>
 
 @if (details == null)
 {
-    <p><em>Indlæser beregninger...</em></p>
+    <p><em>Indlæser beregninger fra serveren...</em></p>
 }
 else
 {
@@ -21,7 +22,7 @@ else
             </div>
 
             <div class="form-check form-switch">
-                <input class="form-check-input" type="checkbox" role="switch" id="clientViewSwitch" 
+                <input class="form-check-input" type="checkbox" role="switch" id="clientViewSwitch"
                        @bind="showClientView">
                 <label class="form-check-label switch-label" for="clientViewSwitch">
                     @(showClientView ? "Kundevisning: AKTIV" : "Kundevisning: Inaktiv")
@@ -31,11 +32,10 @@ else
 
         <PrisOverblik Details="details" IsClientView="showClientView" />
 
-        <RessourceOverblik 
-            HourGroups="GetHoursByType()" 
-            MaterialGroups="@(showClientView ? GetMaterialsByCategory() : GetAllMaterialsGrouped())" 
-            IsClientView="showClientView" />
-        
+        <RessourceOverblik HourGroups="details.GroupedHours"
+                           MaterialGroups="details.GroupedMaterialsClientView"
+                           IsClientView="showClientView" />
+
     </div>
 }
 
@@ -47,96 +47,12 @@ else
 
     protected override async Task OnInitializedAsync()
     {
+        // 1. Service henter data
+        // 2. Serveren har allerede sorteret timer og materialer
+        // 3. Vi gemmer det i 'details'
+        details = await ProjectService.GetProjectDetails(Id);
         details = await Http.GetFromJsonAsync<Calculation>($"{Server.Url}project/{Id}");
     }
 
-    // --- LOGIK TIL DATABEHANDLING ---
-
-    public class HourGroup
-    {
-        public string Type { get; set; } = "";
-        public decimal Total { get; set; }
-    }
-
-    private List<HourGroup> GetHoursByType()
-    {
-        if (details?.Hours == null) return new List<HourGroup>();
-
-        return details.Hours
-            .GroupBy(h => {
-                var t = h.Type?.ToLower() ?? "";
-                if (t.Contains("lærling")) return "Lærling";
-                if (t.Contains("konsulent")) return "Konsulent";
-                if (t.Contains("arbejdsmand")) return "Arbejdsmand";
-                return "Svend";
-            })
-            .Select(g => new HourGroup { Type = g.Key, Total = g.Sum(x => x.Timer) })
-            .OrderByDescending(x => x.Total)
-            .ToList();
-    }
-
-    // METODE 1: Bruges ved KUNDEVISNING (Kategorier)
-    private List<ProjectMaterial> GetMaterialsByCategory()
-    {
-        if (details?.Materials == null) return new List<ProjectMaterial>();
-
-        var categories = new Dictionary<string, string[]>
-        {
-            { "Belysning", new[] { "spot", "lampe", "led", "lys", "armatur", "pendel", "driver", "dæmper", "skinne" } },
-            { "Kabler & Rør", new[] { "kabel", "ledning", "rør", "nkt", "pvi", "flex", "5x1,5", "3x1,5", "5x2,5" } },
-            { "Installation", new[] { "stikkontakt", "afbryder", "underlag", "dåse", "fuga", "opus", "ramme", "tangent" } },
-            { "Sikringer & Tavler", new[] { "tavle", "sikring", "hpfi", "rce", "automatsikring" } }
-        };
-
-        return details.Materials
-            .GroupBy(m => {
-                string desc = m.Beskrivelse?.ToLower() ?? "";
-                foreach (var category in categories)
-                {
-                    if (category.Value.Any(keyword => desc.Contains(keyword))) return category.Key;
-                }
-                return "Øvrige materialer";
-            })
-            .Select(g => new ProjectMaterial 
-            { 
-                Beskrivelse = g.Key, 
-                Total = g.Sum(x => x.Total)
-            })
-            .OrderByDescending(m => m.Total)
-            .ToList();
-    }
-
-    // METODE 2: Bruges ved INTERN VISNING (Alle materialer samlet)
-    private List<ProjectMaterial> GetAllMaterialsGrouped()
-    {
-        if (details?.Materials == null) return new List<ProjectMaterial>();
-
-        string[] knownSuppliers = { "Anker & Co", "Solar", "Lemvigh-Müller", "AO" };
-        TextInfo textInfo = new CultureInfo("da-DK", false).TextInfo;
-
-        return details.Materials
-            .GroupBy(m => {
-                string desc = m.Beskrivelse?.Trim() ?? "";
-                
-                // Tjek kendte leverandører
-                foreach (var supplier in knownSuppliers)
-                {
-                    if (desc.Contains(supplier, StringComparison.OrdinalIgnoreCase))
-                    {
-                        return supplier; 
-                    }
-                }
-                
-                // Ellers brug lowercase for at samle ensartede beskrivelser
-                return desc.ToLower(); 
-            })
-            .Select(g => new ProjectMaterial 
-            { 
-                // Gør første bogstav stort igen, eller brug firmanavnet
-                Beskrivelse = knownSuppliers.Contains(g.Key) ? g.Key : textInfo.ToTitleCase(g.Key), 
-                Total = g.Sum(x => x.Total)
-            })
-            .OrderByDescending(m => m.Total)
-            .ToList();
-    }
+   
 }

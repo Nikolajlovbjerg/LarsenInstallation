@@ -15,7 +15,6 @@ namespace Client.Service
         public async Task<Project?> CreateProject(Project project)
         {
             var response = await _http.PostAsJsonAsync("api/project", project);
-
             return await response.Content.ReadFromJsonAsync<Project>();
         }
 
@@ -23,5 +22,23 @@ namespace Client.Service
         {
             return await _http.GetFromJsonAsync<List<Project>>("api/project");
         }
+
+        // --- DETTE ER METODEN DU MANGLER ---
+        // Denne metode ringer til din backend (ProjectCalculationsService)
+        // og henter de færdige beregninger.
+        public async Task<Calculation?> GetProjectDetails(int id)
+        {
+            try
+            {
+                // Kalder endpointet: api/project/5 (hvis id er 5)
+                return await _http.GetFromJsonAsync<Calculation>($"api/project/{id}");
+            }
+            catch (Exception)
+            {
+                // Hvis projektet ikke findes eller der er fejl, returner null
+                return null;
+            }
+        }
+        // -----------------------------------
     }
 }
