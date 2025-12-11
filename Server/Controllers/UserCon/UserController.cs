@@ -4,54 +4,47 @@ using Server.Repositories.User;
 
 namespace ServerApp.Controllers
 {
-    [ApiController]
-    [Route("api/user")]
+    [ApiController] // Fortæller at denne klasse er en Web API controller
+    [Route("api/user")] // Base-URL for alle endpoints i denne controller
     public class UserController : ControllerBase
     {
 
-        private ICreateUserRepoSQL userRepo;
+        private ICreateUserRepoSQL userRepo; // Interface til repository (controlleren afhænger kun af interfacet)
 
         public UserController(ICreateUserRepoSQL userRepo)
         {
-            this.userRepo = userRepo;
+            this.userRepo = userRepo; // Dependency Injection: Systemet giver controlleren et repository
         }
 
-        [HttpGet]
+        [HttpGet] // Endpoint: GET api/user
         public IEnumerable<Users> Get()
         {
-            return userRepo.GetAll();
+            return userRepo.GetAll(); // Henter alle brugere via repository
         }
 
-        [HttpPost]
+        [HttpPost] // Endpoint: POST api/user
         public void Add(Users user)
         {
-            userRepo.Add(user);
+            userRepo.Add(user); // Kalder repo for at tilføje en ny bruger
         }
-        
-        [HttpPost("login")]
+
+        [HttpPost("login")] // Endpoint: POST api/user/login
         public ActionResult<Users> Login([FromBody] Login dto)
         {
-            var user = userRepo.ValidateUser(dto.UserName, dto.Password); // vi tilføjer denne metode til repo
+            // Validerer brugernavn og password gennem repo
+            var user = userRepo.ValidateUser(dto.UserName, dto.Password);
+
             if (user == null)
-                return Unauthorized(); // 401
-            return Ok(user);
+                return Unauthorized(); // Returnerer HTTP 401 hvis login mislykkes
+
+            return Ok(user); // Returnerer HTTP 200 + brugerdata hvis login lykkes
         }
 
-        [HttpDelete]
-        [Route("delete/{id:int}")]
+        [HttpDelete]  // Endpoint: DELETE api/user/delete/{id}
+        [Route("delete/{id:int}")] // Route med variabel id, kun int
         public void Delete(int id)
         {
-            userRepo.Delete(id);
+            userRepo.Delete(id); // Sletter bruger via repository
         }
-
-        /*[HttpDelete]
-        [Route("delete")]
-        public void DeleteByQuery([FromQuery] int id)
-        {
-            userRepo.Delete(id);
-        }*/
-
-
-
     }
 }
