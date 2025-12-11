@@ -6,7 +6,7 @@ using Server.Service;
 namespace Server.Controllers.ProjectController
 {
     [ApiController]
-    [Route("api/project")] // Ændret route fra "createproject" til "project"
+    [Route("api/project")]
     public class ProjectController : ControllerBase
     {
         private readonly IProjectRepositorySQL _projectRepo;
