@@ -89,6 +89,8 @@ public class ProjectCalculationsService
         dto.GroupedHours = hours
             .GroupBy(h => {
                 var t = h.Type?.ToLower() ?? "";
+                if (t.Contains("overtid 1")) return "Overtid 1";
+                if (t.Contains("overtid 2")) return "Overtid 2";
                 if (t.Contains("lærling")) return "Lærling";
                 if (t.Contains("konsulent")) return "Konsulent";
                 if (t.Contains("arbejdsmand")) return "Arbejdsmand";
