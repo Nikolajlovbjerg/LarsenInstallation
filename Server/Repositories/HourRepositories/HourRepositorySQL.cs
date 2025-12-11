@@ -54,29 +54,4 @@ public class HourRepositorySQL : BaseRepository, IHourRepositorySQL
         return list;
     }
     
-    public List<Calculation> GetTotalHoursGroupedByType()
-    {
-        var result = new List<Calculation>();
-        using var conn = GetConnection();
-        conn.Open();
-        using var command = conn.CreateCommand();
-        
-        command.CommandText = @"
-            SELECT projectid, type, SUM(timer) AS total_hours
-            FROM projecthours
-            GROUP BY projectid, type
-            ORDER BY projectid, type";
-
-        using var reader = command.ExecuteReader();
-        while (reader.Read())
-        {
-            result.Add(new Calculation
-            {
-                ProjectId = reader.GetInt32(0),
-                Type = reader.GetString(1),
-                TotalHours = reader.GetDecimal(2)
-            });
-        }
-        return result;
-    }
 }

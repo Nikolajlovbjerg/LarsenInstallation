@@ -5,7 +5,7 @@
 
 <article class="ad-card">
     <div class="ad-media">
-        <img src="@Project.ImageUrl" alt="Project billede" />
+        <img src="@Project?.ImageUrl" alt="Project billede" />
         <div class="price-badge">
             <button class="dots-btn" @onclick="ToggleMenu" @onfocusout="CloseMenuDelayed">
                 <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-three-dots" viewBox="0 0 16 16">
@@ -46,7 +46,7 @@
     
     private Task GotoEditPage()
     {
-        var id = Project.ProjectId;
+        var id = Project?.ProjectId;
         Nav.NavigateTo($"project/edit/{id}");
         return Task.CompletedTask;
     }

@@ -1,13 +1,11 @@
 @page "/"
+@using Client.Components.Projects
 @using Core
 @using Client.Service
 @inject HttpClient Http
 @inject NavigationManager Nav
 
-
-
-
-@*<div class="admin-container">
+<div class="admin-container">
     <div class="header-section">
         <h3>Mine projekter</h3>
     </div>
@@ -33,7 +31,7 @@
                     @foreach (var project in _projects)
                     {
                         <tr>
-                            $1$ BILLEDE OG NAVN #1#
+                            @* BILLEDE OG NAVN *@
                             <td class="cell-main">
                                 <div class="project-flex">
                                     <img src="@project.ImageUrl" alt="img" 
@@ -45,14 +43,14 @@
                                 </div>
                             </td>
 
-                            $1$ DATO #1#
+                            @* DATO *@
                             <td class="cell-date">
                                 <span class="date-tag">
                                     @project.DateCreated.ToString("dd. MMM yyyy")
                                 </span>
                             </td>
 
-                            $1$ KNAPPER #1#
+                            @* KNAPPER *@
                             <td class="cell-action">
                                 <div class="action-flex">
                                     <button class="btn-simple" @onclick="() => GotoDetails(project.ProjectId)">
@@ -88,7 +86,7 @@
             </table>
         </div>
     }
-</div>*@
+</div>
 
 @code {
     private List<Project>? _projects;

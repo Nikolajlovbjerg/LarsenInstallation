@@ -6,11 +6,11 @@ namespace Server.Service
 {
     public class WorkerConverter
     {
-
+        
         public static List<ProjectHour> Convert(Stream stream)
         {
             Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
-
+            
             IExcelDataReader reader =  ExcelReaderFactory.CreateOpenXmlReader(stream);
             
 

@@ -25,6 +25,10 @@
     color: white;
 }
 
+.container{
+    margin-top: 3rem;
+}
+
 /* Toggle Switch styling */
 .form-check-input {
     cursor: pointer;
