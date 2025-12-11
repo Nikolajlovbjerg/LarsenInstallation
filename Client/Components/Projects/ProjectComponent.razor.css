@@ -1,4 +1,3 @@
-/*
 :host { display:block; }
 
 .ad-card {
@@ -12,15 +11,13 @@
     min-height: 350px;
 }
 
-!* Opdateret container til prikkerne *!
 .price-badge {
     position: absolute;
     top: 12px;
-    right: 12px; !* Flyttet til højre som du ønskede *!
-    z-index: 100; !* Sikrer at menuen ligger ovenpå alt andet *!
+    right: 12px;
+    z-index: 100;
 }
 
-!* Knappen selve prikkerne ligger i *!
 .dots-btn {
     background: rgba(255, 255, 255, 0.9);
     border: none;
@@ -41,11 +38,10 @@
     transform: scale(1.05);
 }
 
-!* Selve Dropdown boksen *!
 .dropdown-menu {
     position: absolute;
-    top: 100%; !* Lige under knappen *!
-    right: 0;  !* Flugter med højre kant *!
+    top: 100%; 
+    right: 0;  
     margin-top: 8px;
     background: white;
     border-radius: 8px;
@@ -58,7 +54,6 @@
     animation: fadeIn 0.2s ease-out;
 }
 
-!* Punkter i menuen *!
 .dropdown-item {
     background: none;
     border: none;
@@ -75,7 +70,6 @@
     background: #f5f5f5;
 }
 
-!* Specifik styling til slet-knappen hvis den skal være rød *!
 .dropdown-item.danger {
     color: #d32f2f;
 }
@@ -134,7 +128,7 @@
 }
 
 .MoreBtn {
-    background: #1d1e3c;                !* mørk blå – matcher dine focus borders *!
+    background: #1d1e3c;             
     color: white;
     padding: 6px 12px;
     font-size: 16px;
@@ -156,7 +150,7 @@
 }
 
 .DelBtn {
-    background: #880000;                !* mørk blå – matcher dine focus borders *!
+    background: #880000;                
     color: white;
     padding: 6px 12px;
     font-size: 16px;
@@ -176,10 +170,10 @@
 .DelBtn:active {
     transform: translateY(0);
 }
-*/
 
 
-     /* Container for at lave scroll hvis tabellen er for bred */
+
+    
  .table-container {
      width: 100%;
      overflow-x: auto;
@@ -191,7 +185,7 @@
 .styled-table {
     width: 100%;
     border-collapse: collapse;
-    min-width: 600px; /* Sikrer at den ikke bliver mast */
+    min-width: 600px; 
 }
 
 .styled-table th {
@@ -209,7 +203,6 @@
     vertical-align: middle;
 }
 
-/* Billede styling */
 .project-info-cell {
     display: flex;
     align-items: center;
@@ -234,7 +227,6 @@
     font-size: 0.9rem;
 }
 
-/* Action kolonne (højre side) */
 .action-cell {
     text-align: right;
     display: flex;
@@ -243,7 +235,6 @@
     gap: 10px;
 }
 
-/* "Se detaljer" knap styling */
 .btn-details {
     background: transparent;
     border: 1px solid #071226;
@@ -259,9 +250,8 @@
     color: white;
 }
 
-/* Menu Wrapper og Knap */
 .menu-wrapper {
-    position: relative; /* Vigtig for at dropdown placeres rigtigt */
+    position: relative; 
 }
 
 .dots-btn-table {
@@ -281,7 +271,6 @@
     color: #000;
 }
 
-/* Dropdown styling */
 .table-dropdown {
     position: absolute;
     right: 0;

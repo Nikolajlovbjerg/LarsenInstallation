@@ -6,6 +6,6 @@ public interface IHourRepositorySQL
 {
     void Add(ProjectHour hour);
     List<ProjectHour> GetByProjectId(int projectId);
-    //hej
-    List<Calculation> GetTotalHoursGroupedByType();
+    
+    /*List<Calculation> GetTotalHoursGroupedByType();*/
 }
