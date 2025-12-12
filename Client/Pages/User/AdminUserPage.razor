@@ -71,16 +71,16 @@
 
     protected override async Task OnInitializedAsync()
     {
-        _users = await Http.GetFromJsonAsync<List<Users>>($"{Server.Url}user");
+        _users = await Http.GetFromJsonAsync<List<Users>>($"{Server.Url}/api/user");
     }
 
     private async Task DeleteUser(int id)
     {
-        var response = await Http.DeleteAsync($"{Server.Url}user/delete/{id}");
+        var response = await Http.DeleteAsync($"{Server.Url}/api/user/delete/{id}");
     
         if (response.IsSuccessStatusCode)
         {
-            _users = await Http.GetFromJsonAsync<List<Users>>($"{Server.Url}user");
+            _users = await Http.GetFromJsonAsync<List<Users>>($"{Server.Url}/api/user");
         }
     }
 

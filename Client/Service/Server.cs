@@ -2,6 +2,6 @@
 {
     public class Server
     {
-        public const string Url = "https://larsenserver.azurewebsites.net/api/";
+        public const string Url = "https://larsenserver.azurewebsites.net";
     }
 }

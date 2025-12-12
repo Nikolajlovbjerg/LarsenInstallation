@@ -1,6 +1,5 @@
 @page "/project/{Id:int}"
 @using Core
-@using System.Globalization
 @using Client.Components.ProjectDetails
 @using Client.Service
 @inject HttpClient Http
@@ -51,7 +50,7 @@ else
         // 2. Serveren har allerede sorteret timer og materialer
         // 3. Vi gemmer det i 'details'
         details = await ProjectService.GetProjectDetails(Id);
-        details = await Http.GetFromJsonAsync<Calculation>($"{Server.Url}project/{Id}");
+        details = await Http.GetFromJsonAsync<Calculation>($"{Server.Url}/api/project/{Id}");
     }
 
    

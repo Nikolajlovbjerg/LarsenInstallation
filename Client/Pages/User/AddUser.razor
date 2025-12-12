@@ -58,7 +58,7 @@
     private async Task HandleValidSubmit()
     {
         // Sender POST request direkte til API'et
-        var response = await http.PostAsJsonAsync($"{Server.Url}user", _user);
+        var response = await http.PostAsJsonAsync($"{Server.Url}/api/user", _user);
 
         if (response.IsSuccessStatusCode)
         {

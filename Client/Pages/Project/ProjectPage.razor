@@ -1,5 +1,4 @@
 @page "/"
-@using Client.Components.Projects
 @using Core
 @using Client.Service
 @inject HttpClient Http
@@ -96,7 +95,7 @@
     {
         try 
         {
-            _projects = await Http.GetFromJsonAsync<List<Project>>($"{Server.Url}project");
+            _projects = await Http.GetFromJsonAsync<List<Project>>($"{Server.Url}/api/project");
         }
         catch (Exception ex)
         {
@@ -117,10 +116,10 @@
 
     private async Task DeleteProject(int id)
     {
-        var response = await Http.DeleteAsync($"{Server.Url}project/{id}");
+        var response = await Http.DeleteAsync($"{Server.Url}/api/project/{id}");
         if (response.IsSuccessStatusCode)
         {
-            _projects = await Http.GetFromJsonAsync<List<Project>>($"{Server.Url}project");
+            _projects = await Http.GetFromJsonAsync<List<Project>>($"{Server.Url}/api/project");
             _activeMenuId = null;
         }
     }
