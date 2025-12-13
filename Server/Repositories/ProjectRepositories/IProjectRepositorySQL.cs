@@ -1,12 +1,12 @@
 using Core;
-
 namespace Server.Repositories.ProjectRepositories;
 
+// Interface som beskriver hvilke metoder et Project-repository skal have
 public interface IProjectRepositorySQL
 {
-    int Create(Project p);
-    void Update(Project p);
-    void Delete(int id);
-    Project? GetById(int id);
-    IEnumerable<Project> GetAll();
+    int Create(Project p); // Skal kunne oprette et projekt og returnere projektets ID
+    void Update(Project p); // Skal kunne opdatere et eksisterende projekt
+    void Delete(int id); // Skal kunne slette et projekt ud fra ID
+    Project? GetById(int id); // Skal kunne hente ét projekt ud fra ID (eller null)
+    IEnumerable<Project> GetAll(); // Skal kunne hente alle projekter
 }
