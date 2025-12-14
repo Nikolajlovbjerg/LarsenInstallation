@@ -28,6 +28,7 @@ public class ProjectCalculationsService
         var project = _projectRepo.GetById(projectId);
         if (project == null) return null;
 
+        // Hent timer og materialer
         var hours = _hourRepo.GetByProjectId(projectId);
         var materials = _materialRepo.GetByProjectId(projectId);
 
@@ -81,9 +82,8 @@ public class ProjectCalculationsService
 
         dto.TotalTimer = dto.Hours.Sum(h => h.Timer);
 
-        // ==========================================================
         //  5. LOGIK FLYTTET FRA CLIENT TIL SERVER: GRUPPERING
-        // ==========================================================
+  
 
         // A. Gruppering af Timer (Svend, Lærling osv.)
         dto.GroupedHours = hours
@@ -109,9 +109,11 @@ public class ProjectCalculationsService
             { "Sikringer & Tavler", new[] { "tavle", "sikring", "hpfi", "rce", "automatsikring" } }
         };
 
+
         dto.GroupedMaterialsClientView = materials
             .GroupBy(m => {
                 string desc = m.Beskrivelse?.ToLower() ?? "";
+                // Find første kategori der matcher
                 foreach (var category in categories)
                 {
                     if (category.Value.Any(keyword => desc.Contains(keyword))) return category.Key;
@@ -127,12 +129,14 @@ public class ProjectCalculationsService
             .ToList();
 
         // C. Gruppering af Materialer (INTERN VISNING - Leverandør/Navn)
+        // Kendte leverandører
         string[] knownSuppliers = { "Anker & Co", "Solar", "Lemvigh-Müller", "AO" };
         TextInfo textInfo = new CultureInfo("da-DK", false).TextInfo;
 
         dto.GroupedMaterialsInternView = materials
             .GroupBy(m => {
                 string desc = m.Beskrivelse?.Trim() ?? "";
+                // Match på leverandør
                 foreach (var supplier in knownSuppliers)
                 {
                     if (desc.Contains(supplier, StringComparison.OrdinalIgnoreCase)) return supplier;
