@@ -24,14 +24,12 @@ public class ProjectCalculationsService
 
     public Calculation? CalculateProject(int projectId)
     {
-        // 1. Hent data
         var project = _projectRepo.GetById(projectId);
         if (project == null) return null;
 
         var hours = _hourRepo.GetByProjectId(projectId);
         var materials = _materialRepo.GetByProjectId(projectId);
-
-        // 2. Opret DTO
+        
         var dto = new Calculation
         {
             ProjectId = project.ProjectId,
@@ -40,30 +38,29 @@ public class ProjectCalculationsService
             Materials = materials
         };
 
-        // 3. Beregn Materialer (Priser)
+        
         foreach (var m in materials)
         {
             dto.TotalKostPrisMaterialer += (m.Kostpris * m.Antal);
             dto.TotalPrisMaterialer += m.Total;
         }
 
-        // 4. Beregn Timer (Priser og Overtid)
+        
         var employeeGroups = hours.GroupBy(x => x.Medarbejder);
         foreach (var group in employeeGroups)
         {
-            // A. Find rollen (kig efter linjer der IKKE er overtid)
+            
             var normalType = group
                 .FirstOrDefault(h => h.Type != null && !h.Type.ToLower().Contains("overtid"))?
                 .Type?.ToLower() ?? "svend";
 
-            // B. Find grundsats
+            
             decimal grundSats = 0;
             if (normalType.Contains("lærling")) grundSats = project.LærlingTimePris;
             else if (normalType.Contains("konsulent")) grundSats = project.KonsulentTimePris;
             else if (normalType.Contains("arbejdsmand")) grundSats = project.ArbejdsmandTimePris;
             else grundSats = project.SvendTimePris;
-
-            // C. Beregn pris inkl. overtidstillæg
+            
             foreach (var h in group)
             {
                 decimal faktor = 1.0m;
