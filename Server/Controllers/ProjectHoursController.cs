@@ -11,6 +11,7 @@ namespace Server.Controllers
     {
         private readonly IHourRepositorySQL _hourRepo;
 
+        // Repository som gemmer timer i databasen
         public ProjectHoursController(IHourRepositorySQL hourRepo)
         {
             _hourRepo = hourRepo;
@@ -30,15 +31,20 @@ namespace Server.Controllers
 
             try 
             {
+                // Opretter en midlertidig hukommelse (stream)
                 using Stream s = new MemoryStream();
-                file.CopyTo(s);
-                s.Position = 0;
-                
+                file.CopyTo(s); // Kopierer filens indhold ind i hukommelsen
+                s.Position = 0; // starter læsningen fra begyndelsen af filen 
+
+
+                //konverterer excel filen til material objekter 
                 var hours = WorkerConverter.Convert(s);
                 
                 foreach (var h in hours)
                 {
+                    //sætter materialer til projekter
                     h.ProjectId = projectId;
+                    // gemmer materialet til db 
                     _hourRepo.Add(h);
                 }
                 return Ok($"Uploaded {hours.Count} hours.");

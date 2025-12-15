@@ -34,7 +34,7 @@
         </div>
     </div>
 
-    // DE 3 BOKSE
+    // DE 3 BOKSE (materialer, timer, tid)
     <div class="row mb-4">
 
         <div class="col-md-4">
@@ -47,10 +47,12 @@
                         @if (IsClientView)
                         {
                             @Details.TotalPrisMaterialer.ToString("N2")
+                            // Kunden ser salgspris
                         }
                         else
                         {
                             @Details.TotalKostPrisMaterialer.ToString("N2")
+                            // Intern ser kostpris
                         }
                         kr.
                     </h3>
@@ -70,10 +72,12 @@
                     <h3 class="card-title text-dark">
                         @if (IsClientView)
                         {
+                            // Kunde ser timepris
                             @Details.TotalPrisTimer.ToString("N2")
                         }
                         else
                         {
+                            // Intern ser lønomkostning
                             @Details.TotalKostPrisTimer.ToString("N2")
                         }
                         kr.
@@ -90,7 +94,9 @@
                 <div class="card-header bg-transparent fw-bold" style="border-color: #071226; color: #071226;">
                     Tid
                 </div>
+            
                 <div class="card-body d-flex align-items-center justify-content-center flex-column">
+                   
                     <h3 class="card-title text-dark">@Details.TotalTimer.ToString("N2") timer</h3>
 
                 </div>
@@ -100,6 +106,8 @@
 }
 
 @code {
+    // Beregninger for projektet (kommer fra serveren)
     [Parameter] public Calculation? Details { get; set; }
+    // True = kundevisning, False = intern visning
     [Parameter] public bool IsClientView { get; set; }
 }
