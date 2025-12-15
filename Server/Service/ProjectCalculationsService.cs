@@ -8,14 +8,14 @@ namespace Server.Service;
 
 public class ProjectCalculationsService
 {
-    private readonly IProjectRepositorySQL _projectRepo;
-    private readonly IHourRepositorySQL _hourRepo;
-    private readonly IMaterialRepositorySQL _materialRepo;
+    private readonly IProjectRepository _projectRepo;
+    private readonly IHourRepository _hourRepo;
+    private readonly IMaterialRepository _materialRepo;
 
     public ProjectCalculationsService(
-        IProjectRepositorySQL projectRepo,
-        IHourRepositorySQL hourRepo,
-        IMaterialRepositorySQL materialRepo)
+        IProjectRepository projectRepo,
+        IHourRepository hourRepo,
+        IMaterialRepository materialRepo)
     {
         _projectRepo = projectRepo;
         _hourRepo = hourRepo;

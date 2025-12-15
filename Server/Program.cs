@@ -12,13 +12,13 @@ var builder = WebApplication.CreateBuilder(args);
 System.Text.Encoding.RegisterProvider(System.Text.CodePagesEncodingProvider.Instance);
 
 
-builder.Services.AddScoped<IProjectRepositorySQL, ProjectRepositorySQL>();
-builder.Services.AddScoped<IHourRepositorySQL, HourRepositorySQL>();
-builder.Services.AddScoped<IMaterialRepositorySQL, MaterialRepositorySQL>();
+builder.Services.AddScoped<IProjectRepository, ProjectRepositorySQL>();
+builder.Services.AddScoped<IHourRepository, HourRepositorySQL>();
+builder.Services.AddScoped<IMaterialRepository, MaterialRepositorySQL>();
 
 builder.Services.AddScoped<ProjectCalculationsService>();
 
-builder.Services.AddSingleton<ICreateUserRepoSQL, CreateUserRepoSQL>();
+builder.Services.AddSingleton<ICreateUserRepo, CreateUserRepoSQL>();
 /*builder.Services.AddSingleton<ICreateProjectRepo, CreateProjectRepo>();
 
 builder.Services.AddSingleton<IProjectHourCalcRepo, ProjectHourCalcRepositorySQL>();*/

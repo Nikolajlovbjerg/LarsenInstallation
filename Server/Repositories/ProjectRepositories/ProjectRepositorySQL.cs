@@ -4,7 +4,7 @@ namespace Server.Repositories.ProjectRepositories;
 
 
 // Repository der håndterer projekter i databasen
-public class ProjectRepositorySQL : BaseRepository, IProjectRepositorySQL
+public class ProjectRepositorySQL : BaseRepository, IProjectRepository
 {
     // Opretter et nyt projekt i databasen og returnerer det nye projectid
     public int Create(Project pro)

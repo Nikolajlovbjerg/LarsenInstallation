@@ -9,10 +9,10 @@ namespace Server.Controllers.ProjectController
     [Route("api/project")]
     public class ProjectController : ControllerBase
     {
-        private readonly IProjectRepositorySQL _projectRepo;
+        private readonly IProjectRepository _projectRepo;
         private readonly ProjectCalculationsService _calcService;
 
-        public ProjectController(IProjectRepositorySQL projectRepo, ProjectCalculationsService calcService)
+        public ProjectController(IProjectRepository projectRepo, ProjectCalculationsService calcService)
         {
             _projectRepo = projectRepo;
             _calcService = calcService;
