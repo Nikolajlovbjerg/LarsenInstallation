@@ -71,11 +71,12 @@
     private async Task OnClickLogin()
     {
         errorText = "";
-        isLoading = true;
+        isLoading = true; // Dette er loading animationen
 
         try
         {
-            // Kald den asynkrone metode i din UserRepository (som bruger HttpClient)
+            // Sender indtastede brugernavn og password til serveren (API'et).
+            // UserRepo er en hjælpeklasse (Service), der snakker med backend
             Users? userObject = await UserRepo.ValidLoginAsync(user.UserName, user.Password);
 
             if (userObject == null)
@@ -90,12 +91,12 @@
             {
                 userObject.Password = string.Empty; // eller null afhængig af modellen
             }
-            catch
+            catch // Ignorer hvis det fejler
             {
                 // Hvis Users.Password er readonly eller lign., lav et lille DTO i stedet:
                 var safeUser = new { userObject.UserName, userObject.Role, /* evt. Id = userObject.Id */ };
                 await LocalStorage.SetItemAsync("user", safeUser);
-                Nav.NavigateTo("/", forceLoad: true);
+                Nav.NavigateTo("/", forceLoad: true); // Genindlæser siden for at App.razor kører forfra og viser forsiden
                 return;
             }
 

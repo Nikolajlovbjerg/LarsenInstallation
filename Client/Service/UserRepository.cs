@@ -16,20 +16,24 @@ namespace Client.Service
         
         public async Task<Users?> ValidLoginAsync(string name, string password)
         {
+            // Pakker brugernavn og password ind i et objekt
             var login = new { UserName = name, Password = password };
             HttpResponseMessage response;
 
             try
             {
+                // Dataene bliver sendt til "api/user/login"
                 response = await _http.PostAsJsonAsync("api/user/login", login);
             }
             catch (Exception)
             {
+                // Hvis der sker fejl returneres null, så hele programmet ikke går ned
                 return null;
             }
 
             if (response.IsSuccessStatusCode)
             {
+                // Hvis serveren godkender, laves det til et User-objekt.
                 var user = await response.Content.ReadFromJsonAsync<Users>();
                 return user;
             }

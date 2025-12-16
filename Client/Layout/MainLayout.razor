@@ -32,9 +32,10 @@
         var user = await LocalStorage.GetItemAsync<Users>("user");
         isLoggedIn = user != null;
     }
-    
+    // Metode der køres når man trykker log ud
     private async Task Logout()
     { 
+        // Dataene slettes og man navigeres til login-siden
         await LocalStorage.RemoveItemAsync("user");
         navManager.NavigateTo("/", true);
     }
