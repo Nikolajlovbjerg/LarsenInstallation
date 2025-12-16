@@ -10,10 +10,10 @@ namespace Server.Controllers
     public class ProjectMaterialsController : ControllerBase
     {
         // Repository som gemmer materialer i databasen
-        private readonly IMaterialRepositorySQL _repo;
+        private readonly IMaterialRepository _repo;
 
         // Repository som gemmer materialer i databasen
-        public ProjectMaterialsController(IMaterialRepositorySQL repo)
+        public ProjectMaterialsController(IMaterialRepository repo)
         {
             _repo = repo;
         }

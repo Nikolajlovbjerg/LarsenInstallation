@@ -2,7 +2,7 @@ using Core;
 namespace Server.Repositories.ProjectRepositories;
 
 // Interface som beskriver hvilke metoder et Project-repository skal have
-public interface IProjectRepositorySQL
+public interface IProjectRepository
 {
     int Create(Project p); // Skal kunne oprette et projekt og returnere projektets ID
     void Update(Project p); // Skal kunne opdatere et eksisterende projekt

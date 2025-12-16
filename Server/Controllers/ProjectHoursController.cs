@@ -9,10 +9,10 @@ namespace Server.Controllers
     [Route("api/projecthours")]
     public class ProjectHoursController : ControllerBase
     {
-        private readonly IHourRepositorySQL _hourRepo;
+        private readonly IHourRepository _hourRepo;
 
         // Repository som gemmer timer i databasen
-        public ProjectHoursController(IHourRepositorySQL hourRepo)
+        public ProjectHoursController(IHourRepository hourRepo)
         {
             _hourRepo = hourRepo;
         }
