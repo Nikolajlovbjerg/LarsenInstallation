@@ -5,52 +5,53 @@ using Server.Service;
 
 namespace Server.Controllers.ProjectController
 {
-    [ApiController]
-    [Route("api/project")]
-    public class ProjectController : ControllerBase
+    [ApiController] // Gør klassen til en API-controller
+    [Route("api/project")] // Base endpoint
+    public class ProjectController : ControllerBase 
     {
-        private readonly IProjectRepository _projectRepo;
-        private readonly ProjectCalculationsService _calcService;
+        private readonly IProjectRepository _projectRepo;  // Adgang til projekter
+        private readonly ProjectCalculationsService _calcService; // Projektberegninger
 
-        public ProjectController(IProjectRepository projectRepo, ProjectCalculationsService calcService)
+        public ProjectController(IProjectRepository projectRepo, ProjectCalculationsService calcService) 
         {
             _projectRepo = projectRepo;
             _calcService = calcService;
         }
 
         [HttpGet]
-        public ActionResult<IEnumerable<Project>> GetAll()
+        public ActionResult<IEnumerable<Project>> GetAll()  // Henter alle projekter
         {
-            return Ok(_projectRepo.GetAll());
+            return Ok(_projectRepo.GetAll()); // Returnerer projektliste
         }
 
-        [HttpGet("{id}")]
-        public ActionResult<Calculation> GetDetails(int id)
+        [HttpGet("{id}")] // Henter detaljer for ét projekt
+        public ActionResult<Calculation> GetDetails(int id) // Beregner projekt
+
         {
             var result = _calcService.CalculateProject(id);
-            if (result == null) return NotFound("Project not found");
-            return Ok(result);
+            if (result == null) return NotFound("Project not found"); // Hvis projekt ikke findes
+            return Ok(result);  // Returnerer beregning
         }
 
-        [HttpPost]
+        [HttpPost]// Opretter nyt projekt
         public IActionResult Create(Project pro)
         {
-            int newId = _projectRepo.Create(pro);
-            return Ok(newId);
+            int newId = _projectRepo.Create(pro); // Gemmer projekt
+            return Ok(newId);  // Returnerer nyt id
         }
 
-        [HttpPut("{id}")]
+        [HttpPut("{id}")] // Opdaterer eksisterende projekt
         public IActionResult Update(int id, [FromBody] Project pro)
         {
-            if (id != pro.ProjectId) return BadRequest("ID mismatch");
-            _projectRepo.Update(pro);
+            if (id != pro.ProjectId) return BadRequest("ID mismatch"); // Tjekker id matcher
+            _projectRepo.Update(pro);  // Opdaterer projekt
             return Ok();
         }
 
-        [HttpDelete("{id}")]
+        [HttpDelete("{id}")] // Sletter projekt
         public void Delete(int id)
         {
-            _projectRepo.Delete(id);
+            _projectRepo.Delete(id);   // Fjerner projektet med givne id 
         }
     }
 }
