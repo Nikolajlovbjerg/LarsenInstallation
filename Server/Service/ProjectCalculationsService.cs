@@ -2,12 +2,15 @@ using Core;
 using Server.Repositories.HourRepositories;
 using Server.Repositories.MaterialRepositories;
 using Server.Repositories.ProjectRepositories;
-using System.Globalization; // Vigtig for TextInfo
+using System.Globalization;
 
 namespace Server.Service;
 
 public class ProjectCalculationsService
 {
+    // Vi bruger Dependency Injection til at få adgang til vores 3 repositories.
+    // Dette gør, at servicen ikke selv skal vide, hvordan man snakker SQL, 
+    // men blot beder om data.
     private readonly IProjectRepositorySQL _projectRepo;
     private readonly IHourRepositorySQL _hourRepo;
     private readonly IMaterialRepositorySQL _materialRepo;
@@ -22,66 +25,77 @@ public class ProjectCalculationsService
         _materialRepo = materialRepo;
     }
 
+    // Hovedmetoden: Tager et projekt-ID og returnerer et færdigt 'Calculation' objekt
+    // med alle tal lagt sammen og sorteret.
     public Calculation? CalculateProject(int projectId)
     {
+        // Vi henter stamdata, timer og materialer hver for sig.
         var project = _projectRepo.GetById(projectId);
-        if (project == null) return null;
+        if (project == null) return null; // Stop hvis projektet ikke findes
 
-        // Hent timer og materialer
+        
         var hours = _hourRepo.GetByProjectId(projectId);
         var materials = _materialRepo.GetByProjectId(projectId);
         
+        // Vi starter vores "Data Transfer Object", som skal sendes til Client.
         var dto = new Calculation
         {
             ProjectId = project.ProjectId,
             Project = project,
-            Hours = hours,
-            Materials = materials
+            Hours = hours, // Rå liste
+            Materials = materials // Rå liste
         };
 
-        
+        //Vi løber igennem alle materialelinjer for at finde total kostpris (indkøb) 
+        // og total salgspris.
         foreach (var m in materials)
         {
             dto.TotalKostPrisMaterialer += (m.Kostpris * m.Antal);
-            dto.TotalPrisMaterialer += m.Total;
+            dto.TotalPrisMaterialer += m.Total; // "Total her kommer fra excel filen"
         }
 
-        
+        // Vi grupperer timerne per medarbejder, da en medarbejder kan have flere timeregistreringer.
         var employeeGroups = hours.GroupBy(x => x.Medarbejder);
         foreach (var group in employeeGroups)
         {
-            
+            // Find medarbejderens "Basistype" (Svend, Lærling, osv.)
+            // Vi kigger på alle deres timer og ser bort fra "overtid" for at finde grundtypen.
+            // Hvis intet er fundet, antager vi det er en "svend".
             var normalType = group
                 .FirstOrDefault(h => h.Type != null && !h.Type.ToLower().Contains("overtid"))?
                 .Type?.ToLower() ?? "svend";
 
-            
+            // Find den timepris, der er aftalt på selve projektet fra Project-tabellen
             decimal grundSats = 0;
             if (normalType.Contains("lærling")) grundSats = project.LærlingTimePris;
             else if (normalType.Contains("konsulent")) grundSats = project.KonsulentTimePris;
             else if (normalType.Contains("arbejdsmand")) grundSats = project.ArbejdsmandTimePris;
             else grundSats = project.SvendTimePris;
             
+            // Nu beregner vi prisen for hver time-registrering
             foreach (var h in group)
             {
                 decimal faktor = 1.0m;
                 string typeLower = h.Type?.ToLower() ?? "";
 
+                // Håndter overtidstillæg (f.eks. 50% eller 100% ekstra)
                 if (typeLower.Contains("overtid 1")) faktor = 1.5m;
                 else if (typeLower.Contains("overtid 2")) faktor = 2.0m;
 
+                // Beregn salgspris: Antal timer * Timepris fra projektet * Overtidsfaktor
                 decimal salgsPris = h.Timer * grundSats * faktor;
 
                 dto.TotalPrisTimer += salgsPris;
                 dto.TotalKostPrisTimer += h.Kostpris;
             }
         }
-
+        // Simpel summering af antal timer totalt
         dto.TotalTimer = dto.Hours.Sum(h => h.Timer);
 
+        
+        
+        
         //  5. LOGIK FLYTTET FRA CLIENT TIL SERVER: GRUPPERING
-  
-
         // A. Gruppering af Timer (Svend, Lærling osv.)
         dto.GroupedHours = hours
             .GroupBy(h => {

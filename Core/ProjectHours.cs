@@ -4,7 +4,6 @@ namespace Core
     {
         public int HourId { get; set; }
         public int ProjectId { get; set; }
-        
         public string? Medarbejder { get; set; }
         public DateTime? Dato { get; set; }
         public DateTime? Stoptid { get; set; }
