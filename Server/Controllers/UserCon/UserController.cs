@@ -9,9 +9,9 @@ namespace ServerApp.Controllers
     public class UserController : ControllerBase
     {
 
-        private ICreateUserRepoSQL userRepo; // Interface til repository (controlleren afhænger kun af interfacet)
+        private ICreateUserRepo userRepo; // Interface til repository (controlleren afhænger kun af interfacet)
 
-        public UserController(ICreateUserRepoSQL userRepo)
+        public UserController(ICreateUserRepo userRepo)
         {
             this.userRepo = userRepo; // Dependency Injection: Systemet giver controlleren et repository
         }

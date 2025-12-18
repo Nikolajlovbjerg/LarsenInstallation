@@ -3,17 +3,24 @@ using Server.PW1;
 
 namespace Server.Repositories;
 
+// Baseklasse som andre repositories arver fra
 public abstract class BaseRepository
 {
-    protected string ConnectionString => 
-        "Host=ep-spring-unit-a2y1k0pd.eu-central-1.aws.neon.tech;" +
-        "Port=5432;" +
-        "Database=LarsenInstallation;" +
-        "Username=neondb_owner;" +
-        $"Password={PASSWORD.PW1};" +
-        "Ssl Mode=Require;" +
-        "Trust Server Certificate=true;";
+    // Connection string til online PostgreSQL-database (Neon)
+    protected string ConnectionString =>
+        // 1. Online database-server og port (Server=...)
+        // 2. Brugernavn til databasen (UserId)
+        // Password hentes fra PASSWORD-klassen
+        // Databasens navn
+        // Kræver krypteret forbindelse (nødvendigt for online database)
+        @"Server=ep-spring-unit-a2y1k0pd.eu-central-1.aws.neon.tech:5432;
+          User Id=neondb_owner;
+          Password=" + PASSWORD.PW1 + @";
+          Database=LarsenInstallation;
+          Ssl Mode=Require;";
 
+    // Opretter en ny databaseforbindelse
+    // Forbindelsen åbnes først, når den bruges
     protected NpgsqlConnection GetConnection()
     {
         return new NpgsqlConnection(ConnectionString);

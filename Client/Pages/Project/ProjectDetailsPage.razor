@@ -39,9 +39,10 @@ else
 }
 
 @code {
-    [Parameter] public int Id { get; set; }
+    [Parameter] public int Id { get; set; } // Tager tallet fra URL'en f.eks. /project/5, bliver til id 5
 
     private Calculation? details;
+    // Denne bool styrer "kunde visning" knappen. False = Virksomhedens oplysninger. True = Kundens oplysninger
     private bool showClientView = false;
 
     protected override async Task OnInitializedAsync()

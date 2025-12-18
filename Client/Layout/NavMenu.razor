@@ -53,19 +53,24 @@
 
 
 @code {
+    // Variabel der styrer om menuen er åben eller lukket. Udelukkende til mobil for at den folder sig pænt sammen.
     private bool collapseNavMenu = true;
 
+    // Hvis collapseNavManu er true, tilføjes CSS-klassen "collapse", som skjuler menuen
     private string? NavMenuCssClass => collapseNavMenu ? "collapse" : null;
 
+    // Metode der køres, når man klikker på menu-knappen eller et link. Vender værdien om fra sand til falsk eller omvendt
     private void ToggleNavMenu()
     {
         collapseNavMenu = !collapseNavMenu;
     }
-
+    // Variabel til at gemme brugeren der er logget ind
     Users? loggedIn;
 
+    // Kører når menuen indlæses
     protected override async Task OnInitializedAsync()
     {
+        // Henter brugeren fra LocalStorage for at tjekke deres rolle.
         loggedIn = await LocalStorage.GetItemAsync<Users?>("user");
     }
 }

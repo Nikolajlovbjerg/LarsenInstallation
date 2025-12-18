@@ -11,14 +11,14 @@ public class ProjectCalculationsService
     // Vi bruger Dependency Injection til at få adgang til vores 3 repositories.
     // Dette gør, at servicen ikke selv skal vide, hvordan man snakker SQL, 
     // men blot beder om data.
-    private readonly IProjectRepositorySQL _projectRepo;
-    private readonly IHourRepositorySQL _hourRepo;
-    private readonly IMaterialRepositorySQL _materialRepo;
+    private readonly IProjectRepository _projectRepo;
+    private readonly IHourRepository _hourRepo;
+    private readonly IMaterialRepository _materialRepo;
 
     public ProjectCalculationsService(
-        IProjectRepositorySQL projectRepo,
-        IHourRepositorySQL hourRepo,
-        IMaterialRepositorySQL materialRepo)
+        IProjectRepository projectRepo,
+        IHourRepository hourRepo,
+        IMaterialRepository materialRepo)
     {
         _projectRepo = projectRepo;
         _hourRepo = hourRepo;
@@ -92,14 +92,13 @@ public class ProjectCalculationsService
         // Simpel summering af antal timer totalt
         dto.TotalTimer = dto.Hours.Sum(h => h.Timer);
 
-        
-        
-        
         //  5. LOGIK FLYTTET FRA CLIENT TIL SERVER: GRUPPERING
+  
+
         // A. Gruppering af Timer (Svend, Lærling osv.)
-        dto.GroupedHours = hours
-            .GroupBy(h => {
-                var t = h.Type?.ToLower() ?? "";
+        dto.GroupedHours = hours // litse med timer 
+            .GroupBy(h => { // grupperer timer 
+                var t = h.Type?.ToLower() ?? ""; // Henter typer og gøre det til lowercase  
                 if (t.Contains("overtid 1")) return "Overtid 1";
                 if (t.Contains("overtid 2")) return "Overtid 2";
                 if (t.Contains("lærling")) return "Lærling";
@@ -107,8 +106,8 @@ public class ProjectCalculationsService
                 if (t.Contains("arbejdsmand")) return "Arbejdsmand";
                 return "Svend";
             })
-            .Select(g => new HourGroupDto { Type = g.Key, Total = g.Sum(x => x.Timer) })
-            .OrderByDescending(x => x.Total)
+            .Select(g => new HourGroupDto { Type = g.Key, Total = g.Sum(x => x.Timer) }) //gruppens navn og total timer 
+            .OrderByDescending(x => x.Total) //sorterer efter flest timer 
             .ToList();
 
         // B. Gruppering af Materialer (KUNDEVISNING - Kategorier)
@@ -121,47 +120,47 @@ public class ProjectCalculationsService
         };
 
 
-        dto.GroupedMaterialsClientView = materials
-            .GroupBy(m => {
+        dto.GroupedMaterialsClientView = materials // liste med materialer 
+            .GroupBy(m => { //grupperer materialer 
                 string desc = m.Beskrivelse?.ToLower() ?? "";
                 // Find første kategori der matcher
                 foreach (var category in categories)
                 {
-                    if (category.Value.Any(keyword => desc.Contains(keyword))) return category.Key;
+                    if (category.Value.Any(keyword => desc.Contains(keyword))) return category.Key; // Matcher søgeord og retunerer kategori 
                 }
-                return "Øvrige materialer";
+                return "Øvrige materialer"; // standard kategori 
             })
-            .Select(g => new ProjectMaterial
+            .Select(g => new ProjectMaterial // opretter nyt objekt 
             {
-                Beskrivelse = g.Key,
-                Total = g.Sum(x => x.Total)
+                Beskrivelse = g.Key, //kategoinavn 
+                Total = g.Sum(x => x.Total) //samlet pris
             })
-            .OrderByDescending(m => m.Total)
+            .OrderByDescending(m => m.Total) // efter pris 
             .ToList();
 
         // C. Gruppering af Materialer (INTERN VISNING - Leverandør/Navn)
         // Kendte leverandører
-        string[] knownSuppliers = { "Anker & Co", "Solar", "Lemvigh-Müller", "AO" };
+        string[] knownSuppliers = { "Anker & Co", "Solar", "Lemvigh-Müller", "AO" }; //leverandører
         TextInfo textInfo = new CultureInfo("da-DK", false).TextInfo;
 
         dto.GroupedMaterialsInternView = materials
             .GroupBy(m => {
-                string desc = m.Beskrivelse?.Trim() ?? "";
+                string desc = m.Beskrivelse?.Trim() ?? ""; //henter beskrivelse 
                 // Match på leverandør
-                foreach (var supplier in knownSuppliers)
+                foreach (var supplier in knownSuppliers) //gennemløber leverandør 
                 {
-                    if (desc.Contains(supplier, StringComparison.OrdinalIgnoreCase)) return supplier;
+                    if (desc.Contains(supplier, StringComparison.OrdinalIgnoreCase)) return supplier; // matcher leverandør og return
                 }
                 return desc.ToLower();
             })
-            .Select(g => new ProjectMaterial
+            .Select(g => new ProjectMaterial // opretter nyt objekt 
             {
-                Beskrivelse = knownSuppliers.Contains(g.Key) ? g.Key : textInfo.ToTitleCase(g.Key),
+                Beskrivelse = knownSuppliers.Contains(g.Key) ? g.Key : textInfo.ToTitleCase(g.Key), 
                 Total = g.Sum(x => x.Total)
             })
-            .OrderByDescending(m => m.Total)
+            .OrderByDescending(m => m.Total) //Sorterer efter pris 
             .ToList();
 
-        return dto;
+        return dto; // retunerer dto (timer + materialer) 
     }
 }
