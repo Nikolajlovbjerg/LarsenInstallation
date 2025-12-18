@@ -59,8 +59,9 @@
     Users user = new();
     string errorText = "";
     bool visPassword = false;
-    bool isLoading = false;
+    bool isLoading = false; // Styrer om spinneren vises
 
+    // Bestemmer input-feltets type baseret på om visPassword er sand/falsk
     string PasswordType => visPassword ? "text" : "password";
 
     void TogglePasswordVisibility()
@@ -71,41 +72,48 @@
     private async Task OnClickLogin()
     {
         errorText = "";
-        isLoading = true; // Dette er loading animationen
+        isLoading = true; // Starter loading animationen
 
         try
         {
-            // Sender indtastede brugernavn og password til serveren (API'et).
-            // UserRepo er en hjælpeklasse (Service), der snakker med backend
+            // 1. Forsøg at logge ind via API'et (UserRepo sender data til serveren)
             Users? userObject = await UserRepo.ValidLoginAsync(user.UserName, user.Password);
 
             if (userObject == null)
             {
+                // Hvis serveren returnerer null, var login ugyldigt
                 errorText = "Forkert brugernavn eller adgangskode — prøv igen.";
                 isLoading = false;
                 return;
             }
 
-            // Fjern adgangskoden før vi gemmer i localStorage (GEM ALDRIG password i klartekst)
+            // 2. SIKKERHED: Fjern adgangskoden fra objektet før vi gemmer det i browseren
+            // Vi vil aldrig have passwords liggende i LocalStorage
             try
             {
-                userObject.Password = string.Empty; // eller null afhængig af modellen
+                userObject.Password = string.Empty; 
             }
-            catch // Ignorer hvis det fejler
+            catch 
             {
-                // Hvis Users.Password er readonly eller lign., lav et lille DTO i stedet:
-                var safeUser = new { userObject.UserName, userObject.Role, /* evt. Id = userObject.Id */ };
+                // Hvis vi ikke kan tømme passwordet direkte, laver vi et nyt "sikkert" objekt
+                var safeUser = new
+                {
+                    userObject.UserName, userObject.Role
+                };
                 await LocalStorage.SetItemAsync("user", safeUser);
-                Nav.NavigateTo("/", forceLoad: true); // Genindlæser siden for at App.razor kører forfra og viser forsiden
+                Nav.NavigateTo("/", forceLoad: true); 
                 return;
             }
 
+            // 3. Gem brugeren i LocalStorage så vi kan huske at de er logget ind
             await LocalStorage.SetItemAsync("user", userObject);
+            
+            // 4. Naviger til forsiden (forceLoad: true sikrer at App.razor genindlæses og tjekker login-status)
             Nav.NavigateTo("/", forceLoad: true);
         }
         catch (HttpRequestException)
         {
-            errorText = "Netværksfejl — kunne ikke kontakte serveren. Tjek at serveren kører og CORS er korrekt sat op.";
+            errorText = "Netværksfejl — kunne ikke kontakte serveren. Tjek at serveren kører.";
         }
         catch (Exception ex)
         {
@@ -113,6 +121,7 @@
         }
         finally
         {
+            // Sørger for at fjerne loading-spinneren uanset om det gik godt eller skidt
             isLoading = false;
         }
     }

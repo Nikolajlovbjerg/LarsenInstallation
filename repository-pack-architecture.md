@@ -92,16 +92,16 @@ Server/
   Repositories/
     HourRepositories/
       HourRepositorySQL.cs
-      IHourRepositorySQL.cs
+      IHourRepository.cs
     MaterialRepositories/
-      IMaterialRepositorySQL.cs
+      IMaterialRepository.cs
       MaterialRepositorySQL.cs
     ProjectRepositories/
-      IProjectRepositorySQL.cs
+      IProjectRepository.cs
       ProjectRepositorySQL.cs
     User/
       CreateUserRepoSQL.cs
-      ICreateUserRepoSQL.cs
+      ICreateUserRepo.cs
     BaseRepository.cs
   Service/
     MaterialConverter.cs
@@ -228,6 +228,54 @@ public class Users
 }
 </file>
 
+<file path="Server/Repositories/HourRepositories/IHourRepository.cs">
+using Core;
+namespace Server.Repositories.HourRepositories;
+// Interface for HourRepositorySQL
+// Definerer hvilke metoder en repository til ProjectHour skal implementere
+public interface IHourRepository
+{
+    // Metode til at tilføje en ProjectHour til databasen
+    // Implementeringen skal oprette en SQL-INSERT og eksekvere den
+    void Add(ProjectHour hour);
+    // Metode til at hente alle ProjectHour for et bestemt projekt
+    // Returnerer en liste med ProjectHour-objekter
+    List<ProjectHour> GetByProjectId(int projectId);
+}
+</file>
+
+<file path="Server/Repositories/MaterialRepositories/IMaterialRepository.cs">
+using Core;
+namespace Server.Repositories.MaterialRepositories;
+// Interface for MaterialRepositorySQL
+// Definerer hvilke metoder en MaterialRepository skal implementere
+public interface IMaterialRepository
+{
+    // Metode til at tilføje et ProjectMaterial til databasen
+    // Implementeringen vil normalt oprette en SQL-INSERT og eksekvere den
+    void Add(ProjectMaterial material);
+    // Metode til at hente alle ProjectMaterialer for et specifikt projekt
+    // Returnerer en liste med ProjectMaterial-objekter
+    List<ProjectMaterial> GetByProjectId(int projectId);
+}
+</file>
+
+<file path="Server/Repositories/User/ICreateUserRepo.cs">
+using Core;
+namespace Server.Repositories.User
+{
+    // Interface som beskriver hvilke metoder et "User Repository" skal have
+    // Formål er at være en mellem mand imellem repo og controller
+    public interface ICreateUserRepo
+    {
+        List<Users> GetAll();   // Skal kunne hente alle brugere
+        void Add(Users user);   // Skal kunne tilføje en ny bruger
+        void Delete(int id);    // Skal kunne slette en bruger ud fra ID
+        Users? ValidateUser(string username, string password);  // Skal kunne validere login
+    }
+}
+</file>
+
 <file path="Client/Layout/MainLayout.razor">
 @inject Blazored.LocalStorage.ILocalStorageService LocalStorage
 @using Core
@@ -263,9 +311,10 @@ public class Users
         var user = await LocalStorage.GetItemAsync<Users>("user");
         isLoggedIn = user != null;
     }
-    
+    // Metode der køres når man trykker log ud
     private async Task Logout()
     { 
+        // Dataene slettes og man navigeres til login-siden
         await LocalStorage.RemoveItemAsync("user");
         navManager.NavigateTo("/", true);
     }
@@ -276,11 +325,37 @@ public class Users
 @page "/CreateProjectPage"
 @using Client.Components.Create_project
 
-
+@* Denne side har kun formålet, at give siden en URL, så man kan navigere til CreateProjectPage*@
 <CreateProjectComponent></CreateProjectComponent>
 
+@* Her er ingen kode, da det hele ligger i CreateProjectComponent*@
 @code {
     
+}
+</file>
+
+<file path="Client/Service/ProjectService.cs">
+using Core;
+using System.Net.Http.Json;
+namespace Client.Service
+{
+    public class ProjectService
+    {
+        private readonly HttpClient _http;
+        public async Task<Calculation?> GetProjectDetails(int id)
+        {
+            try
+            {
+                // Kalder endpointet: api/project/5 (hvis id er 5)
+                return await _http.GetFromJsonAsync<Calculation>($"api/project/{id}");
+            }
+            catch (Exception)
+            {
+                // Hvis projektet ikke findes eller der er fejl, returner null
+                return null;
+            }
+        }
+    }
 }
 </file>
 
@@ -300,18 +375,22 @@ namespace Client.Service
         }
         public async Task<Users?> ValidLoginAsync(string name, string password)
         {
+            // Pakker brugernavn og password ind i et objekt
             var login = new { UserName = name, Password = password };
             HttpResponseMessage response;
             try
             {
+                // Dataene bliver sendt til "api/user/login"
                 response = await _http.PostAsJsonAsync("api/user/login", login);
             }
             catch (Exception)
             {
+                // Hvis der sker fejl returneres null, så hele programmet ikke går ned
                 return null;
             }
             if (response.IsSuccessStatusCode)
             {
+                // Hvis serveren godkender, laves det til et User-objekt.
                 var user = await response.Content.ReadFromJsonAsync<Users>();
                 return user;
             }
@@ -321,126 +400,131 @@ namespace Client.Service
 }
 </file>
 
-<file path="Server/Controllers/ProjectMaterialsController.cs">
-using Core;
-using Microsoft.AspNetCore.Mvc;
-using Server.Repositories.MaterialRepositories;
-using Server.Service;
-namespace Server.Controllers
-{
-    [ApiController]
-    [Route("api/projectmaterials")]
-    public class ProjectMaterialsController : ControllerBase
-    {
-        private readonly IMaterialRepositorySQL _repo;
-        public ProjectMaterialsController(IMaterialRepositorySQL repo)
-        {
-            _repo = repo;
-        }
-        [HttpPost("upload")]
-        public IActionResult Upload(IFormFile? file, [FromQuery] int projectId)
-        {
-            if (file == null || file.Length == 0) return BadRequest("No file");
-            try
-            {
-                using Stream s = new MemoryStream();
-                file.CopyTo(s);
-                s.Position = 0;
-                var materials = MaterialConverter.Convert(s);
-                foreach (var m in materials)
-                {
-                    m.ProjectId = projectId;
-                    _repo.Add(m);
-                }
-                return Ok($"Uploaded {materials.Count} materials.");
-            }
-            catch (Exception ex)
-            {
-                return BadRequest("Error parsing file: " + ex.Message);
-            }
-        }
-    }
-}
+<file path="Client/Program.cs">
+using Microsoft.AspNetCore.Components.Web;
+using Microsoft.AspNetCore.Components.WebAssembly.Hosting;
+using Client;
+using Blazored.LocalStorage;
+using Client.Service;
+using Microsoft.Extensions.DependencyInjection;
+var builder = WebAssemblyHostBuilder.CreateDefault(args);
+builder.RootComponents.Add<App>("#app");
+builder.RootComponents.Add<HeadOutlet>("head::after");
+builder.Services.AddScoped(sp => new HttpClient { BaseAddress = new Uri($"{Server.Url}") });
+// Dette får appen til at bruge den samme adresse, som den selv ligger på
+/*builder.Services.AddScoped(sp => new HttpClient { BaseAddress = new Uri(builder.HostEnvironment.BaseAddress) });*/
+builder.Services.AddBlazoredLocalStorage();
+builder.Services.AddScoped<UserRepository>();
+builder.Services.AddScoped<ProjectService>();
+await builder.Build().RunAsync();
 </file>
 
-<file path="Server/Repositories/MaterialRepositories/IMaterialRepositorySQL.cs">
-using Core;
-namespace Server.Repositories.MaterialRepositories;
-public interface IMaterialRepositorySQL
+<file path="Core/ProjectMaterial.cs">
+namespace Core
 {
-    void Add(ProjectMaterial material);
-    List<ProjectMaterial> GetByProjectId(int projectId);
+    public class ProjectMaterial
+    {
+        public int MaterialsId { get; set; }
+        public int ProjectId { get; set; }
+        public string? Beskrivelse { get; set; }
+        public decimal Kostpris { get; set; }
+        public decimal Antal { get; set; }
+        public decimal Total { get; set; }
+        public string? Leverandør { get; set; }
+        public decimal Avance { get; set; }
+        public decimal Dækningsgrad { get; set; }
+        public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+    }
 }
 </file>
 
 <file path="Server/Repositories/MaterialRepositories/MaterialRepositorySQL.cs">
 using Core;
-using Npgsql;
 namespace Server.Repositories.MaterialRepositories;
-public class MaterialRepositorySQL : BaseRepository, IMaterialRepositorySQL
+// Repository til håndtering af projectmaterials i databasen
+public class MaterialRepositorySQL : BaseRepository, IMaterialRepository
 {
+    // Tilføjer et nyt ProjectMaterial til databasen
     public void Add(ProjectMaterial m)
     {
+        // Opretter databaseforbindelse, lukkes automatisk når using-blokken afsluttes
         using var conn = GetConnection();
-        conn.Open();
+        conn.Open(); // Åbner forbindelsen
+        // Opretter en SQL-kommando, lukkes automatisk med using
         using var command = conn.CreateCommand();
         command.CommandText = @"
             INSERT INTO projectmaterials
                 (projectid, beskrivelse, kostpris, antal, leverandør, total, avance, dækningsgrad) 
             VALUES 
                 (@pid, @besk, @kost, @antal, @lev, @total, @avance, @dg)";
+        // Binder værdier fra ProjectMaterial-objektet til SQL-parametre
+        // Brug af parametre forhindrer SQL-injection og sikrer korrekt datatype
         command.Parameters.AddWithValue("pid", m.ProjectId);
+        // @pid i SQL får værdien af ProjectId fra objektet
         command.Parameters.AddWithValue("besk", m.Beskrivelse ?? (object)DBNull.Value);
+        // @besk får værdien af Beskrivelse, hvis null sendes DBNull.Value til databasen
+        //osv
         command.Parameters.AddWithValue("kost", m.Kostpris);
         command.Parameters.AddWithValue("antal", m.Antal);
         command.Parameters.AddWithValue("lev", m.Leverandør ?? (object)DBNull.Value);
         command.Parameters.AddWithValue("total", m.Total);
         command.Parameters.AddWithValue("avance", m.Avance);
         command.Parameters.AddWithValue("dg", m.Dækningsgrad);
+        // Køre INSERT-kommandoen
         command.ExecuteNonQuery();
     }
+    // Henter alle ProjectMaterial til et specifikt projekt
     public List<ProjectMaterial> GetByProjectId(int projectId)
     {
-        var list = new List<ProjectMaterial>();
+        var list = new List<ProjectMaterial>(); // Liste til resultater
+        // Opretter databaseforbindelse
         using var conn = GetConnection();
-        conn.Open();
+        conn.Open(); // Åbner forbindelsen
+        // Opretter SQL-kommando
         using var command = conn.CreateCommand();
         command.CommandText = "SELECT * FROM projectmaterials WHERE projectid = @id";
-        command.Parameters.AddWithValue("id", projectId);
+        command.Parameters.AddWithValue("id", projectId); // Parameter for sikkerhed
+        // Læser resultater fra databasen
         using var reader = command.ExecuteReader();
-        while (reader.Read())
+        while (reader.Read()) // Læser én række ad gangen
         {
+            // Mapper databasekolonner til et ProjectMaterial-objekt
+            // Hver række i databasen bliver til et objekt i C#-listen
             list.Add(new ProjectMaterial
             {
+                // Henter 'materialsid' kolonnen fra databasen
+                // Hvis værdien er NULL, bruges 0 som default
                 MaterialsId = Convert.ToInt32(reader["materialsid"] is DBNull ? 0 : reader["materialsid"]),
+                // Henter 'projectid' kolonnen, forventes altid at have en værdi
                 ProjectId = Convert.ToInt32(reader["projectid"]),
+                // Henter 'beskrivelse' kolonnen
+                // Hvis NULL, bruges tom streng, ellers konverteres til string
                 Beskrivelse = reader["beskrivelse"] == DBNull.Value ? "" : reader["beskrivelse"].ToString(),
+                // Henter 'kostpris' kolonnen og konverterer til decimal
                 Kostpris = Convert.ToDecimal(reader["kostpris"]),
+                //Osv
                 Antal = Convert.ToDecimal(reader["antal"]),
                 Total = Convert.ToDecimal(reader["total"]),
                 Leverandør = reader["leverandør"] == DBNull.Value ? "" : reader["leverandør"].ToString(),
-                Avance = Convert.ToDecimal(reader["avance"]),
                 Dækningsgrad = Convert.ToDecimal(reader["dækningsgrad"]),
             });
         }
-        return list;
+        return list; // Returnerer listen med materialer
     }
 }
 </file>
 
-<file path="Server/Repositories/User/ICreateUserRepoSQL.cs">
+<file path="Server/Repositories/ProjectRepositories/IProjectRepository.cs">
 using Core;
-namespace Server.Repositories.User
+namespace Server.Repositories.ProjectRepositories;
+// Interface som beskriver hvilke metoder et Project-repository skal have
+public interface IProjectRepository
 {
-    // Interface som beskriver hvilke metoder et "User Repository" skal have
-    // Formål er at være en mellem mand imellem repo og controller
-    public interface ICreateUserRepoSQL
-    {
-        List<Users> GetAll();   // Skal kunne hente alle brugere
-        void Add(Users user);   // Skal kunne tilføje en ny bruger
-        void Delete(int id);    // Skal kunne slette en bruger ud fra ID
-        Users? ValidateUser(string username, string password);  // Skal kunne validere login
-    }
+    int Create(Project p); // Skal kunne oprette et projekt og returnere projektets ID
+    void Update(Project p); // Skal kunne opdatere et eksisterende projekt
+    void Delete(int id); // Skal kunne slette et projekt ud fra ID
+    Project? GetById(int id); // Skal kunne hente et projekt ud fra ID (eller null)
+    IEnumerable<Project> GetAll(); // Skal kunne hente alle projekter
 }
 </file>
 
@@ -448,16 +532,23 @@ namespace Server.Repositories.User
 using Npgsql;
 using Server.PW1;
 namespace Server.Repositories;
+// Baseklasse som andre repositories arver fra
 public abstract class BaseRepository
 {
-    protected string ConnectionString => 
-        "Host=ep-spring-unit-a2y1k0pd.eu-central-1.aws.neon.tech;" +
-        "Port=5432;" +
-        "Database=LarsenInstallation;" +
-        "Username=neondb_owner;" +
-        $"Password={PASSWORD.PW1};" +
-        "Ssl Mode=Require;" +
-        "Trust Server Certificate=true;";
+    // Connection string til online PostgreSQL-database (Neon)
+    protected string ConnectionString =>
+        // 1. Online database-server og port (Server=...)
+        // 2. Brugernavn til databasen (UserId)
+        // Password hentes fra PASSWORD-klassen
+        // Databasens navn
+        // Kræver krypteret forbindelse (nødvendigt for online database)
+        @"Server=ep-spring-unit-a2y1k0pd.eu-central-1.aws.neon.tech:5432;
+          User Id=neondb_owner;
+          Password=" + PASSWORD.PW1 + @";
+          Database=LarsenInstallation;
+          Ssl Mode=Require;";
+    // Opretter en ny databaseforbindelse
+    // Forbindelsen åbnes først, når den bruges
     protected NpgsqlConnection GetConnection()
     {
         return new NpgsqlConnection(ConnectionString);
@@ -502,7 +593,7 @@ public abstract class BaseRepository
         </div>
     </div>
 
-    // DE 3 BOKSE
+    // DE 3 BOKSE (materialer, timer, tid)
     <div class="row mb-4">
 
         <div class="col-md-4">
@@ -515,10 +606,12 @@ public abstract class BaseRepository
                         @if (IsClientView)
                         {
                             @Details.TotalPrisMaterialer.ToString("N2")
+                            // Kunden ser salgspris
                         }
                         else
                         {
                             @Details.TotalKostPrisMaterialer.ToString("N2")
+                            // Intern ser kostpris
                         }
                         kr.
                     </h3>
@@ -538,10 +631,12 @@ public abstract class BaseRepository
                     <h3 class="card-title text-dark">
                         @if (IsClientView)
                         {
+                            // Kunde ser timepris
                             @Details.TotalPrisTimer.ToString("N2")
                         }
                         else
                         {
+                            // Intern ser lønomkostning
                             @Details.TotalKostPrisTimer.ToString("N2")
                         }
                         kr.
@@ -558,7 +653,9 @@ public abstract class BaseRepository
                 <div class="card-header bg-transparent fw-bold" style="border-color: #071226; color: #071226;">
                     Tid
                 </div>
+            
                 <div class="card-body d-flex align-items-center justify-content-center flex-column">
+                   
                     <h3 class="card-title text-dark">@Details.TotalTimer.ToString("N2") timer</h3>
 
                 </div>
@@ -568,7 +665,76 @@ public abstract class BaseRepository
 }
 
 @code {
+    // Beregninger for projektet (kommer fra serveren)
     [Parameter] public Calculation? Details { get; set; }
+    // True = kundevisning, False = intern visning
+    [Parameter] public bool IsClientView { get; set; }
+}
+</file>
+
+<file path="Client/Components/ProjectDetails/RessourceOverblik.razor">
+@using Core
+@namespace Client.Components.ProjectDetails
+
+<div class="row mb-5">
+    <!-- Timer -->
+    <div class="col-md-6 mb-3">
+        <div class="card h-100 shadow-sm" style="border-color: #071226;">
+            <div class="card-header bg-transparent fw-bold" style="border-color: #071226; color: #071226;">
+                Timeoversigt
+            </div>
+            <ul class="list-group list-group-flush">
+                @foreach (var group in HourGroups)
+                {
+                    <li class="list-group-item d-flex justify-content-between align-items-center">
+                        <span>@group.Type</span>
+                        <span class="badge rounded-pill" style="background-color: #071226;">
+                            @group.Total.ToString("N2") t
+                        </span>
+                    </li>
+                }
+            </ul>
+        </div>
+    </div>
+
+    <!-- Materialer (ALTID kategori-liste fra serveren) -->
+    <div class="col-md-6 mb-3">
+        <div class="card h-100 shadow-sm"
+             style="border-color: #071226; max-height: 500px; display:flex; flex-direction:column;">
+
+            <div class="card-header bg-transparent fw-bold"
+                 style="border-color: #071226; color: #071226;">
+                Materialer fordelt på kategorier
+            </div>
+
+            <div style="overflow-y: auto; flex: 1;">
+                <ul class="list-group list-group-flush">
+                    @if (MaterialGroups.Any())
+                    {
+                        @foreach (var mat in MaterialGroups)
+                        {
+                            <li class="list-group-item d-flex justify-content-between align-items-center">
+                                <span>@mat.Beskrivelse</span>
+                                <span class="fw-bold">@mat.Total.ToString("N2") kr.</span>
+                            </li>
+                        }
+                    }
+                    else
+                    {
+                        <li class="list-group-item text-muted text-center">Ingen materialer registreret</li>
+                    }
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+
+@code {
+    [Parameter] public List<HourGroupDto> HourGroups { get; set; } = new();
+
+    // ALTID kategori-liste fra serveren
+    [Parameter] public List<ProjectMaterial> MaterialGroups { get; set; } = new();
+
     [Parameter] public bool IsClientView { get; set; }
 }
 </file>
@@ -647,11 +813,12 @@ public abstract class BaseRepository
     private async Task OnClickLogin()
     {
         errorText = "";
-        isLoading = true;
+        isLoading = true; // Dette er loading animationen
 
         try
         {
-            // Kald den asynkrone metode i din UserRepository (som bruger HttpClient)
+            // Sender indtastede brugernavn og password til serveren (API'et).
+            // UserRepo er en hjælpeklasse (Service), der snakker med backend
             Users? userObject = await UserRepo.ValidLoginAsync(user.UserName, user.Password);
 
             if (userObject == null)
@@ -666,12 +833,15 @@ public abstract class BaseRepository
             {
                 userObject.Password = string.Empty; // eller null afhængig af modellen
             }
-            catch
+            catch // Ignorer hvis det fejler
             {
-                // Hvis Users.Password er readonly eller lign., lav et lille DTO i stedet:
-                var safeUser = new { userObject.UserName, userObject.Role, /* evt. Id = userObject.Id */ };
+                // Hvis Users.Password er readonly eller lign.
+                var safeUser = new
+                {
+                    userObject.UserName, userObject.Role
+                };
                 await LocalStorage.SetItemAsync("user", safeUser);
-                Nav.NavigateTo("/", forceLoad: true);
+                Nav.NavigateTo("/", forceLoad: true); // Genindlæser siden for at App.razor kører forfra og viser forsiden
                 return;
             }
 
@@ -694,121 +864,6 @@ public abstract class BaseRepository
 }
 </file>
 
-<file path="Client/Service/ProjectService.cs">
-using Core;
-using System.Net.Http.Json;
-namespace Client.Service
-{
-    public class ProjectService
-    {
-        private readonly HttpClient _http;
-        public async Task<Calculation?> GetProjectDetails(int id)
-        {
-            try
-            {
-                // Kalder endpointet: api/project/5 (hvis id er 5)
-                return await _http.GetFromJsonAsync<Calculation>($"api/project/{id}");
-            }
-            catch (Exception)
-            {
-                // Hvis projektet ikke findes eller der er fejl, returner null
-                return null;
-            }
-        }
-    }
-}
-</file>
-
-<file path="Client/Program.cs">
-using Microsoft.AspNetCore.Components.Web;
-using Microsoft.AspNetCore.Components.WebAssembly.Hosting;
-using Client;
-using Blazored.LocalStorage;
-using Client.Service;
-using Microsoft.Extensions.DependencyInjection;
-var builder = WebAssemblyHostBuilder.CreateDefault(args);
-builder.RootComponents.Add<App>("#app");
-builder.RootComponents.Add<HeadOutlet>("head::after");
-builder.Services.AddScoped(sp => new HttpClient { BaseAddress = new Uri($"{Server.Url}") });
-// Dette får appen til at bruge den samme adresse, som den selv ligger på
-/*builder.Services.AddScoped(sp => new HttpClient { BaseAddress = new Uri(builder.HostEnvironment.BaseAddress) });*/
-builder.Services.AddBlazoredLocalStorage();
-builder.Services.AddScoped<UserRepository>();
-builder.Services.AddScoped<ProjectService>();
-await builder.Build().RunAsync();
-</file>
-
-<file path="Core/ProjectMaterial.cs">
-namespace Core
-{
-    public class ProjectMaterial
-    {
-        public int MaterialsId { get; set; }
-        public int ProjectId { get; set; }
-        public string? Beskrivelse { get; set; }
-        public decimal Kostpris { get; set; }
-        public decimal Antal { get; set; }
-        public decimal Total { get; set; }
-        public string? Leverandør { get; set; }
-        public decimal Avance { get; set; }
-        public decimal Dækningsgrad { get; set; }
-        public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
-    }
-}
-</file>
-
-<file path="Server/Controllers/ProjectController/ProjectController.cs">
-using Core;
-using Microsoft.AspNetCore.Mvc;
-using Server.Repositories.ProjectRepositories;
-using Server.Service;
-namespace Server.Controllers.ProjectController
-{
-    [ApiController]
-    [Route("api/project")]
-    public class ProjectController : ControllerBase
-    {
-        private readonly IProjectRepositorySQL _projectRepo;
-        private readonly ProjectCalculationsService _calcService;
-        public ProjectController(IProjectRepositorySQL projectRepo, ProjectCalculationsService calcService)
-        {
-            _projectRepo = projectRepo;
-            _calcService = calcService;
-        }
-        [HttpGet]
-        public ActionResult<IEnumerable<Project>> GetAll()
-        {
-            return Ok(_projectRepo.GetAll());
-        }
-        [HttpGet("{id}")]
-        public ActionResult<Calculation> GetDetails(int id)
-        {
-            var result = _calcService.CalculateProject(id);
-            if (result == null) return NotFound("Project not found");
-            return Ok(result);
-        }
-        [HttpPost]
-        public IActionResult Create(Project pro)
-        {
-            int newId = _projectRepo.Create(pro);
-            return Ok(newId);
-        }
-        [HttpPut("{id}")]
-        public IActionResult Update(int id, [FromBody] Project pro)
-        {
-            if (id != pro.ProjectId) return BadRequest("ID mismatch");
-            _projectRepo.Update(pro);
-            return Ok();
-        }
-        [HttpDelete("{id}")]
-        public void Delete(int id)
-        {
-            _projectRepo.Delete(id);
-        }
-    }
-}
-</file>
-
 <file path="Server/Controllers/UserCon/UserController.cs">
 using Core;
 using Microsoft.AspNetCore.Mvc;
@@ -819,8 +874,8 @@ namespace ServerApp.Controllers
     [Route("api/user")] // Base-URL for alle endpoints i denne controller
     public class UserController : ControllerBase
     {
-        private ICreateUserRepoSQL userRepo; // Interface til repository (controlleren afhænger kun af interfacet)
-        public UserController(ICreateUserRepoSQL userRepo)
+        private ICreateUserRepo userRepo; // Interface til repository (controlleren afhænger kun af interfacet)
+        public UserController(ICreateUserRepo userRepo)
         {
             this.userRepo = userRepo; // Dependency Injection: Systemet giver controlleren et repository
         }
@@ -853,70 +908,122 @@ namespace ServerApp.Controllers
 }
 </file>
 
+<file path="Server/Controllers/ProjectMaterialsController.cs">
+using Core;
+using Microsoft.AspNetCore.Mvc;
+using Server.Repositories.MaterialRepositories;
+using Server.Service;
+namespace Server.Controllers
+{
+    [ApiController]
+    [Route("api/projectmaterials")]
+    public class ProjectMaterialsController : ControllerBase
+    {
+        // Repository som gemmer materialer i databasen
+        private readonly IMaterialRepository _repo;
+        // Repository som gemmer materialer i databasen
+        public ProjectMaterialsController(IMaterialRepository repo)
+        {
+            _repo = repo;
+        }
+        // Endpoint: bruges når man uploader en fil
+        [HttpPost("upload")]
+        public IActionResult Upload(IFormFile? file, [FromQuery] int projectId)
+        {
+            // Hvis der ikke er valgt en fil, fejlbesked
+            if (file == null || file.Length == 0) return BadRequest("No file");
+            try
+            {
+                // Opretter en midlertidig hukommelse (stream)
+                using Stream s = new MemoryStream();
+                file.CopyTo(s); // Kopierer filens indhold ind i hukommelsen
+                s.Position = 0; // starter læsningen fra begyndelsen af filen 
+                //konverterer excel filen til material objekter 
+                var materials = MaterialConverter.Convert(s);
+                foreach (var m in materials)
+                {
+                    //sætter materialer til projekter
+                    m.ProjectId = projectId;
+                    // gemmer materialet til db 
+                    _repo.Add(m);
+                }
+                return Ok($"Uploaded {materials.Count} materials."); //succes besked 
+            }
+            catch (Exception ex)
+            {
+                return BadRequest("Error parsing file: " + ex.Message); // fejlbesked 
+            }
+        }
+    }
+}
+</file>
+
 <file path="Server/Repositories/HourRepositories/HourRepositorySQL.cs">
 using Core;
-using Npgsql;
 namespace Server.Repositories.HourRepositories;
-public class HourRepositorySQL : BaseRepository, IHourRepositorySQL
+// Repository til håndtering af timer (ProjectHour) i databasen
+public class HourRepositorySQL : BaseRepository, IHourRepository
 {
+    // Tilføjer en ny ProjectHour til databasen
     public void Add(ProjectHour h)
     {
+        // Opretter databaseforbindelse, lukker automatisk når using-blokken afsluttes
         using var conn = GetConnection();
-        conn.Open();
+        conn.Open(); // Åbner forbindelsen
+        // Opretter en SQL-kommando, lukker automatisk med using
         using var command = conn.CreateCommand();
         command.CommandText = @"
             INSERT INTO projecthours
                 (projectid, medarbejder, dato, stoptid, timer, type, kostpris) 
             VALUES 
                 (@pid, @med, @dato, @stop, @timer, @type, @kost)";
+        // Binder værdier fra ProjectHour-objektet til SQL-parametre
+        // Parametre beskytter mod SQL-injection og sikrer korrekt datatype
         command.Parameters.AddWithValue("pid", h.ProjectId);
-        command.Parameters.AddWithValue("med", h.Medarbejder ?? (object)DBNull.Value);
+        //pid for værdien af projectid
+        command.Parameters.AddWithValue("med", h.Medarbejder ?? (object)DBNull.Value); //Hvis null så for den null som værdi
         command.Parameters.AddWithValue("dato", h.Dato ?? (object)DBNull.Value);
         command.Parameters.AddWithValue("stop", h.Stoptid ?? (object)DBNull.Value);
         command.Parameters.AddWithValue("timer", h.Timer);
         command.Parameters.AddWithValue("type", h.Type ?? (object)DBNull.Value);
         command.Parameters.AddWithValue("kost", h.Kostpris);
+        // Eksekverer INSERT-kommandoen
         command.ExecuteNonQuery();
     }
+    // Henter alle ProjectHour for et bestemt projekt
     public List<ProjectHour> GetByProjectId(int projectId)
     {
-        var list = new List<ProjectHour>();
+        var list = new List<ProjectHour>(); // Liste til at gemme resultater
+        // Opretter databaseforbindelse
         using var conn = GetConnection();
-        conn.Open();
+        conn.Open(); // Åbner forbindelsen
+        // Opretter SQL-kommando
         using var command = conn.CreateCommand();
         command.CommandText = "SELECT * FROM projecthours WHERE projectid = @id";
-        command.Parameters.AddWithValue("id", projectId);
+        command.Parameters.AddWithValue("id", projectId); // Parameter for sikkerhed
+        // Læser resultater fra databasen
         using var reader = command.ExecuteReader();
-        while (reader.Read())
+        while (reader.Read()) // Læser én række ad gangen
         {
+            // Mapper databasekolonner til ProjectHour-objekt
             list.Add(new ProjectHour
             {
-                HourId = Convert.ToInt32(reader["hourid"] is DBNull ? 0 : reader["hourid"]), // Håndter hvis ID kolonne mangler eller hedder noget andet
+                // Håndterer NULL eller manglende ID-kolonne med default 0
+                HourId = Convert.ToInt32(reader["hourid"] is DBNull ? 0 : reader["hourid"]),
                 ProjectId = Convert.ToInt32(reader["projectid"]),
+                // Hvis medarbejder er NULL, bruges standard "Ukendt"
                 Medarbejder = reader["medarbejder"] == DBNull.Value ? "Ukendt" : reader["medarbejder"].ToString(),
+                // Dato og stoptid håndteres som nullable DateTime
                 Dato = reader["dato"] == DBNull.Value ? null : Convert.ToDateTime(reader["dato"]),
                 Stoptid = reader["stoptid"] == DBNull.Value ? null : Convert.ToDateTime(reader["stoptid"]),
-                Timer = Convert.ToDecimal(reader["timer"]),
-                Type = reader["type"] == DBNull.Value ? "" : reader["type"].ToString(),
+                Timer = Convert.ToDecimal(reader["timer"]), // decimal fra databasen
+                Type = reader["type"] == DBNull.Value ? "" : reader["type"].ToString(), // tom streng hvis NULL
                 Kostpris = Convert.ToDecimal(reader["kostpris"]),
             });
         }
+        // Returnerer listen med ProjectHour-objekter
         return list;
     }
-}
-</file>
-
-<file path="Server/Repositories/ProjectRepositories/IProjectRepositorySQL.cs">
-using Core;
-namespace Server.Repositories.ProjectRepositories;
-// Interface som beskriver hvilke metoder et Project-repository skal have
-public interface IProjectRepositorySQL
-{
-    int Create(Project p); // Skal kunne oprette et projekt og returnere projektets ID
-    void Update(Project p); // Skal kunne opdatere et eksisterende projekt
-    void Delete(int id); // Skal kunne slette et projekt ud fra ID
-    Project? GetById(int id); // Skal kunne hente ét projekt ud fra ID (eller null)
-    IEnumerable<Project> GetAll(); // Skal kunne hente alle projekter
 }
 </file>
 
@@ -925,7 +1032,7 @@ using Core;
 using Npgsql;
 namespace Server.Repositories.ProjectRepositories;
 // Repository der håndterer projekter i databasen
-public class ProjectRepositorySQL : BaseRepository, IProjectRepositorySQL
+public class ProjectRepositorySQL : BaseRepository, IProjectRepository
 {
     // Opretter et nyt projekt i databasen og returnerer det nye projectid
     public int Create(Project pro)
@@ -1052,123 +1159,35 @@ public class ProjectRepositorySQL : BaseRepository, IProjectRepositorySQL
 }
 </file>
 
-<file path="Server/Repositories/User/CreateUserRepoSQL.cs">
-using Core;                   
-using Npgsql;                 // Giver adgang til PostgreSQL i C#
-using Server.PW1;             
-namespace Server.Repositories.User
-{
-    public class CreateUserRepoSQL : ICreateUserRepoSQL
-    {
-        // Connection string: beskriver hvordan man forbinder til databasen
-        private const string conString =
-        "Host=ep-spring-unit-a2y1k0pd.eu-central-1.aws.neon.tech;" +
-        "Port=5432;" +                         // Port databasen lytter på
-        "Database=LarsenInstallation;" +       // Navn på databasen
-        "Username=neondb_owner;" +             // Brugernavn til DB
-        $"Password={PASSWORD.PW1};" +          // Password hentet fra en klasse
-        "Ssl Mode=Require;" +                  // Krypteret forbindelse
-        "Trust Server Certificate=true;";      // Accepter certifikat
-        public List<Users> GetAll()
-        {
-            var result = new List<Users>();    // Tom liste til brugere der hentes
-            using (var mConnection = new NpgsqlConnection(conString)) // Opretter DB-forbindelse
-            {
-                mConnection.Open();            // Åbner forbindelsen
-                var command = mConnection.CreateCommand();   // Opretter SQL-kommando
-                command.CommandText = @"SELECT * FROM Users"; // SQL der henter alle brugere
-                using (var reader = command.ExecuteReader())  // Kører SELECT og får en "reader" (Læser kolloner)
-                {
-                    while (reader.Read())        // Læser én række ad gangen
-                    {
-                        // Henter værdier fra kolonnerne i rækken
-                        var userid = reader.GetInt32(0);
-                        var username = reader.GetString(1);
-                        var password = reader.GetString(2);
-                        var role = reader.GetString(3);
-                        // Mapper database-værdier til et Users-objekt (lægger data ind i C# objekt)
-                        Users u = new Users
-                        {
-                            UserId = userid,
-                            UserName = username,
-                            Password = password,
-                            Role = role
-                        };
-                        result.Add(u);           // Tilføjer bruger til listen
-                    }
-                }
-            }
-            return result;                       // Returnerer hele listen
-        }
-        public void Add(Users user)
-        {
-            using (var mConnection = new NpgsqlConnection(conString))  // Åbner DB-forbindelse
-            {
-                mConnection.Open();
-                var command = mConnection.CreateCommand(); // Ny SQL-kommando
-                // SQL med parametre
-                command.CommandText =
-                    "INSERT INTO Users (username, password, role) VALUES (@username, @password, @role)";
-                Console.WriteLine(command.CommandText);
-                // Opretter parameter for @username
-                var paramName = command.CreateParameter();
-                paramName.ParameterName = "username";   // Navn der matcher @username
-                command.Parameters.Add(paramName);      // Tilføjer til SQL-kommandos parameterliste
-                paramName.Value = user.UserName;        // Sætter værdien
-                // Opretter parameter for @password
-                var paramPassword = command.CreateParameter();
-                paramPassword.ParameterName = "password";
-                command.Parameters.Add(paramPassword);
-                paramPassword.Value = user.Password;
-                // Opretter parameter for @role
-                var paramRole = command.CreateParameter();
-                paramRole.ParameterName = "role";
-                command.Parameters.Add(paramRole);
-                paramRole.Value = user.Role;
-                command.ExecuteNonQuery();   // Eksekverer INSERT (kører SQL-kommandoen)
-            }
-        }
-        public Users? ValidateUser(string username, string password)
-        {
-            // Finder første bruger der matcher username og password (efter GetAll har hentet alle)
-            return GetAll().FirstOrDefault(u => u.UserName == username && u.Password == password);
-        }
-        public void Delete(int id)
-        {
-            using (var mConnection = new NpgsqlConnection(conString)) // Ny DB-forbindelse
-            {
-                mConnection.Open();
-                var command = mConnection.CreateCommand(); // Ny SQL-kommando
-                command.CommandText = $"DELETE FROM users WHERE userid={id}"; // SQL der sletter ud fra id
-                command.ExecuteNonQuery();   // Kører DELETE-kommandoen
-            }
-        }
-    }
-}
-</file>
-
 <file path="Server/Service/WorkerConverter.cs">
+using Core;
+using ExcelDataReader; // Bruges til at læse Excel-filer
 using System.IO;
 using System.Text;
-using Core;
-using ExcelDataReader;
 namespace Server.Service
 {
+    // Service-klasse der konverterer Excel-data til ProjectHour
     public class WorkerConverter
     {
+        // Konverterer Excel-stream til liste af ProjectHour
         public static List<ProjectHour> Convert(Stream stream)
         {
+            // Registrerer encoding provider
             Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
+            // Opretter Excel reader til .xlsx filer
             IExcelDataReader reader =  ExcelReaderFactory.CreateOpenXmlReader(stream);
+            // Læser Excel-data ind i et DataSet
             var ds = reader.AsDataSet(new ExcelDataSetConfiguration()
             {
                 ConfigureDataTable = (tableReader) => new ExcelDataTableConfiguration()
                 {
-                    UseHeaderRow = false
+                    UseHeaderRow = false // Bruger ikke første række som header
                 }
             });
+            // Liste der skal indeholde arbejdstimer
             List<ProjectHour> result = new();
             int row_no = 1;
+            // Gennemløber alle rækker i Excel-arket
             while (row_no < ds.Tables[0].Rows.Count)
             {
                 var row = ds.Tables[0].Rows[row_no];
@@ -1179,301 +1198,17 @@ namespace Server.Service
                 p.Timer = Decimal.Parse(row[5].ToString());
                 p.Type = row[6].ToString();
                 p.Kostpris = Decimal.Parse(row[8].ToString());
-                // other fields here...
+                //Koden læser data fra bestemte kolonner i Excel og gemmer dem i et ProjectHour-objekt.
+                // Tilføjer arbejdstimen til listen
                 result.Add(p);
+                // Logger arbejdstimen til konsollen
                 Console.WriteLine($"dato= {p.Dato}, stop tid = {p.Stoptid} Timer = {p.Timer}, Type = {p.Type}  kostpris = {p.Kostpris}");
+                // Går videre til næste række
                 row_no++;
             }
+            // Returnerer listen med arbejdstimer
             return result;
         }
-    }
-}
-</file>
-
-<file path="Client/Components/ProjectDetails/RessourceOverblik.razor">
-@using Core
-@namespace Client.Components.ProjectDetails
-
-<div class="row mb-5">
-    <!-- Timer -->
-    <div class="col-md-6 mb-3">
-        <div class="card h-100 shadow-sm" style="border-color: #071226;">
-            <div class="card-header bg-transparent fw-bold" style="border-color: #071226; color: #071226;">
-                Timeoversigt
-            </div>
-            <ul class="list-group list-group-flush">
-                @foreach (var group in HourGroups)
-                {
-                    <li class="list-group-item d-flex justify-content-between align-items-center">
-                        <span>@group.Type</span>
-                        <span class="badge rounded-pill" style="background-color: #071226;">
-                            @group.Total.ToString("N2") t
-                        </span>
-                    </li>
-                }
-            </ul>
-        </div>
-    </div>
-
-    <!-- Materialer (ALTID kategori-liste fra serveren) -->
-    <div class="col-md-6 mb-3">
-        <div class="card h-100 shadow-sm"
-             style="border-color: #071226; max-height: 500px; display:flex; flex-direction:column;">
-
-            <div class="card-header bg-transparent fw-bold"
-                 style="border-color: #071226; color: #071226;">
-                Materialer fordelt på kategorier
-            </div>
-
-            <div style="overflow-y: auto; flex: 1;">
-                <ul class="list-group list-group-flush">
-                    @if (MaterialGroups.Any())
-                    {
-                        @foreach (var mat in MaterialGroups)
-                        {
-                            <li class="list-group-item d-flex justify-content-between align-items-center">
-                                <span>@mat.Beskrivelse</span>
-                                <span class="fw-bold">@mat.Total.ToString("N2") kr.</span>
-                            </li>
-                        }
-                    }
-                    else
-                    {
-                        <li class="list-group-item text-muted text-center">Ingen materialer registreret</li>
-                    }
-                </ul>
-            </div>
-        </div>
-    </div>
-</div>
-
-@code {
-    [Parameter] public List<HourGroupDto> HourGroups { get; set; } = new();
-
-    // ALTID kategori-liste fra serveren
-    [Parameter] public List<ProjectMaterial> MaterialGroups { get; set; } = new();
-
-    [Parameter] public bool IsClientView { get; set; }
-}
-</file>
-
-<file path="Client/Service/Server.cs">
-namespace Client.Service
-{
-    public class Server
-    {
-        public const string Url = "https://larsenserver.azurewebsites.net";
-    }
-}
-</file>
-
-<file path="Core/ProjectHours.cs">
-namespace Core
-{
-    public class ProjectHour
-    {
-        public int HourId { get; set; }
-        public int ProjectId { get; set; }
-        public string? Medarbejder { get; set; }
-        public DateTime? Dato { get; set; }
-        public DateTime? Stoptid { get; set; }
-        public decimal Timer { get; set; }
-        public string? Type { get; set; }
-        public decimal Kostpris { get; set; }
-        public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
-    }
-}
-</file>
-
-<file path="Server/Controllers/ProjectHoursController.cs">
-using Core;
-using Microsoft.AspNetCore.Mvc;
-using Server.Repositories.HourRepositories;
-using Server.Service; 
-namespace Server.Controllers
-{
-    [ApiController]
-    [Route("api/projecthours")]
-    public class ProjectHoursController : ControllerBase
-    {
-        private readonly IHourRepositorySQL _hourRepo;
-        public ProjectHoursController(IHourRepositorySQL hourRepo)
-        {
-            _hourRepo = hourRepo;
-        }
-        /*[HttpGet]
-        public IEnumerable<Calculation> GetOverview()
-        {
-            return _hourRepo.GetTotalHoursGroupedByType();
-        }*/
-        [HttpPost("upload")]
-        //
-        public IActionResult Upload(IFormFile? file, [FromQuery] int projectId)
-        {
-            if (file == null || file.Length == 0) return BadRequest("No file");
-            try 
-            {
-                using Stream s = new MemoryStream();
-                file.CopyTo(s);
-                s.Position = 0;
-                var hours = WorkerConverter.Convert(s);
-                foreach (var h in hours)
-                {
-                    h.ProjectId = projectId;
-                    _hourRepo.Add(h);
-                }
-                return Ok($"Uploaded {hours.Count} hours.");
-            }
-            catch (Exception ex)
-            {
-                return BadRequest("Error parsing file: " + ex.Message);
-            }
-        }
-    }
-}
-</file>
-
-<file path="Server/Repositories/HourRepositories/IHourRepositorySQL.cs">
-using Core;
-namespace Server.Repositories.HourRepositories;
-public interface IHourRepositorySQL
-{
-    void Add(ProjectHour hour);
-    List<ProjectHour> GetByProjectId(int projectId);
-    /*List<Calculation> GetTotalHoursGroupedByType();*/
-}
-</file>
-
-<file path="Server/Service/ProjectCalculationsService.cs">
-using Core;
-using Server.Repositories.HourRepositories;
-using Server.Repositories.MaterialRepositories;
-using Server.Repositories.ProjectRepositories;
-using System.Globalization; // Vigtig for TextInfo
-namespace Server.Service;
-public class ProjectCalculationsService
-{
-    private readonly IProjectRepositorySQL _projectRepo;
-    private readonly IHourRepositorySQL _hourRepo;
-    private readonly IMaterialRepositorySQL _materialRepo;
-    public ProjectCalculationsService(
-        IProjectRepositorySQL projectRepo,
-        IHourRepositorySQL hourRepo,
-        IMaterialRepositorySQL materialRepo)
-    {
-        _projectRepo = projectRepo;
-        _hourRepo = hourRepo;
-        _materialRepo = materialRepo;
-    }
-    public Calculation? CalculateProject(int projectId)
-    {
-        // 1. Hent data
-        var project = _projectRepo.GetById(projectId);
-        if (project == null) return null;
-        var hours = _hourRepo.GetByProjectId(projectId);
-        var materials = _materialRepo.GetByProjectId(projectId);
-        // 2. Opret DTO
-        var dto = new Calculation
-        {
-            ProjectId = project.ProjectId,
-            Project = project,
-            Hours = hours,
-            Materials = materials
-        };
-        // 3. Beregn Materialer (Priser)
-        foreach (var m in materials)
-        {
-            dto.TotalKostPrisMaterialer += (m.Kostpris * m.Antal);
-            dto.TotalPrisMaterialer += m.Total;
-        }
-        // 4. Beregn Timer (Priser og Overtid)
-        var employeeGroups = hours.GroupBy(x => x.Medarbejder);
-        foreach (var group in employeeGroups)
-        {
-            // A. Find rollen (kig efter linjer der IKKE er overtid)
-            var normalType = group
-                .FirstOrDefault(h => h.Type != null && !h.Type.ToLower().Contains("overtid"))?
-                .Type?.ToLower() ?? "svend";
-            // B. Find grundsats
-            decimal grundSats = 0;
-            if (normalType.Contains("lærling")) grundSats = project.LærlingTimePris;
-            else if (normalType.Contains("konsulent")) grundSats = project.KonsulentTimePris;
-            else if (normalType.Contains("arbejdsmand")) grundSats = project.ArbejdsmandTimePris;
-            else grundSats = project.SvendTimePris;
-            // C. Beregn pris inkl. overtidstillæg
-            foreach (var h in group)
-            {
-                decimal faktor = 1.0m;
-                string typeLower = h.Type?.ToLower() ?? "";
-                if (typeLower.Contains("overtid 1")) faktor = 1.5m;
-                else if (typeLower.Contains("overtid 2")) faktor = 2.0m;
-                decimal salgsPris = h.Timer * grundSats * faktor;
-                dto.TotalPrisTimer += salgsPris;
-                dto.TotalKostPrisTimer += h.Kostpris;
-            }
-        }
-        dto.TotalTimer = dto.Hours.Sum(h => h.Timer);
-        // ==========================================================
-        //  5. LOGIK FLYTTET FRA CLIENT TIL SERVER: GRUPPERING
-        // ==========================================================
-        // A. Gruppering af Timer (Svend, Lærling osv.)
-        dto.GroupedHours = hours
-            .GroupBy(h => {
-                var t = h.Type?.ToLower() ?? "";
-                if (t.Contains("overtid 1")) return "Overtid 1";
-                if (t.Contains("overtid 2")) return "Overtid 2";
-                if (t.Contains("lærling")) return "Lærling";
-                if (t.Contains("konsulent")) return "Konsulent";
-                if (t.Contains("arbejdsmand")) return "Arbejdsmand";
-                return "Svend";
-            })
-            .Select(g => new HourGroupDto { Type = g.Key, Total = g.Sum(x => x.Timer) })
-            .OrderByDescending(x => x.Total)
-            .ToList();
-        // B. Gruppering af Materialer (KUNDEVISNING - Kategorier)
-        var categories = new Dictionary<string, string[]>
-        {
-            { "Belysning", new[] { "spot", "lampe", "led", "lys", "armatur", "pendel", "driver", "dæmper", "skinne" } },
-            { "Kabler & Rør", new[] { "kabel", "ledning", "rør", "nkt", "pvi", "flex", "5x1,5", "3x1,5", "5x2,5" } },
-            { "Installation", new[] { "stikkontakt", "afbryder", "underlag", "dåse", "fuga", "opus", "ramme", "tangent" } },
-            { "Sikringer & Tavler", new[] { "tavle", "sikring", "hpfi", "rce", "automatsikring" } }
-        };
-        dto.GroupedMaterialsClientView = materials
-            .GroupBy(m => {
-                string desc = m.Beskrivelse?.ToLower() ?? "";
-                foreach (var category in categories)
-                {
-                    if (category.Value.Any(keyword => desc.Contains(keyword))) return category.Key;
-                }
-                return "Øvrige materialer";
-            })
-            .Select(g => new ProjectMaterial
-            {
-                Beskrivelse = g.Key,
-                Total = g.Sum(x => x.Total)
-            })
-            .OrderByDescending(m => m.Total)
-            .ToList();
-        // C. Gruppering af Materialer (INTERN VISNING - Leverandør/Navn)
-        string[] knownSuppliers = { "Anker & Co", "Solar", "Lemvigh-Müller", "AO" };
-        TextInfo textInfo = new CultureInfo("da-DK", false).TextInfo;
-        dto.GroupedMaterialsInternView = materials
-            .GroupBy(m => {
-                string desc = m.Beskrivelse?.Trim() ?? "";
-                foreach (var supplier in knownSuppliers)
-                {
-                    if (desc.Contains(supplier, StringComparison.OrdinalIgnoreCase)) return supplier;
-                }
-                return desc.ToLower();
-            })
-            .Select(g => new ProjectMaterial
-            {
-                Beskrivelse = knownSuppliers.Contains(g.Key) ? g.Key : textInfo.ToTitleCase(g.Key),
-                Total = g.Sum(x => x.Total)
-            })
-            .OrderByDescending(m => m.Total)
-            .ToList();
-        return dto;
     }
 }
 </file>
@@ -1534,19 +1269,24 @@ public class ProjectCalculationsService
 
 
 @code {
+    // Variabel der styrer om menuen er åben eller lukket. Udelukkende til mobil for at den folder sig pænt sammen.
     private bool collapseNavMenu = true;
 
+    // Hvis collapseNavManu er true, tilføjes CSS-klassen "collapse", som skjuler menuen
     private string? NavMenuCssClass => collapseNavMenu ? "collapse" : null;
 
+    // Metode der køres, når man klikker på menu-knappen eller et link. Vender værdien om fra sand til falsk eller omvendt
     private void ToggleNavMenu()
     {
         collapseNavMenu = !collapseNavMenu;
     }
-
+    // Variabel til at gemme brugeren der er logget ind
     Users? loggedIn;
 
+    // Kører når menuen indlæses
     protected override async Task OnInitializedAsync()
     {
+        // Henter brugeren fra LocalStorage for at tjekke deres rolle.
         loggedIn = await LocalStorage.GetItemAsync<Users?>("user");
     }
 }
@@ -1735,19 +1475,194 @@ public class ProjectCalculationsService
 }
 </file>
 
-<file path="Server/Service/MaterialConverter.cs">
-using System.IO;
-using System.Text;
+<file path="Client/Service/Server.cs">
+namespace Client.Service
+{
+    public class Server
+    {
+        //public const string Url = "https://larsenserver.azurewebsites.net";
+        public const string Url = "http://localhost:5028";
+    }
+}
+</file>
+
+<file path="Core/ProjectHours.cs">
+namespace Core
+{
+    public class ProjectHour
+    {
+        public int HourId { get; set; }
+        public int ProjectId { get; set; }
+        public string? Medarbejder { get; set; }
+        public DateTime? Dato { get; set; }
+        public DateTime? Stoptid { get; set; }
+        public decimal Timer { get; set; }
+        public string? Type { get; set; }
+        public decimal Kostpris { get; set; }
+        public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+    }
+}
+</file>
+
+<file path="Server/Controllers/ProjectController/ProjectController.cs">
 using Core;
-using ExcelDataReader;
+using Microsoft.AspNetCore.Mvc;
+using Server.Repositories.ProjectRepositories;
+using Server.Service;
+namespace Server.Controllers.ProjectController
+{
+    [ApiController] // Gør klassen til en API-controller
+    [Route("api/project")] // Base endpoint
+    public class ProjectController : ControllerBase 
+    {
+        private readonly IProjectRepository _projectRepo;  // Adgang til projekter
+        private readonly ProjectCalculationsService _calcService; // Projektberegninger
+        public ProjectController(IProjectRepository projectRepo, ProjectCalculationsService calcService) 
+        {
+            _projectRepo = projectRepo;
+            _calcService = calcService;
+        }
+        [HttpGet]
+        public ActionResult<IEnumerable<Project>> GetAll()  // Henter alle projekter
+        {
+            return Ok(_projectRepo.GetAll()); // Returnerer projektliste
+        }
+        [HttpGet("{id}")] // Henter detaljer for et projekt
+        public ActionResult<Calculation> GetDetails(int id) // Beregner projekt
+        {
+            var result = _calcService.CalculateProject(id);
+            if (result == null) return NotFound("Project not found"); // Hvis projekt ikke findes
+            return Ok(result);  // Returnerer beregning
+        }
+        [HttpPost]// Opretter nyt projekt
+        public IActionResult Create(Project pro)
+        {
+            int newId = _projectRepo.Create(pro); // Gemmer projekt
+            return Ok(newId);  // Returnerer nyt id
+        }
+        [HttpPut("{id}")] // Opdaterer eksisterende projekt
+        public IActionResult Update(int id, [FromBody] Project pro)
+        {
+            if (id != pro.ProjectId) return BadRequest("ID mismatch"); // Tjekker id matcher
+            _projectRepo.Update(pro);  // Opdaterer projekt
+            return Ok();
+        }
+        [HttpDelete("{id}")] // Sletter projekt
+        public void Delete(int id)
+        {
+            _projectRepo.Delete(id);   // Fjerner projektet med givne id 
+        }
+    }
+}
+</file>
+
+<file path="Server/Repositories/User/CreateUserRepoSQL.cs">
+using System.Data.Common;
+using Core;                   
+//forklar hvorfor der bruges using
+namespace Server.Repositories.User
+{
+    public class CreateUserRepoSQL : BaseRepository, ICreateUserRepo
+    {
+    public List<Users> GetAll()
+        {
+            var result = new List<Users>();    // Tom liste til brugere der hentes
+            // Connection string: beskriver hvordan man forbinder til databasen
+            using var mConnection = GetConnection(); //Bruger using for at sikre at forbindelsen bliver lukket(Using = køre og sørger for at det bliver lukket)
+            mConnection.Open(); // Åbner forbindelsen
+            {
+                var command = mConnection.CreateCommand();   // Opretter SQL-kommando
+                command.CommandText = @"SELECT * FROM Users"; // SQL der henter alle brugere
+                using (var reader = command.ExecuteReader())  // Kører SELECT og får en "reader" (Læser kolloner) 
+                {
+                    while (reader.Read()) // Læser én række ad gangen
+                    {
+                        // Henter værdier fra kolonnerne i rækken
+                        var userid = reader.GetInt32(0);
+                        var username = reader.GetString(1);
+                        var password = reader.GetString(2);
+                        var role = reader.GetString(3);
+                        // Mapper database-værdier til et Users-objekt (lægger data ind i C# objekt)
+                        Users u = new Users
+                        {
+                            UserId = userid,
+                            UserName = username,
+                            Password = password,
+                            Role = role
+                        };
+                        result.Add(u); // Tilføjer bruger til listen
+                    }
+                }
+            }
+            return result; // Returnerer hele listen
+        }
+        public void Add(Users user)
+        {
+            // Connection string: beskriver hvordan man forbinder til databasen
+            using var mConnection = GetConnection();
+            mConnection.Open(); // Åbner forbindelsen
+            {
+                var command = mConnection.CreateCommand(); // Ny SQL-kommando
+                // SQL med parametre
+                command.CommandText =
+                    "INSERT INTO Users (username, password, role) VALUES (@username, @password, @role)";
+                Console.WriteLine(command.CommandText);
+                // Opretter parameter for @username
+                var paramName = command.CreateParameter();
+                paramName.ParameterName = "username"; // Navn der matcher @username
+                command.Parameters.Add(paramName); // Tilføjer til SQL-kommandos parameterliste
+                paramName.Value = user.UserName; // Sætter værdien
+                // Opretter parameter for @password
+                var paramPassword = command.CreateParameter();
+                paramPassword.ParameterName = "password";
+                command.Parameters.Add(paramPassword);
+                paramPassword.Value = user.Password;
+                // Opretter parameter for @role
+                var paramRole = command.CreateParameter();
+                paramRole.ParameterName = "role";
+                command.Parameters.Add(paramRole);
+                paramRole.Value = user.Role;
+                command.ExecuteNonQuery();   // Eksekverer INSERT (kører SQL-kommandoen)
+            }
+        }
+        public Users? ValidateUser(string username, string password)
+        {
+            // Finder første bruger der matcher username og password (efter GetAll har hentet alle)
+            return GetAll().FirstOrDefault(u => u.UserName == username && u.Password == password);
+        }
+        public void Delete(int id)
+        {
+            // Connection string: beskriver hvordan man forbinder til databasen
+            using var mConnection = GetConnection();
+            mConnection.Open(); // Åbner forbindelsen
+            {
+                var command = mConnection.CreateCommand(); // Ny SQL-kommando
+                command.CommandText = $"DELETE FROM users WHERE userid={id}"; // SQL der sletter ud fra id
+                command.ExecuteNonQuery();   // Kører DELETE-kommandoen
+            }
+        }
+    }
+}
+</file>
+
+<file path="Server/Service/MaterialConverter.cs">
+using Core;
+using ExcelDataReader; // Bruges til at læse excel filer
+using System.IO;
+using System.Runtime.Intrinsics.X86;
+using System.Text;
 namespace Server.Service
 {
     public class MaterialConverter
     {
+        // Konverterer Excel-stream til liste af ProjectMaterial
         public static List<ProjectMaterial> Convert(Stream stream)
         {
+            // Registrerer encoding provider (kræves til ExcelDataReader)
             Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
+            // Opretter Excel reader til .xlsx filer
             IExcelDataReader reader = ExcelReaderFactory.CreateOpenXmlReader(stream);
+            // Læser Excel-data ind i et DataSet
             var ds = reader.AsDataSet(new ExcelDataSetConfiguration()
             {
                 ConfigureDataTable = (tableReader) => new ExcelDataTableConfiguration()
@@ -1755,23 +1670,30 @@ namespace Server.Service
                     UseHeaderRow = false
                 }
             });
+            // Liste der skal indeholde materialer
             List<ProjectMaterial> result = new();
-            int row_no = 1;
+            int row_no = 1; // starter ved række 1 
+            // Gennemløber alle rækker i Excel-arket
             while (row_no < ds.Tables[0].Rows.Count)
             {
+                // Henter nuværende række
                 var row = ds.Tables[0].Rows[row_no];
-                ProjectMaterial p = new ProjectMaterial();
+                ProjectMaterial p = new ProjectMaterial(); // Opretter nyt ProjectMaterial objekt
                 p.Beskrivelse = row[1].ToString();
                 p.Kostpris = Decimal.Parse(row[2].ToString());
                 p.Antal = Decimal.Parse(row[4].ToString());
                 p.Leverandør = row[8].ToString();
                 p.Total = Decimal.Parse(row[17].ToString());
-                p.Avance = Decimal.Parse(row[19].ToString());
+                p.Avance = Decimal.Parse(row[19].ToString()); // Læser værdier fra valgte kolonner og gemmer dem i objektet
                 p.Dækningsgrad = string.IsNullOrEmpty(row[20].ToString()) ? 0 : decimal.Parse(row[20].ToString());
+                // Tilføjer materialet til listen
                 result.Add(p);
+                // Logger materialet til konsollen
                 Console.WriteLine($"Beskrivelse= {p.Beskrivelse}, Kostpris = {p.Kostpris} Antal = {p.Antal}, Total = {p.Total}  Avance = {p.Avance}, dækningsgrad = {p.Dækningsgrad}");
+                // Går videre til næste række
                 row_no++;
             }
+            // Returnerer listen med materialer
             return result;
         }
     }
@@ -1858,23 +1780,123 @@ public class Project
 }
 </file>
 
+<file path="Server/Controllers/ProjectHoursController.cs">
+using Core;
+using Microsoft.AspNetCore.Mvc;
+using Server.Repositories.HourRepositories;
+using Server.Service; 
+namespace Server.Controllers
+{
+    [ApiController]
+    [Route("api/projecthours")]
+    public class ProjectHoursController : ControllerBase
+    {
+        private readonly IHourRepository _hourRepo;
+        // Repository som gemmer timer i databasen
+        public ProjectHoursController(IHourRepository hourRepo)
+        {
+            _hourRepo = hourRepo;
+        }
+        /*[HttpGet]
+        public IEnumerable<Calculation> GetOverview()
+        {
+            return _hourRepo.GetTotalHoursGroupedByType();
+        }*/
+        [HttpPost("upload")]
+        //
+        public IActionResult Upload(IFormFile? file, [FromQuery] int projectId)
+        {
+            if (file == null || file.Length == 0) return BadRequest("No file");
+            try 
+            {
+                // Opretter en midlertidig hukommelse (stream)
+                using Stream s = new MemoryStream();
+                file.CopyTo(s); // Kopierer filens indhold ind i hukommelsen
+                s.Position = 0; // starter læsningen fra begyndelsen af filen 
+                //konverterer excel filen til material objekter 
+                var hours = WorkerConverter.Convert(s);
+                foreach (var h in hours)
+                {
+                    //sætter materialer til projekter
+                    h.ProjectId = projectId;
+                    // gemmer materialet til db 
+                    _hourRepo.Add(h);
+                }
+                return Ok($"Uploaded {hours.Count} hours.");
+            }
+            catch (Exception ex)
+            {
+                return BadRequest("Error parsing file: " + ex.Message);
+            }
+        }
+    }
+}
+</file>
+
+<file path="Server/Program.cs">
+/*using Server.Repositories.Proj.CreateProjectsFolder;
+using Server.Repositories.Proj.HourCalculator;*/
+using Server.Repositories.User;
+using Server.Repositories.HourRepositories;
+using Server.Repositories.MaterialRepositories;
+using Server.Repositories.ProjectRepositories;
+using Server.Service;
+var builder = WebApplication.CreateBuilder(args);
+// Add services to the container.
+System.Text.Encoding.RegisterProvider(System.Text.CodePagesEncodingProvider.Instance);
+builder.Services.AddScoped<IProjectRepository, ProjectRepositorySQL>();
+builder.Services.AddScoped<IHourRepository, HourRepositorySQL>();
+builder.Services.AddScoped<IMaterialRepository, MaterialRepositorySQL>();
+builder.Services.AddScoped<ProjectCalculationsService>();
+builder.Services.AddSingleton<ICreateUserRepo, CreateUserRepoSQL>();
+/*builder.Services.AddSingleton<ICreateProjectRepo, CreateProjectRepo>();
+builder.Services.AddSingleton<IProjectHourCalcRepo, ProjectHourCalcRepositorySQL>();*/
+builder.Services.AddControllers();
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("policy",
+        policy =>
+        {
+            policy.AllowAnyOrigin();
+            policy.AllowAnyMethod();
+            policy.AllowAnyHeader();
+        });
+});
+// Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
+builder.Services.AddOpenApi();
+var app = builder.Build();
+// Configure the HTTP request pipeline.
+if (app.Environment.IsDevelopment())
+{
+    app.MapOpenApi();
+}
+app.UseCors("policy");
+//app.UseHttpsRedirection();
+app.UseAuthorization();
+app.MapControllers();
+app.Run();
+</file>
+
 <file path="Client/Pages/Project/EditProjectPage.razor">
 @using Core
 @using Client.Service
 @inject HttpClient http
 @inject NavigationManager Nav
-@page "/project/edit/{ProjectId:int}"
+@page "/project/edit/{ProjectId:int}" @* Vigtig at URL indeholder en variabel, så variablen gemmes som et ProjectID*@
 
 <div class="create-page-back">
 <div class="create-con">
 <h3>Redigere projekt</h3>
 
+@* Når siden startes, er _project null, fordi data fra serveren ikke er kommet endnu.
+Derfor vises ventetekst, så siden ikke crasher ved at prøve at vise tomme data *@
 @if (_project == null)
 {
     <p><em>Indlæser projektdata...</em></p>
 }
 else
 {
+    /* Binder formularen til '_project' objektet. Når brugeren trykker 'Gem', køres metoden 'HandleSubmit'*/
         <EditForm Model="@_project" OnValidSubmit="HandleSubmit">
                 <DataAnnotationsValidator/>
                 <ValidationSummary/>
@@ -1920,29 +1942,50 @@ else
 </div>
 
 @code {
+    // Property der automatisk får værdien fra URL'en (f.eks. 5)
     [Parameter] public int ProjectId { get; set; }
-
+    // Her gemmes de data vi redigerer. Starter som 'null'
     private Project?  _project;
     
     private string? errorText;
 
+    // 1. HENT DATA (Kører når siden åbner)
+    protected override async Task OnInitializedAsync()
+    {
+        // Vi spørger serveren: "Giv mig alt info om projekt nr. [ProjectId]"
+        // Serveren returnerer en 'Calculation', som indeholder 'Project'-objektet.
+        var result = await http.GetFromJsonAsync<Calculation>($"{Server.Url}/api/project/{ProjectId}");
+        
+        if (result != null)
+        { 
+            // Vi trækker selve projekt-delen ud og lægger den i vores variabel,
+            // så formularen ovenfor kan vise dataene.
+            _project = result.Project;
+        }
+    }
+    
+    // 2. GEM DATA (Kører når man trykker "Gem ændringer")
     private async Task HandleSubmit()
     {
         if (_project == null) return;
 
-        _project.ProjectId = ProjectId; // sikkerhed: sørg for id matcher
+        // Sikkerhedsforanstaltning: Vi sikrer os, at ID'et i objektet matcher URL'en.
+        _project.ProjectId = ProjectId;
 
         try
         {
+            // Her bruger vi 'PutAsJsonAsync'.
+            // PUT bruges normalt til at OPDATERE/RETTE noget eksisterende.
             var res = await http.PutAsJsonAsync($"{Server.Url}/api/project/{ProjectId}", _project);
 
+            // Hvis serveren siger OK (status 200), sender vi brugeren til forsiden.
             if (res.IsSuccessStatusCode)
             {
                 Nav.NavigateTo("/");
                 return;
             }
 
-            // Læs fejlbody — typisk indeholder den undtagelsesmeddelelse
+            // HVIS FEJL: Læs fejlbeskeden fra serveren, så vi kan se, hvad der gik galt.
             var body = await res.Content.ReadAsStringAsync();
             errorText = $"Fejl ved opdatering: {(int)res.StatusCode} {res.ReasonPhrase}. Server siger: {body}";
             Console.WriteLine(errorText);
@@ -1958,18 +2001,8 @@ else
             Console.WriteLine(errorText);
         }
     }
-
     
-    protected override async Task OnInitializedAsync()
-    {
-        var result = await http.GetFromJsonAsync<Calculation>($"{Server.Url}/api/project/{ProjectId}");
-        
-        if (result != null)
-        {
-            _project = result.Project;
-        }
-    }
-    
+    // Knappen "Annuller" sender bare brugeren til forsiden
     private void Cancel()
     {
         Nav.NavigateTo("/");
@@ -1977,175 +2010,148 @@ else
 }
 </file>
 
-<file path="Server/Program.cs">
-/*using Server.Repositories.Proj.CreateProjectsFolder;
-using Server.Repositories.Proj.HourCalculator;*/
-using Server.Repositories.User;
+<file path="Server/Service/ProjectCalculationsService.cs">
+using Core;
 using Server.Repositories.HourRepositories;
 using Server.Repositories.MaterialRepositories;
 using Server.Repositories.ProjectRepositories;
-using Server.Service;
-var builder = WebApplication.CreateBuilder(args);
-// Add services to the container.
-System.Text.Encoding.RegisterProvider(System.Text.CodePagesEncodingProvider.Instance);
-builder.Services.AddScoped<IProjectRepositorySQL, ProjectRepositorySQL>();
-builder.Services.AddScoped<IHourRepositorySQL, HourRepositorySQL>();
-builder.Services.AddScoped<IMaterialRepositorySQL, MaterialRepositorySQL>();
-builder.Services.AddScoped<ProjectCalculationsService>();
-builder.Services.AddSingleton<ICreateUserRepoSQL, CreateUserRepoSQL>();
-/*builder.Services.AddSingleton<ICreateProjectRepo, CreateProjectRepo>();
-builder.Services.AddSingleton<IProjectHourCalcRepo, ProjectHourCalcRepositorySQL>();*/
-builder.Services.AddControllers();
-builder.Services.AddCors(options =>
+using System.Globalization;
+namespace Server.Service;
+public class ProjectCalculationsService
 {
-    options.AddPolicy("policy",
-        policy =>
+    // Vi bruger Dependency Injection til at få adgang til vores 3 repositories.
+    // Dette gør, at servicen ikke selv skal vide, hvordan man snakker SQL, 
+    // men blot beder om data.
+    private readonly IProjectRepository _projectRepo;
+    private readonly IHourRepository _hourRepo;
+    private readonly IMaterialRepository _materialRepo;
+    public ProjectCalculationsService(
+        IProjectRepository projectRepo,
+        IHourRepository hourRepo,
+        IMaterialRepository materialRepo)
+    {
+        _projectRepo = projectRepo;
+        _hourRepo = hourRepo;
+        _materialRepo = materialRepo;
+    }
+    // Hovedmetoden: Tager et projekt-ID og returnerer et færdigt 'Calculation' objekt
+    // med alle tal lagt sammen og sorteret.
+    public Calculation? CalculateProject(int projectId)
+    {
+        // Vi henter stamdata, timer og materialer hver for sig.
+        var project = _projectRepo.GetById(projectId);
+        if (project == null) return null; // Stop hvis projektet ikke findes
+        var hours = _hourRepo.GetByProjectId(projectId);
+        var materials = _materialRepo.GetByProjectId(projectId);
+        // Vi starter vores "Data Transfer Object", som skal sendes til Client.
+        var dto = new Calculation
         {
-            policy.AllowAnyOrigin();
-            policy.AllowAnyMethod();
-            policy.AllowAnyHeader();
-        });
-});
-// Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
-builder.Services.AddOpenApi();
-var app = builder.Build();
-// Configure the HTTP request pipeline.
-if (app.Environment.IsDevelopment())
-{
-    app.MapOpenApi();
-}
-app.UseCors("policy");
-//app.UseHttpsRedirection();
-app.UseAuthorization();
-app.MapControllers();
-app.Run();
-</file>
-
-<file path="Client/Pages/Project/ProjectPage.razor">
-@page "/"
-@using Core
-@using Client.Service
-@inject HttpClient Http
-@inject NavigationManager Nav
-
-<div class="admin-container">
-    <div class="header-section">
-        <h3>Mine projekter</h3>
-    </div>
-
-    @if (_projects == null)
-    {
-        <div class="loading-state">
-            <div class="spinner-border text-primary" role="status"></div>
-            <p>Indlæser projekter...</p>
-        </div>
-    }
-    else if (_projects.Count == 0)
-    {
-        <div class="empty-state">
-            <p>Ingen projekter fundet.</p>
-        </div>
-    }
-    else
-    {
-        <div class="table-card">
-            <table class="clean-table">
-                <tbody>
-                    @foreach (var project in _projects)
-                    {
-                        <tr>
-                            @* BILLEDE OG NAVN *@
-                            <td class="cell-main">
-                                <div class="project-flex">
-                                    <img src="@project.ImageUrl" alt="img" 
-                                         onerror="this.src='https://placehold.co/100?text=No+Img'" />
-                                    <div class="text-group">
-                                        <span class="name">@project.Name</span>
-                                        <span class="sub-id">ID: #@project.ProjectId</span>
-                                    </div>
-                                </div>
-                            </td>
-
-                            @* DATO *@
-                            <td class="cell-date">
-                                <span class="date-tag">
-                                    @project.DateCreated.ToString("dd. MMM yyyy")
-                                </span>
-                            </td>
-
-                            @* KNAPPER *@
-                            <td class="cell-action">
-                                <div class="action-flex">
-                                    <button class="btn-simple" @onclick="() => GotoDetails(project.ProjectId)">
-                                        Se detaljer
-                                    </button>
-
-                                    <div class="menu-container">
-                                        <button class="btn-dots" 
-                                                @onclick="() => ToggleMenu(project.ProjectId)" 
-                                                @onfocusout="CloseMenuDelayed">
-                                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-three-dots" viewBox="0 0 16 16">
-                                                <path d="M3 9.5a1.5 1.5 0 1 1 0-3 1.5 1.5 0 0 1 0 3m5 0a1.5 1.5 0 1 1 0-3 1.5 1.5 0 0 1 0 3m5 0a1.5 1.5 0 1 1 0-3 1.5 1.5 0 0 1 0 3"/>
-                                            </svg>
-                                        </button>
-                                        
-                                        @if (_activeMenuId == project.ProjectId)
-                                        {
-                                            <div class="dropdown-popover">
-                                                <button @onclick="() => GotoEdit(project.ProjectId)">
-                                                    <i class="bi bi-pencil"></i> Rediger
-                                                </button>
-                                                <button class="danger" @onclick="() => DeleteProject(project.ProjectId)">
-                                                    <i class="bi bi-trash"></i> Slet
-                                                </button>
-                                            </div>
-                                        }
-                                    </div>
-                                </div>
-                            </td>
-                        </tr>
-                    }
-                </tbody>
-            </table>
-        </div>
-    }
-</div>
-
-@code {
-    private List<Project>? _projects;
-    private int? _activeMenuId = null;
-
-    protected override async Task OnInitializedAsync()
-    {
-        try 
+            ProjectId = project.ProjectId,
+            Project = project,
+            Hours = hours, // Rå liste
+            Materials = materials // Rå liste
+        };
+        //Vi løber igennem alle materialelinjer for at finde total kostpris (indkøb) 
+        // og total salgspris.
+        foreach (var m in materials)
         {
-            _projects = await Http.GetFromJsonAsync<List<Project>>($"{Server.Url}/api/project");
+            dto.TotalKostPrisMaterialer += (m.Kostpris * m.Antal);
+            dto.TotalPrisMaterialer += m.Total; // "Total her kommer fra excel filen"
         }
-        catch (Exception ex)
+        // Vi grupperer timerne per medarbejder, da en medarbejder kan have flere timeregistreringer.
+        var employeeGroups = hours.GroupBy(x => x.Medarbejder);
+        foreach (var group in employeeGroups)
         {
-            Console.WriteLine($"Fejl: {ex.Message}");
+            // Find medarbejderens "Basistype" (Svend, Lærling, osv.)
+            // Vi kigger på alle deres timer og ser bort fra "overtid" for at finde grundtypen.
+            // Hvis intet er fundet, antager vi det er en "svend".
+            var normalType = group
+                .FirstOrDefault(h => h.Type != null && !h.Type.ToLower().Contains("overtid"))?
+                .Type?.ToLower() ?? "svend";
+            // Find den timepris, der er aftalt på selve projektet fra Project-tabellen
+            decimal grundSats = 0;
+            if (normalType.Contains("lærling")) grundSats = project.LærlingTimePris;
+            else if (normalType.Contains("konsulent")) grundSats = project.KonsulentTimePris;
+            else if (normalType.Contains("arbejdsmand")) grundSats = project.ArbejdsmandTimePris;
+            else grundSats = project.SvendTimePris;
+            // Nu beregner vi prisen for hver time-registrering
+            foreach (var h in group)
+            {
+                decimal faktor = 1.0m;
+                string typeLower = h.Type?.ToLower() ?? "";
+                // Håndter overtidstillæg (f.eks. 50% eller 100% ekstra)
+                if (typeLower.Contains("overtid 1")) faktor = 1.5m;
+                else if (typeLower.Contains("overtid 2")) faktor = 2.0m;
+                // Beregn salgspris: Antal timer * Timepris fra projektet * Overtidsfaktor
+                decimal salgsPris = h.Timer * grundSats * faktor;
+                dto.TotalPrisTimer += salgsPris;
+                dto.TotalKostPrisTimer += h.Kostpris;
+            }
         }
-    }
-    
-    private void GotoDetails(int id) => Nav.NavigateTo($"project/{id}");
-    private void GotoEdit(int id) => Nav.NavigateTo($"project/edit/{id}");
-
-    private void ToggleMenu(int id) => _activeMenuId = (_activeMenuId == id) ? null : id;
-
-    private async Task CloseMenuDelayed()
-    {
-        await Task.Delay(200);
-        _activeMenuId = null;
-    }
-
-    private async Task DeleteProject(int id)
-    {
-        var response = await Http.DeleteAsync($"{Server.Url}/api/project/{id}");
-        if (response.IsSuccessStatusCode)
+        // Simpel summering af antal timer totalt
+        dto.TotalTimer = dto.Hours.Sum(h => h.Timer);
+        //  5. LOGIK FLYTTET FRA CLIENT TIL SERVER: GRUPPERING
+        // A. Gruppering af Timer (Svend, Lærling osv.)
+        dto.GroupedHours = hours // litse med timer 
+            .GroupBy(h => { // grupperer timer 
+                var t = h.Type?.ToLower() ?? ""; // Henter typer og gøre det til lowercase  
+                if (t.Contains("overtid 1")) return "Overtid 1";
+                if (t.Contains("overtid 2")) return "Overtid 2";
+                if (t.Contains("lærling")) return "Lærling";
+                if (t.Contains("konsulent")) return "Konsulent";
+                if (t.Contains("arbejdsmand")) return "Arbejdsmand";
+                return "Svend";
+            })
+            .Select(g => new HourGroupDto { Type = g.Key, Total = g.Sum(x => x.Timer) }) //gruppens navn og total timer 
+            .OrderByDescending(x => x.Total) //sorterer efter flest timer 
+            .ToList();
+        // B. Gruppering af Materialer (KUNDEVISNING - Kategorier)
+        var categories = new Dictionary<string, string[]>
         {
-            _projects = await Http.GetFromJsonAsync<List<Project>>($"{Server.Url}/api/project");
-            _activeMenuId = null;
-        }
+            { "Belysning", new[] { "spot", "lampe", "led", "lys", "armatur", "pendel", "driver", "dæmper", "skinne" } },
+            { "Kabler & Rør", new[] { "kabel", "ledning", "rør", "nkt", "pvi", "flex", "5x1,5", "3x1,5", "5x2,5" } },
+            { "Installation", new[] { "stikkontakt", "afbryder", "underlag", "dåse", "fuga", "opus", "ramme", "tangent" } },
+            { "Sikringer & Tavler", new[] { "tavle", "sikring", "hpfi", "rce", "automatsikring" } }
+        };
+        dto.GroupedMaterialsClientView = materials // liste med materialer 
+            .GroupBy(m => { //grupperer materialer 
+                string desc = m.Beskrivelse?.ToLower() ?? "";
+                // Find første kategori der matcher
+                foreach (var category in categories)
+                {
+                    if (category.Value.Any(keyword => desc.Contains(keyword))) return category.Key; // Matcher søgeord og retunerer kategori 
+                }
+                return "Øvrige materialer"; // standard kategori 
+            })
+            .Select(g => new ProjectMaterial // opretter nyt objekt 
+            {
+                Beskrivelse = g.Key, //kategoinavn 
+                Total = g.Sum(x => x.Total) //samlet pris
+            })
+            .OrderByDescending(m => m.Total) // efter pris 
+            .ToList();
+        // C. Gruppering af Materialer (INTERN VISNING - Leverandør/Navn)
+        // Kendte leverandører
+        string[] knownSuppliers = { "Anker & Co", "Solar", "Lemvigh-Müller", "AO" }; //leverandører
+        TextInfo textInfo = new CultureInfo("da-DK", false).TextInfo;
+        dto.GroupedMaterialsInternView = materials
+            .GroupBy(m => {
+                string desc = m.Beskrivelse?.Trim() ?? ""; //henter beskrivelse 
+                // Match på leverandør
+                foreach (var supplier in knownSuppliers) //gennemløber leverandør 
+                {
+                    if (desc.Contains(supplier, StringComparison.OrdinalIgnoreCase)) return supplier; // matcher leverandør og return
+                }
+                return desc.ToLower();
+            })
+            .Select(g => new ProjectMaterial // opretter nyt objekt 
+            {
+                Beskrivelse = knownSuppliers.Contains(g.Key) ? g.Key : textInfo.ToTitleCase(g.Key), 
+                Total = g.Sum(x => x.Total)
+            })
+            .OrderByDescending(m => m.Total) //Sorterer efter pris 
+            .ToList();
+        return dto; // retunerer dto (timer + materialer) 
     }
 }
 </file>
@@ -2226,10 +2232,165 @@ app.Run();
 }*@
 </file>
 
+<file path="Client/Pages/Project/ProjectPage.razor">
+@page "/"
+@using Core
+@using Client.Service
+@inject HttpClient Http
+@inject NavigationManager Nav
+
+<div class="admin-container">
+    <div class="header-section">
+        <h3>Mine projekter</h3>
+    </div>
+
+    @* _projects starter med at være 'null'. Så længe den er det, vises en spinner. *@
+    @if (_projects == null)
+    {
+        <div class="loading-state">
+            <div class="spinner-border text-primary" role="status"></div>
+            <p>Indlæser projekter...</p>
+        </div>
+    }
+    @* Hvis listen er hentet, men den er tom (0 projekter), vises en besked. *@
+    else if (_projects.Count == 0)
+    {
+        <div class="empty-state">
+            <p>Ingen projekter fundet.</p>
+        </div>
+    }
+    else
+    {
+        <div class="table-card">
+            <table class="clean-table">
+                <tbody>
+                @* Kører et loop igennem alle projekter i listen *@
+                @foreach (var project in _projects)
+                {
+                    <tr>
+                        @* BILLEDE OG NAVN *@
+                        <td class="cell-main">
+                            <div class="project-flex">
+                                @* Hvis billed-linket er dødt eller tomt,
+                                       så indlæser den automatisk et gråt placeholder-billede i stedet. *@
+                                <img src="@project.ImageUrl" alt="img"
+                                     onerror="this.src='https://placehold.co/100?text=No+Img'"/>
+                                <div class="text-group">
+                                    <span class="name">@project.Name</span>
+                                    <span class="sub-id">ID: #@project.ProjectId</span>
+                                </div>
+                            </div>
+                        </td>
+
+                        @* DATO *@
+                        <td class="cell-date">
+                            <span class="date-tag">
+                                @project.DateCreated.ToString("dd. MMM yyyy")
+                            </span>
+                        </td>
+
+                        @* KNAPPER *@
+                        <td class="cell-action">
+                            <div class="action-flex">
+                                @* Knap til at se detaljer (man sendes til ProjectDetailsPage) *@
+                                <button class="btn-simple" @onclick="() => GotoDetails(project.ProjectId)">
+                                    Se detaljer
+                                </button>
+
+                                @* Den lille menu (3 prikker) *@
+                                <div class="menu-container">
+                                    <button class="btn-dots"
+                                            @onclick="() => ToggleMenu(project.ProjectId)"
+                                            @onfocusout="CloseMenuDelayed">
+                                        @* Ikon kode for tre prikker ... *@
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-three-dots" viewBox="0 0 16 16">
+                                            <path d="M3 9.5a1.5 1.5 0 1 1 0-3 1.5 1.5 0 0 1 0 3m5 0a1.5 1.5 0 1 1 0-3 1.5 1.5 0 0 1 0 3m5 0a1.5 1.5 0 1 1 0-3 1.5 1.5 0 0 1 0 3"/>
+                                        </svg>
+                                    </button>
+
+                                    @* Her tjekkes: Er det lige præcis dette projekt, der har menuen åben?
+                                            Vi bruger ID'et til at styre det, så ikke alle menuer åbner samtidig. *@
+                                    @if (_activeMenuId == project.ProjectId)
+                                    {
+                                        <div class="dropdown-popover">
+                                            <button @onclick="() => GotoEdit(project.ProjectId)">
+                                                <i class="bi bi-pencil"></i> Rediger
+                                            </button>
+                                            <button class="danger" @onclick="() => DeleteProject(project.ProjectId)">
+                                                <i class="bi bi-trash"></i> Slet
+                                            </button>
+                                        </div>
+                                    }
+                                </div>
+                            </div>
+                        </td>
+                    </tr>
+                }
+                </tbody>
+            </table>
+        </div>
+    }
+</div>
+
+@code {
+    // Listen over projekter. Den er null indtil der er hentet data.
+    private List<Project>? _projects;
+    // Holder styr på, hvilket projekt der har sin "3-prikker-menu" åben lige nu.
+    // Hvis den er null, er ingen menuer åbne.
+    private int? _activeMenuId = null;
+
+    // 1. HENT PROJEKTER (Kører når siden starter)
+    protected override async Task OnInitializedAsync()
+    {
+        try 
+        {
+            // Henter listen fra API'et: api/project
+            _projects = await Http.GetFromJsonAsync<List<Project>>($"{Server.Url}/api/project");
+        }
+        catch (Exception ex)
+        {
+            // Hvis serveren er nede, skrives fejlen i browserens konsol
+            Console.WriteLine($"Fejl: {ex.Message}");
+        }
+    }
+    
+    // Navigations-hjælpere
+    private void GotoDetails(int id) => Nav.NavigateTo($"project/{id}");
+    private void GotoEdit(int id) => Nav.NavigateTo($"project/edit/{id}");
+
+    // 2. Åben/Luk menu
+    // Hvis man klikker på samme ID igen, lukkes menuen (null).
+    // Hvis man klikker på et nyt ID, åbnes den menu (id).
+    private void ToggleMenu(int id) => _activeMenuId = (_activeMenuId == id) ? null : id;
+
+    // 3. Luk menu ved klik udenfor
+    // Når musen forlader knappen (focus out), lukker vi menuen.
+    // Vi venter 200ms (Delay), så brugeren når at registrere et klik på "Slet" eller "Rediger", inden menuen forsvinder helt.
+    private async Task CloseMenuDelayed()
+    {
+        await Task.Delay(200);
+        _activeMenuId = null;
+    }
+
+    // 4. Slet projekt
+    private async Task DeleteProject(int id)
+    {
+        // Beder serveren slette projektet
+        var response = await Http.DeleteAsync($"{Server.Url}/api/project/{id}");
+        // Hvis det lykkedes...
+        if (response.IsSuccessStatusCode)
+        {
+            // ...så hentes hele listen igen, så det slettede projekt forsvinder fra skærmen.
+            _projects = await Http.GetFromJsonAsync<List<Project>>($"{Server.Url}/api/project");
+            _activeMenuId = null;
+        }
+    }
+}
+</file>
+
 <file path="Client/Components/Create project/CreateProjectComponent.razor">
 @using Core
 @using Client.Service
-@inject ProjectService
 @inject NavigationManager Nav
 @inject HttpClient http
 
@@ -2409,9 +2570,10 @@ else
 }
 
 @code {
-    [Parameter] public int Id { get; set; }
+    [Parameter] public int Id { get; set; } // Tager tallet fra URL'en f.eks. /project/5, bliver til id 5
 
     private Calculation? details;
+    // Denne bool styrer "kunde visning" knappen. False = Virksomhedens oplysninger. True = Kundens oplysninger
     private bool showClientView = false;
 
     protected override async Task OnInitializedAsync()

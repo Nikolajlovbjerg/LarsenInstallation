@@ -5,7 +5,7 @@ using Server.Service;
 
 namespace Server.Controllers.ProjectController
 {
-    [ApiController] // Gør klassen til en API-controller
+    [ApiController] // GÃ¸r klassen til en API-controller
     [Route("api/project")] // Base endpoint
     public class ProjectController : ControllerBase 
     {
@@ -24,7 +24,7 @@ namespace Server.Controllers.ProjectController
             return Ok(_projectRepo.GetAll()); // Returnerer projektliste
         }
 
-        [HttpGet("{id}")] // Henter detaljer for ét projekt
+        [HttpGet("{id}")] // Henter detaljer for et projekt
         public ActionResult<Calculation> GetDetails(int id) // Beregner projekt
 
         {

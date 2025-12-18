@@ -69,6 +69,7 @@
 @code {
     private List<Users>? _users = new();
 
+    // Henter listen af brugere når siden startes
     protected override async Task OnInitializedAsync()
     {
         _users = await Http.GetFromJsonAsync<List<Users>>($"{Server.Url}/api/user");
@@ -76,22 +77,24 @@
 
     private async Task DeleteUser(int id)
     {
+        // Sender slette-kommando til API'et
         var response = await Http.DeleteAsync($"{Server.Url}/api/user/delete/{id}");
     
         if (response.IsSuccessStatusCode)
         {
+            // Hvis sletningen gik godt, henter vi listen på ny for at opdatere tabellen
             _users = await Http.GetFromJsonAsync<List<Users>>($"{Server.Url}/api/user");
         }
     }
 
-    // Hjælpemetode til at farve badges baseret på rolle
+    // Hjælpemetode (Switch expression) til at vælge CSS-klasse baseret på rollens navn
     private string GetRoleBadgeClass(string role)
     {
         return role.ToLower() switch
         {
-            "admin" => "bg-danger",
-            "bruger" => "bg-primary",
-            _ => "bg-secondary"
+            "admin" => "bg-danger",   // Rød
+            "bruger" => "bg-primary", // Blå
+            _ => "bg-secondary"       // Grå (hvis andet)
         };
     }
 
@@ -99,5 +102,4 @@
     {
         Nav.NavigateTo("adduser");
     }
-
 }
