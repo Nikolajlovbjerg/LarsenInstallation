@@ -52,14 +52,17 @@
 </div>
 
 @code {
-    private Users _user = new() { Role = "Bruger" }; // Sætter default rolle
+    // Initialiserer en ny bruger med standardrollen "Bruger"
+    private Users _user = new() { Role = "Bruger" }; 
     private string[] roles = ["Bruger", "Admin"];
 
+    // Køres kun når formularen er gyldig (valideret ok)
     private async Task HandleValidSubmit()
     {
-        // Sender POST request direkte til API'et
+        // Sender brugerdata som JSON via en POST request direkte til API'et
         var response = await http.PostAsJsonAsync($"{Server.Url}/api/user", _user);
 
+        // Hvis serveren svarer OK (200), nulstiller vi og går tilbage til oversigten
         if (response.IsSuccessStatusCode)
         {
             _user = new Users();
@@ -69,6 +72,7 @@
 
     private void Cancel()
     {
+        // Sender brugeren tilbage til admin-oversigten uden at gemme
         navMan.NavigateTo("adminuser");
     }
 }
