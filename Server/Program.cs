@@ -19,9 +19,9 @@ builder.Services.AddScoped<IMaterialRepository, MaterialRepositorySQL>();
 builder.Services.AddScoped<ProjectCalculationsService>();
 
 builder.Services.AddSingleton<ICreateUserRepo, CreateUserRepoSQL>();
-/*builder.Services.AddSingleton<ICreateProjectRepo, CreateProjectRepo>();
+/* builder.Services.AddSingleton<ICreateProjectRepo, CreateProjectRepo>();
 
-builder.Services.AddSingleton<IProjectHourCalcRepo, ProjectHourCalcRepositorySQL>();*/
+builder.Services.AddSingleton<IProjectHourCalcRepo, ProjectHourCalcRepositorySQL>(); */
 
 builder.Services.AddControllers();
 
