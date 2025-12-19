@@ -24,7 +24,7 @@
                            placeholder="Password" />
                 <label for="pwd">Password</label>
 
-                <!-- Brug en button type="button" så vi ikke utilsigtet submitter formen -->
+                @* Brug en button type="button" så vi ikke utilsigtet submitter formen *@
                 <button type="button" class="btn btn-link p-0" @onclick="TogglePasswordVisibility" aria-label="Toggle password visibility">
                     <i class="bi @(visPassword ? "bi-eye-slash" : "bi-eye")"></i>
                 </button>
@@ -76,7 +76,7 @@
 
         try
         {
-            // 1. Forsøg at logge ind via API'et (UserRepo sender data til serveren)
+            // Forsøg at logge ind via API'et (UserRepo sender data til serveren)
             Users? userObject = await UserRepo.ValidLoginAsync(user.UserName, user.Password);
 
             if (userObject == null)
@@ -87,7 +87,7 @@
                 return;
             }
 
-            // 2. SIKKERHED: Fjern adgangskoden fra objektet før vi gemmer det i browseren
+            //Fjern adgangskoden fra objektet før vi gemmer det i browseren
             // Vi vil aldrig have passwords liggende i LocalStorage
             try
             {
@@ -105,10 +105,10 @@
                 return;
             }
 
-            // 3. Gem brugeren i LocalStorage så vi kan huske at de er logget ind
+            // Gem brugeren i LocalStorage så vi kan huske at de er logget ind
             await LocalStorage.SetItemAsync("user", userObject);
             
-            // 4. Naviger til forsiden (forceLoad: true sikrer at App.razor genindlæses og tjekker login-status)
+            // Naviger til forsiden (forceLoad: true sikrer at App.razor genindlæses og tjekker login-status)
             Nav.NavigateTo("/", forceLoad: true);
         }
         catch (HttpRequestException)

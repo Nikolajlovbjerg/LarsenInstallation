@@ -123,12 +123,12 @@
     private void GotoDetails(int id) => Nav.NavigateTo($"project/{id}");
     private void GotoEdit(int id) => Nav.NavigateTo($"project/edit/{id}");
 
-    // 2. Åben/Luk menu
+    // Åben/Luk menu
     // Hvis man klikker på samme ID igen, lukkes menuen (null).
     // Hvis man klikker på et nyt ID, åbnes den menu (id).
     private void ToggleMenu(int id) => _activeMenuId = (_activeMenuId == id) ? null : id;
 
-    // 3. Luk menu ved klik udenfor
+    // Luk menu ved klik udenfor
     // Når musen forlader knappen (focus out), lukker vi menuen.
     // Vi venter 200ms (Delay), så brugeren når at registrere et klik på "Slet" eller "Rediger", inden menuen forsvinder helt.
     private async Task CloseMenuDelayed()
@@ -137,15 +137,15 @@
         _activeMenuId = null;
     }
 
-    // 4. Slet projekt
+    // Slet projekt
     private async Task DeleteProject(int id)
     {
         // Beder serveren slette projektet
         var response = await Http.DeleteAsync($"{Server.Url}/api/project/{id}");
-        // Hvis det lykkedes...
+        // Hvis det lykkedes
         if (response.IsSuccessStatusCode)
         {
-            // ...så hentes hele listen igen, så det slettede projekt forsvinder fra skærmen.
+            // så hentes hele listen igen, så det slettede projekt forsvinder fra skærmen.
             _projects = await Http.GetFromJsonAsync<List<Project>>($"{Server.Url}/api/project");
             _activeMenuId = null;
         }

@@ -11,7 +11,7 @@ builder.RootComponents.Add<HeadOutlet>("head::after");
 
 builder.Services.AddScoped(sp => new HttpClient { BaseAddress = new Uri($"{Server.Url}") });
 // Dette får appen til at bruge den samme adresse, som den selv ligger på
-/*builder.Services.AddScoped(sp => new HttpClient { BaseAddress = new Uri(builder.HostEnvironment.BaseAddress) });*/
+/* builder.Services.AddScoped(sp => new HttpClient { BaseAddress = new Uri(builder.HostEnvironment.BaseAddress) }); */
 
 builder.Services.AddBlazoredLocalStorage();
 builder.Services.AddScoped<UserRepository>();

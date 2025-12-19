@@ -23,9 +23,9 @@ public class HourRepositorySQL : BaseRepository, IHourRepository
         // Binder værdier fra ProjectHour-objektet til SQL-parametre
         // Parametre beskytter mod SQL-injection og sikrer korrekt datatype
         command.Parameters.AddWithValue("pid", h.ProjectId);
-        //pid for værdien af projectid
+        // pid for værdien af projectid
 
-        command.Parameters.AddWithValue("med", h.Medarbejder ?? (object)DBNull.Value); //Hvis null så for den null som værdi
+        command.Parameters.AddWithValue("med", h.Medarbejder ?? (object)DBNull.Value); // Hvis null så for den null som værdi
         command.Parameters.AddWithValue("dato", h.Dato ?? (object)DBNull.Value);
         command.Parameters.AddWithValue("stop", h.Stoptid ?? (object)DBNull.Value);
         command.Parameters.AddWithValue("timer", h.Timer);
