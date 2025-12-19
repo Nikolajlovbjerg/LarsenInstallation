@@ -3,18 +3,18 @@
 
 @if (Details != null)
 {
-    // TOP BANNER
+    
     <div class="card text-white mb-4 shadow text-center" style="@(IsClientView ? "background-color: #071226;" : "background-color: #071226;")">
         <div class="card-body py-4">
             @if (IsClientView)
             {
-                // Kundevisning: Kun den store samlede pris
+                
                 <h2 class="display-3 fw-bold">@Details.SamletTotalPris.ToString("N2") kr.</h2>
                 <p class="fs-5 mb-0">Total Pris</p>
             }
             else
             {
-                // Intern visning: Fokus på fortjeneste
+                
                 <div class="row text-center divide-cols">
                     <div class="col-md-4">
                         <h6 class="text-white-50">TOTAL PRIS</h6>
@@ -47,12 +47,12 @@
                         @if (IsClientView)
                         {
                             @Details.TotalPrisMaterialer.ToString("N2")
-                            // Kunden ser salgspris
+                            // Salgspris
                         }
                         else
                         {
                             @Details.TotalKostPrisMaterialer.ToString("N2")
-                            // Intern ser kostpris
+                            // Kostpris
                         }
                         kr.
                     </h3>
@@ -72,12 +72,12 @@
                     <h3 class="card-title text-dark">
                         @if (IsClientView)
                         {
-                            // Kunde ser timepris
+                            // Timepris
                             @Details.TotalPrisTimer.ToString("N2")
                         }
                         else
                         {
-                            // Intern ser lønomkostning
+                            // Lønomkostning
                             @Details.TotalKostPrisTimer.ToString("N2")
                         }
                         kr.

@@ -19,7 +19,7 @@ namespace Server.Controllers
         }
 
 
-        // Endpoint: bruges når man uploader en fil
+        // Et endpoint der bruges når man uploader en fil
 
         [HttpPost("upload")]
         public IActionResult Upload(IFormFile? file, [FromQuery] int projectId)
