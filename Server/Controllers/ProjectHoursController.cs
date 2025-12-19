@@ -47,10 +47,12 @@ namespace Server.Controllers
                     // gemmer materialet til db 
                     _hourRepo.Add(h);
                 }
+                //returnere et ok svar og antallet af hvor mange timer der bliver oploadet 
                 return Ok($"Uploaded {hours.Count} hours.");
             }
             catch (Exception ex)
             {
+                //returneres en fejlbesked, hvis der sker en fejl 
                 return BadRequest("Error parsing file: " + ex.Message);
             }
         }
