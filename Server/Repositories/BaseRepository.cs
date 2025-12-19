@@ -10,9 +10,9 @@ public abstract class BaseRepository
     protected string ConnectionString =>
         // 1. Online database-server og port (Server)
         // 2. Brugernavn til databasen (UserId)
-        // Password hentes fra PASSWORD-klassen
-        // Databasens navn
-        // Kræver krypteret forbindelse (nødvendigt for online database)
+        // 3. Password hentes fra PASSWORD-klassen
+        // 4. Databasens navn
+        // 5. Kræver krypteret forbindelse (nødvendigt for online database)
         @"Server=ep-spring-unit-a2y1k0pd.eu-central-1.aws.neon.tech:5432;
           User Id=neondb_owner;
           Password=" + PASSWORD.PW1 + @";

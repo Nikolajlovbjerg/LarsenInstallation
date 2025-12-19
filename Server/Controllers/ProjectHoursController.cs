@@ -16,15 +16,8 @@ namespace Server.Controllers
         {
             _hourRepo = hourRepo;
         }
-
-        /*[HttpGet]
-        public IEnumerable<Calculation> GetOverview()
-        {
-            return _hourRepo.GetTotalHoursGroupedByType();
-        }*/
         
         [HttpPost("upload")]
-        //
         public IActionResult Upload(IFormFile? file, [FromQuery] int projectId)
         {
             if (file == null || file.Length == 0) return BadRequest("No file");
