@@ -1,7 +1,5 @@
 ﻿using System.Data.Common;
 using Core;                   
-          
-//forklar hvorfor der bruges using
 
 namespace Server.Repositories.User
 {
@@ -19,6 +17,7 @@ namespace Server.Repositories.User
                 var command = mConnection.CreateCommand();   // Opretter SQL-kommando
                 command.CommandText = @"SELECT * FROM Users"; // SQL der henter alle brugere
 
+                //Bruger using for at sørge for at forbindelsen bliver lukket
                 using (var reader = command.ExecuteReader())  // Kører SELECT og får en "reader" (Læser kolloner) 
                 {
                     while (reader.Read()) // Læser én række ad gangen
