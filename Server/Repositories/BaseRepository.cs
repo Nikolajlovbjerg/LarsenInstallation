@@ -8,7 +8,7 @@ public abstract class BaseRepository
 {
     // Connection string til online PostgreSQL-database (Neon)
     protected string ConnectionString =>
-        // 1. Online database-server og port (Server=...)
+        // 1. Online database-server og port (Server)
         // 2. Brugernavn til databasen (UserId)
         // 3. Password hentes fra PASSWORD-klassen
         // 4. Databasens navn

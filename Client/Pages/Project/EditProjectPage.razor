@@ -69,7 +69,7 @@ else
     
     private string? errorText;
 
-    // 1. HENT DATA (Kører når siden åbner)
+    // 1. Hent data (Kører når siden åbner)
     protected override async Task OnInitializedAsync()
     {
         // Vi spørger serveren: "Giv mig alt info om projekt nr. [ProjectId]"
@@ -84,7 +84,7 @@ else
         }
     }
     
-    // 2. GEM DATA (Kører når man trykker "Gem ændringer")
+    // 2. Gem data (Kører når man trykker "Gem ændringer")
     private async Task HandleSubmit()
     {
         if (_project == null) return;
@@ -95,7 +95,7 @@ else
         try
         {
             // Her bruger vi 'PutAsJsonAsync'.
-            // PUT bruges normalt til at OPDATERE/RETTE noget eksisterende.
+            // PUT bruges normalt til at opdatere/rette noget eksisterende.
             var res = await http.PutAsJsonAsync($"{Server.Url}/api/project/{ProjectId}", _project);
 
             // Hvis serveren siger OK (status 200), sender vi brugeren til forsiden.
@@ -105,7 +105,7 @@ else
                 return;
             }
 
-            // HVIS FEJL: Læs fejlbeskeden fra serveren, så vi kan se, hvad der gik galt.
+            // Hvis fejl: Læs fejlbeskeden fra serveren, så vi kan se, hvad der gik galt.
             var body = await res.Content.ReadAsStringAsync();
             errorText = $"Fejl ved opdatering: {(int)res.StatusCode} {res.ReasonPhrase}. Server siger: {body}";
             Console.WriteLine(errorText);

@@ -22,7 +22,7 @@
         </div>
     </div>
 
-    @* Materialer (ALTID kategori-liste fra serveren) *@
+    @* Materialer (Altid kategori-liste fra serveren) *@
     <div class="col-md-6 mb-3">
         <div class="card h-100 shadow-sm"
              style="border-color: #071226; max-height: 500px; display:flex; flex-direction:column;">
@@ -57,7 +57,7 @@
 @code {
     [Parameter] public List<HourGroupDto> HourGroups { get; set; } = new();
 
-    // ALTID kategori-liste fra serveren
+    // Altid kategori-liste fra serveren
     [Parameter] public List<ProjectMaterial> MaterialGroups { get; set; } = new();
 
     [Parameter] public bool IsClientView { get; set; }
