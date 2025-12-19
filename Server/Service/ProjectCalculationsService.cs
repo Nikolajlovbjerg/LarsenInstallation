@@ -110,7 +110,7 @@ public class ProjectCalculationsService
             .OrderByDescending(x => x.Total) //sorterer efter flest timer 
             .ToList();
 
-        // B. Gruppering af Materialer (KUNDEVISNING - Kategorier)
+        // B. Gruppering af Materialer (Kundevisning - Kategorier)
         var categories = new Dictionary<string, string[]>
         {
             { "Belysning", new[] { "spot", "lampe", "led", "lys", "armatur", "pendel", "driver", "dæmper", "skinne" } },
@@ -120,19 +120,19 @@ public class ProjectCalculationsService
         };
 
 
-        dto.GroupedMaterialsClientView = materials // liste med materialer 
-            .GroupBy(m => { //grupperer materialer 
+        dto.GroupedMaterialsClientView = materials // Liste med materialer 
+            .GroupBy(m => { // Grupperer materialer 
                 string desc = m.Beskrivelse?.ToLower() ?? "";
                 // Find første kategori der matcher
                 foreach (var category in categories)
                 {
-                    if (category.Value.Any(keyword => desc.Contains(keyword))) return category.Key; // Matcher søgeord og retunerer kategori 
+                    if (category.Value.Any(keyword => desc.Contains(keyword))) return category.Key; // Matcher søgeord og returnerer kategori 
                 }
-                return "Øvrige materialer"; // standard kategori 
+                return "Øvrige materialer"; // Standard kategori 
             })
-            .Select(g => new ProjectMaterial // opretter nyt objekt 
+            .Select(g => new ProjectMaterial // Opretter nyt objekt 
             {
-                Beskrivelse = g.Key, // kategorinavn 
+                Beskrivelse = g.Key, // Kategorinavn 
                 Total = g.Sum(x => x.Total) //samlet pris
             })
             .OrderByDescending(m => m.Total) // efter pris 
@@ -140,27 +140,27 @@ public class ProjectCalculationsService
 
         // C. Gruppering af Materialer (INTERN VISNING - Leverandør/Navn)
         // Kendte leverandører
-        string[] knownSuppliers = { "Anker & Co", "Solar", "Lemvigh-Müller", "AO" }; //leverandører
+        string[] knownSuppliers = { "Anker & Co", "Solar", "Lemvigh-Müller", "AO" }; // Leverandører
         TextInfo textInfo = new CultureInfo("da-DK", false).TextInfo;
 
         dto.GroupedMaterialsInternView = materials
             .GroupBy(m => {
-                string desc = m.Beskrivelse?.Trim() ?? ""; //henter beskrivelse 
+                string desc = m.Beskrivelse?.Trim() ?? ""; // Henter beskrivelse 
                 // Match på leverandør
-                foreach (var supplier in knownSuppliers) //gennemløber leverandør 
+                foreach (var supplier in knownSuppliers) // Gennemløber leverandør 
                 {
-                    if (desc.Contains(supplier, StringComparison.OrdinalIgnoreCase)) return supplier; // matcher leverandør og return
+                    if (desc.Contains(supplier, StringComparison.OrdinalIgnoreCase)) return supplier; // Matcher leverandør og return
                 }
                 return desc.ToLower();
             })
-            .Select(g => new ProjectMaterial // opretter nyt objekt 
+            .Select(g => new ProjectMaterial // Opretter nyt objekt 
             {
                 Beskrivelse = knownSuppliers.Contains(g.Key) ? g.Key : textInfo.ToTitleCase(g.Key), 
                 Total = g.Sum(x => x.Total)
             })
-            .OrderByDescending(m => m.Total) //Sorterer efter pris 
+            .OrderByDescending(m => m.Total) // Sorterer efter pris 
             .ToList();
 
-        return dto; // returnerer dto (timer + materialer) 
+        return dto; // Returnerer dto (timer + materialer) 
     }
 }

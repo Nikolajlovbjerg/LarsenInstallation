@@ -8,13 +8,13 @@
         <div class="card-body py-4">
             @if (IsClientView)
             {
-                // KUNDEVISNING: Kun den store samlede pris
+                // Kundevisning: Kun den store samlede pris
                 <h2 class="display-3 fw-bold">@Details.SamletTotalPris.ToString("N2") kr.</h2>
                 <p class="fs-5 mb-0">Total Pris</p>
             }
             else
             {
-                // INTERN VISNING: Fokus på fortjeneste
+                // Intern visning: Fokus på fortjeneste
                 <div class="row text-center divide-cols">
                     <div class="col-md-4">
                         <h6 class="text-white-50">TOTAL PRIS</h6>
@@ -34,7 +34,7 @@
         </div>
     </div>
 
-    // DE 3 BOKSE (materialer, timer, tid)
+    // De 3 bokse (materialer, timer, tid)
     <div class="row mb-4">
 
         <div class="col-md-4">

@@ -34,21 +34,21 @@ namespace Server.Controllers
                 file.CopyTo(s); // Kopierer filens indhold ind i hukommelsen
                 s.Position = 0; // starter læsningen fra begyndelsen af filen 
 
-                //konverterer excel filen til material objekter 
+                // Konverterer excel filen til material objekter 
                 var materials = MaterialConverter.Convert(s);
 
                 foreach (var m in materials)
                 {
-                    //sætter materialer til projekter
+                    // Sætter materialer til projekter
                     m.ProjectId = projectId;
-                    // gemmer materialet til db 
+                    // Gemmer materialet til db 
                     _repo.Add(m);
                 }
-                return Ok($"Uploaded {materials.Count} materials."); //succes besked 
+                return Ok($"Uploaded {materials.Count} materials."); // Succes besked 
             }
             catch (Exception ex)
             {
-                return BadRequest("Error parsing file: " + ex.Message); // fejlbesked 
+                return BadRequest("Error parsing file: " + ex.Message); // Fejlbesked 
             }
         }
     }

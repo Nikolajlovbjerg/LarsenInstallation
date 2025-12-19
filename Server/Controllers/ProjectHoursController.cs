@@ -37,22 +37,22 @@ namespace Server.Controllers
                 s.Position = 0; // starter læsningen fra begyndelsen af filen 
 
 
-                //konverterer excel filen til material objekter 
+                // Konverterer excel filen til material objekter 
                 var hours = WorkerConverter.Convert(s);
                 
                 foreach (var h in hours)
                 {
-                    //sætter materialer til projekter
+                    // Sætter materialer til projekter
                     h.ProjectId = projectId;
-                    // gemmer materialet til db 
+                    // Gemmer materialet til db 
                     _hourRepo.Add(h);
                 }
-                //returnere et ok svar og antallet af hvor mange timer der bliver oploadet 
+                // Returnere et ok svar og antallet af hvor mange timer der bliver oploadet 
                 return Ok($"Uploaded {hours.Count} hours.");
             }
             catch (Exception ex)
             {
-                //returneres en fejlbesked, hvis der sker en fejl 
+                // Returneres en fejlbesked, hvis der sker en fejl 
                 return BadRequest("Error parsing file: " + ex.Message);
             }
         }
