@@ -92,7 +92,7 @@ public class ProjectCalculationsService
         // Simpel summering af antal timer totalt
         dto.TotalTimer = dto.Hours.Sum(h => h.Timer);
 
-        //  5. LOGIK FLYTTET FRA CLIENT TIL SERVER: GRUPPERING
+       
   
 
         // A. Gruppering af Timer (Svend, Lærling osv.)
