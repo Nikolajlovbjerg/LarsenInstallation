@@ -14,7 +14,7 @@ namespace Core
         public List<ProjectHour> Hours { get; set; } = new();
         public List<ProjectMaterial> Materials { get; set; } = new();
 
-        // --- NYT: Færdigsorterede lister fra Serveren ---
+        // NYT: Færdigsorterede lister fra Serveren
         public List<HourGroupDto> GroupedHours { get; set; } = new();
         public List<ProjectMaterial> GroupedMaterialsClientView { get; set; } = new(); // Kategoriseret (Belysning, Kabler...)
         public List<ProjectMaterial> GroupedMaterialsInternView { get; set; } = new(); // Leverandør/Navn

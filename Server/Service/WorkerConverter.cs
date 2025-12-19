@@ -38,7 +38,7 @@ namespace Server.Service
                 p.Timer = Decimal.Parse(row[5].ToString());
                 p.Type = row[6].ToString();
                 p.Kostpris = Decimal.Parse(row[8].ToString());
-                //Koden læser data fra bestemte kolonner i Excel og gemmer dem i et ProjectHour-objekt.
+                // Koden læser data fra bestemte kolonner i Excel og gemmer dem i et ProjectHour-objekt.
 
                 // Tilføjer arbejdstimen til listen
                 result.Add(p);

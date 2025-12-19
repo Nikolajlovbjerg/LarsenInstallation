@@ -142,10 +142,10 @@
     {
         // Beder serveren slette projektet
         var response = await Http.DeleteAsync($"{Server.Url}/api/project/{id}");
-        // Hvis det lykkedes...
+        // Hvis det lykkedes
         if (response.IsSuccessStatusCode)
         {
-            // ...så hentes hele listen igen, så det slettede projekt forsvinder fra skærmen.
+            // så hentes hele listen igen, så det slettede projekt forsvinder fra skærmen.
             _projects = await Http.GetFromJsonAsync<List<Project>>($"{Server.Url}/api/project");
             _activeMenuId = null;
         }

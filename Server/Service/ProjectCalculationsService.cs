@@ -46,7 +46,7 @@ public class ProjectCalculationsService
             Materials = materials // Rå liste
         };
 
-        //Vi løber igennem alle materialelinjer for at finde total kostpris (indkøb) 
+        // Vi løber igennem alle materialelinjer for at finde total kostpris (indkøb) 
         // og total salgspris.
         foreach (var m in materials)
         {
@@ -96,7 +96,7 @@ public class ProjectCalculationsService
   
 
         // A. Gruppering af Timer (Svend, Lærling osv.)
-        dto.GroupedHours = hours // litse med timer 
+        dto.GroupedHours = hours // liste med timer 
             .GroupBy(h => { // grupperer timer 
                 var t = h.Type?.ToLower() ?? ""; // Henter typer og gøre det til lowercase  
                 if (t.Contains("overtid 1")) return "Overtid 1";
@@ -132,7 +132,7 @@ public class ProjectCalculationsService
             })
             .Select(g => new ProjectMaterial // opretter nyt objekt 
             {
-                Beskrivelse = g.Key, //kategoinavn 
+                Beskrivelse = g.Key, // kategorinavn 
                 Total = g.Sum(x => x.Total) //samlet pris
             })
             .OrderByDescending(m => m.Total) // efter pris 
@@ -161,6 +161,6 @@ public class ProjectCalculationsService
             .OrderByDescending(m => m.Total) //Sorterer efter pris 
             .ToList();
 
-        return dto; // retunerer dto (timer + materialer) 
+        return dto; // returnerer dto (timer + materialer) 
     }
 }
