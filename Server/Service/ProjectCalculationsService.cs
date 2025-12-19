@@ -138,7 +138,7 @@ public class ProjectCalculationsService
             .OrderByDescending(m => m.Total) // efter pris 
             .ToList();
 
-        // C. Gruppering af Materialer (INTERN VISNING - Leverandør/Navn)
+        // C. Gruppering af Materialer (Intern visning - Leverandør/Navn)
         // Kendte leverandører
         string[] knownSuppliers = { "Anker & Co", "Solar", "Lemvigh-Müller", "AO" }; // Leverandører
         TextInfo textInfo = new CultureInfo("da-DK", false).TextInfo;
