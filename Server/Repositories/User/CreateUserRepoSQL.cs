@@ -11,13 +11,12 @@ namespace Server.Repositories.User
             var result = new List<Users>();    // Tom liste til brugere der hentes
 
             // Connection string: beskriver hvordan man forbinder til databasen
-            using var mConnection = GetConnection(); //Bruger using for at sikre at forbindelsen bliver lukket(Using = køre og sørger for at det bliver lukket)
+            using var mConnection = GetConnection(); //Bruger using for at sikre at forbindelsen bliver lukket(Using = sørger for at det bliver lukket)
             mConnection.Open(); // Åbner forbindelsen
             {
                 var command = mConnection.CreateCommand();   // Opretter SQL-kommando
                 command.CommandText = @"SELECT * FROM Users"; // SQL der henter alle brugere
-
-                //Bruger using for at sørge for at forbindelsen bliver lukket
+                
                 using (var reader = command.ExecuteReader())  // Kører SELECT og får en "reader" (Læser kolloner) 
                 {
                     while (reader.Read()) // Læser én række ad gangen
