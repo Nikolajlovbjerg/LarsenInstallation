@@ -13,18 +13,24 @@
             <ValidationSummary />
 
             <div class="upload-grid">
-                <div class="upload-box">
-                    <label class="upload-title"><strong>Vælg time fil (.xls, .xlsx)</strong></label>
+                <div class="upload-box" style="grid-column: span 2;">
+                    <label class="upload-title"><strong>Vælg Excel filer (Timer & Materialer)</strong></label>
                     <div class="upload-area">
-                        <InputFile OnChange="UploadFile" accept=".xls,.xlsx" />
+                        <InputFile OnChange="UploadFiles" accept=".xls,.xlsx" multiple />
                     </div>
-                </div>
-
-                <div class="upload-box">
-                    <label class="upload-title"><strong>Vælg materiale fil (.xls, .xlsx)</strong></label>
-                    <div class="upload-area">
-                        <InputFile OnChange="MaterialUploadFile" accept=".xls,.xlsx" />
-                    </div>
+                    @* Show the selected files to the user *@
+                    @if (selectedFiles != null && selectedFiles.Any())
+                    {
+                        <div class="mt-2 text-start">
+                            <strong>Valgte filer:</strong>
+                            <ul class="mb-0">
+                                @foreach (var file in selectedFiles)
+                                {
+                                    <li>@file.Name</li>
+                                }
+                            </ul>
+                        </div>
+                    }
                 </div>
             </div>
 
@@ -71,50 +77,47 @@
     // Initialiserer en ny instans af projekt-modellen
     Project aProject = new();
 
-    // Variabler til at holde filerne midlertidigt. 'IBrowserFile?' betyder, de kan være null.
-    IBrowserFile? timeFile;
-    IBrowserFile? materialeFile;
+    // A list to hold multiple files chosen by the user
+    IReadOnlyList<IBrowserFile> selectedFiles = new List<IBrowserFile>();
 
-    // Metode der køres, når brugeren vælger en fil i "Time" upload-feltet
-    public void UploadFile(InputFileChangeEventArgs e)
+    // This runs when the user selects files
+    public void UploadFiles(InputFileChangeEventArgs e)
     {
-        // Gemmer filen i variablen, men uploader den ikke endnu
-        timeFile = e.File; 
+        // Fetches all the selected files. You can specify maximum allowed files as an argument if needed.
+        selectedFiles = e.GetMultipleFiles(); 
     }
 
-    // Metode der køres, når brugeren vælger en fil i "Materiale" upload-feltet
-    public void MaterialUploadFile(InputFileChangeEventArgs e)
-    {
-        materialeFile = e.File;
-    }
-
-    // Hovedmetoden der køres, når brugeren trykker på "Opret" knappen
     private async Task OnClickCreate()
     {
-        // 1. Send projektdata (tekst/tal) til API'et for at oprette rækken i databasen
+        // 1. Send project data
         var response = await http.PostAsJsonAsync($"{Server.Url}/api/project", aProject);
 
-        // 2. Tjek om oprettelsen gik godt (HTTP status 200-299)
         if (response.IsSuccessStatusCode)
         {
-            // 3. Læs det nye ID som API'et returnerer 
             var newProjectId = await response.Content.ReadFromJsonAsync<int>();
 
-            // 4. Hvis der er valgt en Time-fil, upload den nu med det nye ID
-            if (timeFile != null)
+            // 2. Iterate through each selected file
+            foreach (var file in selectedFiles)
             {
-                await UploadFileToApi(timeFile, newProjectId, "api/projecthours/upload");
-            }
+                var fileName = file.Name.ToLower();
 
-            // 5. Hvis der er valgt en Materiale-fil, upload den nu med det nye ID
-            if (materialeFile != null)
-            {
-                await UploadFileToApi(materialeFile, newProjectId, "api/projectmaterials/upload");
+                // 3. Determine file type by looking at its name
+                // "case_hours" contains "hour" and "case"
+                if (fileName.Contains("hour") || fileName.Contains("time") || fileName.Contains("case"))
+                {
+                    await UploadFileToApi(file, newProjectId, "api/projecthours/upload");
+                }
+                // "ordrematerialer" contains "ordre" and "material"
+                else if (fileName.Contains("material") || fileName.Contains("ordre"))
+                {
+                    await UploadFileToApi(file, newProjectId, "api/projectmaterials/upload");
+                }
             }
         }
 
-        // 6. Nulstil formularen og naviger brugeren tilbage til forsiden
+        // 4. Reset and navigate back
         aProject = new();
+        selectedFiles = new List<IBrowserFile>();
         Nav.NavigateTo("/");
     }
 

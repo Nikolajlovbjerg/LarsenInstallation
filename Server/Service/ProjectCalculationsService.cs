@@ -113,52 +113,109 @@ public class ProjectCalculationsService
         // B. Gruppering af Materialer (Kundevisning - Kategorier)
         var categories = new Dictionary<string, string[]>
         {
-            { "Belysning", new[] { "spot", "lampe", "led", "lys", "armatur", "pendel", "driver", "dæmper", "skinne" } },
-            { "Kabler & Rør", new[] { "kabel", "ledning", "rør", "nkt", "pvi", "flex", "5x1,5", "3x1,5", "5x2,5" } },
-            { "Installation", new[] { "stikkontakt", "afbryder", "underlag", "dåse", "fuga", "opus", "ramme", "tangent" } },
-            { "Sikringer & Tavler", new[] { "tavle", "sikring", "hpfi", "rce", "automatsikring" } }
+            { "Belysning", new[] { 
+                "spot", "lampe", "led", "lys", "armatur", "pendel", "driver", "dæmper", "skinne", 
+                "pære", "lyskilde", "halogen", "projektør", "sensor", "pir", "downlight", "uplight", 
+                "lysrør", "fatning", "trafo", "transformator", "plafond", "bevægelsessensor",
+                "lampeudtag", "corepro", "strømforsyning", "ceiling", "track", "anker", "dekorativ", 
+                "spreaderlight", "stipo", "lighstick", "anker&co", "anker & co",
+                "philips", "sg", "nordlux", "louis poulsen", "fabbian", "iguzzini", "zumtobel", "vossloh", "osram", "batten", "glimtænder"
+            } },
+            { "Alarm", new[] {
+                "røgdetektor", "abdl", "brandalarm", "detektor", "alarm", "nøgleskab", "cylinder", "almsten sikring aps",
+                "kamera", "itv", "overvågning", "hikvision", "axis", "pax", "adgangskontrol", "magnetkontakt", 
+                "siréne", "passiv", "infra", "almsten"
+            } },
+            { "KNX", new[] {
+                "ihc", "knx", "wiser", "dali", "devisnow", "relæmodul", "smart", "home", "saas", 
+                "programmering", "controller", "astrour", "timer",
+                "gateway", "aktuator", "schneider", "abb", "zennio", "buskabel", "fortrådning", "logikmodul"
+            } },
+            { "Sikringer & Tavler", new[] { 
+                "tavle", "sikring", "hpfi", "rce", "automatsikring", "kombiafbryder", "rcbo", 
+                "gruppeafbryder", "hovedafbryder", "måler", "målertavle", "smeltesikring", "neozed", 
+                "diazed", "din-skinne", "samleskinne", "klemrække", "overspænding", "gruppetavle", 
+                "jordspyd", "byggepladstavle", "abs", "din", "byggepladscentral", "pfi", "sikkerhedsafb", "hovedtavle",
+                "tavlemateriel", "kontaktor", "transistor", "strømtransformer", "skinnesystem", "effektafbryder"
+            } },
+            { "Lyd & AV-udstyr", new[] {
+                "lydsystem", "højtaler", "westsound", "iport", "connect pro", "av", "lyd", "sonos", "højtalere",
+                "hdmi", "skærm", "projektor", "tv", "lydstyring", "forstærker", "beosound", "bang & olufsen", "displayport"
+            } },
+            { "Netværk & Data", new[] {
+                "datakabel", "netværkskabel", "cat5", "cat6", "cat7", "coax", "antennekabel", 
+                "utp", "kat", "patchkabel", "patchpanel", "rack", "rj45", "wifi", "unifi", "surf", 
+                "vægbøjle", "19\"",
+                "switch", "router", "fiber", "sfp", "keystone", "pdu", "server", "accesspoint", "ubiquiti"
+            } },
+            { "Kabler & Rør", new[] { 
+                "kabel", "ledning", "rør", "nkt", "pvi", "flex", "5x1,5", "3x1,5", "5x2,5", "3x2,5", 
+                "5x6", "7x1,5", "installationskabel", "gummikabel", "tomrør", "pn", "noflik", "noiklx", 
+                "flexrør", "plastrør", "kabelrør", "afumex", "pklj", "pvl", "signalkabel", "forlængerk", 
+                "forlængerkabel", "tilslutningstråd", "kobbertråd", "noikal", "caddy", "qaddy", "tromle",
+                "jordledning", "brandkabel", "pknm", "pvikly", "halogenfri", "kabelbakke", "gitterbakke", "stålør", "pariser"
+            } },
+            { "Installation (alt fra køkken til bil lader & solceller)", new[] { 
+                "stikkontakt", "afbryder", "underlag", "dåse", "fuga", "opus", "ramme", "tangent", 
+                "wago", "muffe", "samlemuffe", "forfradåse", "indmuringsdåse", "loftdåse", "udtag", 
+                "roset", "stikprop", "schuko", "blinddæksel", "korrespondance", "krydsning", 
+                "tryk", "clips", "dæksel", "lk", "pressemuffe", "stikk", "polykonmuffe", "jung", 
+                "blænddæksel", "designramme", "krympemuffe", "jord", "membrandåse", "forgreningsdåse", 
+                "afd", "cee", "mat", "boks", "box", "afdækning", "klemme", "hybridstikprop", "modul",
+                "cover", "kasse", "låg", "skrue", "spånskrue", "plugs", "kabelkanal", "ledningskanal", "strips", "kabelbinder", 
+                "kabelbøjle", "strip", "bøjlebånd", "tape", "dampspærretape", "fzb", "galv", "metal", 
+                "krympeflex", "krympeslange", "hulsav", "bor", "fladbor", "spiralbor", "klinge", "savklinge", "lenox", "dymotape", 
+                "fuge", "fugemasse", "batteri", "handske", "nitril", "affald", "støvpose", "qaddy", 
+                "tromle", "loddekolbe", "rengøring", "støvsugning",
+                "vinkel", "bolt", "møtrik", "gevind", "unbrakoskrue", "ankerskrue", "isolering", "brandlukning", "gaggenau", "miele", "quooker", "liebherr", "køleskab", "vinskab", "ovn", "fryseskab", 
+                "opvaskemaskine", "kogeplade", "emhætte", "hanstholm", "køkken", "vask", "armatur", "ladestander", 
+                "ladeboks", "easee", "zaptec", "ladekabel", "solcelle", "inverter", "hybrid", "batteri", 
+                "varmepumpe", "elbil", "montagesystem", "ventilation", "ølund", "udsugning", "kanal", "aggregat", 
+                "emhætteaftræk", "solceller", "solcelle", "inverter", "batteri", "S750", "hybrid", "sol", "energi", 
+                "varmepumpe", "ladestander", "ladeboks", "easee", "zaptec"
+            } }
         };
 
 
-        dto.GroupedMaterialsClientView = materials // Liste med materialer 
-            .GroupBy(m => { // Grupperer materialer 
-                string desc = m.Beskrivelse?.ToLower() ?? "";
+        dto.GroupedMaterialsClientView = materials 
+            .GroupBy(m => { 
+                // ÆNDRING: Nu slår vi Beskrivelse og Leverandør sammen til én sætning
+                string desc = $"{m.Beskrivelse} {m.Leverandør}".ToLower();
+        
                 // Find første kategori der matcher
                 foreach (var category in categories)
                 {
-                    if (category.Value.Any(keyword => desc.Contains(keyword))) return category.Key; // Matcher søgeord og returnerer kategori 
+                    if (category.Value.Any(keyword => desc.Contains(keyword))) return category.Key; 
                 }
-                return "Øvrige materialer"; // Standard kategori 
+                return "Øvrige materialer"; 
             })
-            .Select(g => new ProjectMaterial // Opretter nyt objekt 
+            .Select(g => new ProjectMaterial 
             {
-                Beskrivelse = g.Key, // Kategorinavn 
-                Total = g.Sum(x => x.Total) //samlet pris
+                Beskrivelse = g.Key, 
+                Total = g.Sum(x => x.Total) 
             })
-            .OrderByDescending(m => m.Total) // efter pris 
+            .OrderByDescending(m => m.Total) 
             .ToList();
 
         // C. Gruppering af Materialer (Intern visning - Leverandør/Navn)
         // Kendte leverandører
-        string[] knownSuppliers = { "Anker & Co", "Solar", "Lemvigh-Müller", "AO" }; // Leverandører
-        TextInfo textInfo = new CultureInfo("da-DK", false).TextInfo;
 
-        dto.GroupedMaterialsInternView = materials
-            .GroupBy(m => {
-                string desc = m.Beskrivelse?.Trim() ?? ""; // Henter beskrivelse 
-                // Match på leverandør
-                foreach (var supplier in knownSuppliers) // Gennemløber leverandør 
+        dto.GroupedMaterialsInternView = materials 
+            .GroupBy(m => { 
+                string desc = $"{m.Beskrivelse} {m.Leverandør}".ToLower();
+                foreach (var category in categories)
                 {
-                    if (desc.Contains(supplier, StringComparison.OrdinalIgnoreCase)) return supplier; // Matcher leverandør og return
+                    if (category.Value.Any(keyword => desc.Contains(keyword))) return category.Key; 
                 }
-                return desc.ToLower();
+                return "Øvrige materialer"; 
             })
-            .Select(g => new ProjectMaterial // Opretter nyt objekt 
+            .Select(g => new ProjectMaterial 
             {
-                Beskrivelse = knownSuppliers.Contains(g.Key) ? g.Key : textInfo.ToTitleCase(g.Key), 
-                Total = g.Sum(x => x.Total)
+                Beskrivelse = g.Key, 
+                // HER ER ÆNDRINGEN: Brug Kostpris * Antal i stedet for x.Total
+                Total = g.Sum(x => x.Kostpris * x.Antal) 
             })
-            .OrderByDescending(m => m.Total) // Sorterer efter pris 
+            .OrderByDescending(m => m.Total) 
             .ToList();
 
         return dto; // Returnerer dto (timer + materialer) 

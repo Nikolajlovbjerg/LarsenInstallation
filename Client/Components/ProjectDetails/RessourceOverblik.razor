@@ -3,7 +3,7 @@
 
 <div class="row mb-5">
     <div class="col-md-6 mb-3">
-        <div class="card h-100 shadow-sm" style="border-color: #071226;">
+        <div class="card h-auto shadow-sm" style="border-color: #071226;">
             <div class="card-header bg-transparent fw-bold" style="border-color: #071226; color: #071226;">
                 Timeoversigt
             </div>
@@ -21,21 +21,22 @@
         </div>
     </div>
 
-    @* Materialer (Altid kategori-liste fra serveren) *@
     <div class="col-md-6 mb-3">
-        <div class="card h-100 shadow-sm"
-             style="border-color: #071226; max-height: 500px; display:flex; flex-direction:column;">
-
-            <div class="card-header bg-transparent fw-bold"
-                 style="border-color: #071226; color: #071226;">
-                Materialer fordelt på kategorier
+        <div class="card h-auto shadow-sm" style="border-color: #071226; max-height: 500px; display:flex; flex-direction:column;">
+            <div class="card-header bg-transparent fw-bold" style="border-color: #071226; color: #071226;">
+                @(IsClientView ? "Materialer (Kategorier)" : "Materialer (Intern oversigt)")
             </div>
 
             <div style="overflow-y: auto; flex: 1;">
                 <ul class="list-group list-group-flush">
-                    @if (MaterialGroups.Any())
+                    @{
+                        // Choose which list to iterate over based on the view mode
+                        var displayList = IsClientView ? MaterialGroups : InternMaterialGroups;
+                    }
+
+                    @if (displayList != null && displayList.Any())
                     {
-                        @foreach (var mat in MaterialGroups)
+                        @foreach (var mat in displayList)
                         {
                             <li class="list-group-item d-flex justify-content-between align-items-center">
                                 <span>@mat.Beskrivelse</span>
@@ -55,9 +56,7 @@
 
 @code {
     [Parameter] public List<HourGroupDto> HourGroups { get; set; } = new();
-
-    // Altid kategori-liste fra serveren
     [Parameter] public List<ProjectMaterial> MaterialGroups { get; set; } = new();
-
+    [Parameter] public List<ProjectMaterial> InternMaterialGroups { get; set; } = new();
     [Parameter] public bool IsClientView { get; set; }
 }
