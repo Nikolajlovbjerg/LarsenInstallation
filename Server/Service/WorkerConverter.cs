@@ -42,8 +42,6 @@ namespace Server.Service
 
                 // Tilføjer arbejdstimen til listen
                 result.Add(p);
-                // Logger arbejdstimen til konsollen
-                Console.WriteLine($"dato= {p.Dato}, stop tid = {p.Stoptid} Timer = {p.Timer}, Type = {p.Type}  kostpris = {p.Kostpris}");
                 // Går videre til næste række
                 row_no++;
 

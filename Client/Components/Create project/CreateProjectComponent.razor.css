@@ -1,12 +1,22 @@
+
+.create-page-back {
+    display: flex;
+    justify-content: center;  /* Centers horizontally */
+    align-items: flex-start;  /* Keeps it near the top */
+    width: 100%;              /* Takes full width of the main content area */
+    min-height: 100vh;
+    padding: 100px 20px;       /* Top and side padding */
+}
+
 .create-con {
     background: white;
     width: 100%;
-    max-width: 1450px;
+    max-width: 1450px;         /* Reduced from 1450px for a better look */
     padding: 35px 30px;
     border-radius: 14px;
-    box-shadow: 0 10px 30px rgba(0,0,0,0.15);
-    animation: fadeIn 0.4s ease;
-    margin-top: 40px;
+    /*box-shadow: 0 10px 30px rgba(0,0,0,0.15);*/
+    /* Remove 'margin-top' if you use padding on the parent for better centering */
+    margin: 0 auto;
 }
 
 .create-con h3 {
@@ -215,7 +225,7 @@
 .opretbtn {
     background: #1d1e3c;                /* mørk blå – matcher dine focus borders */
     color: white;
-    padding: 10px 24px;
+    padding: 10px 14px;
     font-size: 16px;
     font-weight: 600;
     border: none;

@@ -19,7 +19,7 @@ namespace Server.Controllers
         }
 
 
-        // Et endpoint der bruges når man uploader en fil
+        // Et endpoint der bruges nï¿½r man uploader en fil
 
         [HttpPost("upload")]
         public IActionResult Upload(IFormFile? file, [FromQuery] int projectId)
@@ -32,14 +32,14 @@ namespace Server.Controllers
                 // Opretter en midlertidig hukommelse (stream)
                 using Stream s = new MemoryStream();
                 file.CopyTo(s); // Kopierer filens indhold ind i hukommelsen
-                s.Position = 0; // starter læsningen fra begyndelsen af filen 
+                s.Position = 0; // starter lÃ¸sningen fra begyndelsen af filen 
 
                 // Konverterer excel filen til material objekter 
                 var materials = MaterialConverter.Convert(s);
 
                 foreach (var m in materials)
                 {
-                    // Sætter materialer til projekter
+                    // SÃ¦tter materialer til projekter
                     m.ProjectId = projectId;
                     // Gemmer materialet til db 
                     _repo.Add(m);

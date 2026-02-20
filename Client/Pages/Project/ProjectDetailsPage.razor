@@ -39,17 +39,13 @@ else
 }
 
 @code {
-    [Parameter] public int Id { get; set; } // Tager tallet fra URL'en f.eks. /project/5, bliver til id 5
+    [Parameter] public int Id { get; set; }
 
     private Calculation? details;
-    // Denne bool styrer "kunde visning" knappen. False = Virksomhedens oplysninger. True = Kundens oplysninger
     private bool showClientView = false;
 
     protected override async Task OnInitializedAsync()
     {
-        // 1. Service henter data
-        // 2. Serveren har allerede sorteret timer og materialer
-        // 3. Vi gemmer det i 'details'
         details = await ProjectService.GetProjectDetails(Id);
         details = await Http.GetFromJsonAsync<Calculation>($"{Server.Url}/api/project/{Id}");
     }

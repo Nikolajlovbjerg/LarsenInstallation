@@ -6,7 +6,7 @@ namespace Server.Repositories.MaterialRepositories;
 // Definerer hvilke metoder en MaterialRepository skal implementere
 public interface IMaterialRepository
 {
-    // Metode til at tilføje et ProjectMaterial til databasen
+    // Metode til at tilfÃ¸je et ProjectMaterial til databasen
     // Implementeringen vil normalt oprette en SQL-INSERT og eksekvere den
     void Add(ProjectMaterial material);
 

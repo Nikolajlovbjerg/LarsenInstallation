@@ -6,7 +6,7 @@ namespace Server.Repositories.HourRepositories;
 // Definerer hvilke metoder en repository til ProjectHour skal implementere
 public interface IHourRepository
 {
-    // Metode til at tilføje en ProjectHour til databasen
+    // Metode til at tilfÃ¸je en ProjectHour til databasen
     // Implementeringen skal oprette en SQL-INSERT og eksekvere den
     void Add(ProjectHour hour);
 

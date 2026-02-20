@@ -45,8 +45,6 @@ namespace Server.Service
 
                 // Tilføjer materialet til listen
                 result.Add(p);
-                // Logger materialet til konsollen
-                Console.WriteLine($"Beskrivelse= {p.Beskrivelse}, Kostpris = {p.Kostpris} Antal = {p.Antal}, Total = {p.Total}  Avance = {p.Avance}, dækningsgrad = {p.Dækningsgrad}");
                 // Går videre til næste række
                 row_no++;
 

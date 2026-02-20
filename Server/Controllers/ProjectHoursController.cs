@@ -27,7 +27,7 @@ namespace Server.Controllers
                 // Opretter en midlertidig hukommelse (stream)
                 using Stream s = new MemoryStream();
                 file.CopyTo(s); // Kopierer filens indhold ind i hukommelsen
-                s.Position = 0; // starter læsningen fra begyndelsen af filen 
+                s.Position = 0; // starter lÃ¸sningen fra begyndelsen af filen 
 
 
                 // Konverterer excel filen til material objekter 
@@ -35,12 +35,12 @@ namespace Server.Controllers
                 
                 foreach (var h in hours)
                 {
-                    // Sætter materialer til projekter
+                    // SÃ¦tter materialer til projekter
                     h.ProjectId = projectId;
                     // Gemmer materialet til db 
                     _hourRepo.Add(h);
                 }
-                // Returnere et ok svar og antallet af hvor mange timer der bliver oploadet 
+                // Returnere et ok svar og antallet af hvor mange timer der bliver uploadet 
                 return Ok($"Uploaded {hours.Count} hours.");
             }
             catch (Exception ex)

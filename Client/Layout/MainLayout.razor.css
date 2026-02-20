@@ -64,6 +64,15 @@ main {
     text-overflow: ellipsis;
 }
 
+.nav-link svg {
+    transition: color 0.3s ease, transform 0.2s ease;
+}
+
+.nav-link:hover svg {
+    color: #dc3545; /* Becomes "Danger" red on hover */
+    transform: scale(1.1); /* Slight pop out */
+}
+
 @media (max-width: 640.98px) {
     .top-row {
         justify-content: space-between;
