@@ -99,5 +99,59 @@ namespace Server.Repositories.User
                 command.ExecuteNonQuery();   // Kører DELETE-kommandoen
             }
         }
+        
+        public Users? GetById(int id)
+        {
+            using var mConnection = GetConnection();
+            mConnection.Open();
+            var command = mConnection.CreateCommand();
+            command.CommandText = "SELECT * FROM Users WHERE userid = @id";
+
+            var paramId = command.CreateParameter();
+            paramId.ParameterName = "id";
+            paramId.Value = id;
+            command.Parameters.Add(paramId);
+
+            using var reader = command.ExecuteReader();
+            if (reader.Read())
+            {
+                return new Users
+                {
+                    UserId = reader.GetInt32(0),
+                    UserName = reader.GetString(1),
+                    Password = reader.GetString(2),
+                    Role = reader.GetString(3)
+                };
+            }
+            return null;
+        }
+
+        public void Update(Users user)
+        {
+            using var mConnection = GetConnection();
+            mConnection.Open();
+            var command = mConnection.CreateCommand();
+    
+            command.CommandText = @"UPDATE Users 
+                            SET username = @username, 
+                                password = @password, 
+                                role = @role 
+                            WHERE userid = @id";
+
+            // Tilføj parametre (vigtigt for at undgå SQL injection)
+            var pId = command.CreateParameter(); pId.ParameterName = "id"; pId.Value = user.UserId;
+            command.Parameters.Add(pId);
+
+            var pName = command.CreateParameter(); pName.ParameterName = "username"; pName.Value = user.UserName;
+            command.Parameters.Add(pName);
+
+            var pPass = command.CreateParameter(); pPass.ParameterName = "password"; pPass.Value = user.Password;
+            command.Parameters.Add(pPass);
+
+            var pRole = command.CreateParameter(); pRole.ParameterName = "role"; pRole.Value = user.Role;
+            command.Parameters.Add(pRole);
+
+            command.ExecuteNonQuery();
+        }
     }
 }

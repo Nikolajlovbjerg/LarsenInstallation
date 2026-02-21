@@ -15,6 +15,7 @@ public abstract class BaseRepository
         "Password=" + PASSWORD.PW1 + ";" +
         "Database=Larsen_InstallationAps;" +
         "SSL Mode=Require;" +
+        "Pooling=false;" +
         "Trust Server Certificate=true;";
 
     // Opretter en ny databaseforbindelse

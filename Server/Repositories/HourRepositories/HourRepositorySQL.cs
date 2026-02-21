@@ -6,34 +6,38 @@ namespace Server.Repositories.HourRepositories;
 public class HourRepositorySQL : BaseRepository, IHourRepository
 {
     // Tilføjer en ny ProjectHour til databasen
-    public void Add(ProjectHour h)
+    public void AddRange(List<ProjectHour> hours)
     {
-        // Opretter databaseforbindelse, lukker automatisk når using-blokken afsluttes
         using var conn = GetConnection();
-        conn.Open(); // Åbner forbindelsen
-
-        // Opretter en SQL-kommando, lukker automatisk med using
-        using var command = conn.CreateCommand();
-        command.CommandText = @"
-            INSERT INTO projecthours
-                (projectid, medarbejder, dato, stoptid, timer, type, kostpris) 
-            VALUES 
-                (@pid, @med, @dato, @stop, @timer, @type, @kost)";
-
-        // Binder værdier fra ProjectHour-objektet til SQL-parametre
-        // Parametre beskytter mod SQL-injection og sikrer korrekt datatype
-        command.Parameters.AddWithValue("pid", h.ProjectId);
-        // pid for værdien af projectid
-
-        command.Parameters.AddWithValue("med", h.Medarbejder ?? (object)DBNull.Value); // Hvis null så for den null som værdi
-        command.Parameters.AddWithValue("dato", h.Dato ?? (object)DBNull.Value);
-        command.Parameters.AddWithValue("stop", h.Stoptid ?? (object)DBNull.Value);
-        command.Parameters.AddWithValue("timer", h.Timer);
-        command.Parameters.AddWithValue("type", h.Type ?? (object)DBNull.Value);
-        command.Parameters.AddWithValue("kost", h.Kostpris);
-
-        // Eksekverer INSERT-kommandoen
-        command.ExecuteNonQuery();
+        conn.Open();
+        using var transaction = conn.BeginTransaction();
+        try
+        {
+            foreach (var h in hours)
+            {
+                using var command = conn.CreateCommand();
+                command.CommandText = @"
+                INSERT INTO projecthours
+                    (projectid, medarbejder, dato, stoptid, timer, type, kostpris) 
+                VALUES 
+                    (@pid, @med, @dato, @stop, @timer, @type, @kost)";
+            
+                command.Parameters.AddWithValue("pid", h.ProjectId);
+                command.Parameters.AddWithValue("med", h.Medarbejder ?? (object)DBNull.Value);
+                command.Parameters.AddWithValue("dato", h.Dato ?? (object)DBNull.Value);
+                command.Parameters.AddWithValue("stop", h.Stoptid ?? (object)DBNull.Value);
+                command.Parameters.AddWithValue("timer", h.Timer);
+                command.Parameters.AddWithValue("type", h.Type ?? (object)DBNull.Value);
+                command.Parameters.AddWithValue("kost", h.Kostpris);
+                command.ExecuteNonQuery();
+            }
+            transaction.Commit();
+        }
+        catch
+        {
+            transaction.Rollback();
+            throw;
+        }
     }
 
     // Henter alle ProjectHour for et bestemt projekt

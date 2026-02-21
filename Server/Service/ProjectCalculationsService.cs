@@ -166,13 +166,8 @@ public class ProjectCalculationsService
                 "kabelbøjle", "strip", "bøjlebånd", "tape", "dampspærretape", "fzb", "galv", "metal", 
                 "krympeflex", "krympeslange", "hulsav", "bor", "fladbor", "spiralbor", "klinge", "savklinge", "lenox", "dymotape", 
                 "fuge", "fugemasse", "batteri", "handske", "nitril", "affald", "støvpose", "qaddy", 
-                "tromle", "loddekolbe", "rengøring", "støvsugning",
-                "vinkel", "bolt", "møtrik", "gevind", "unbrakoskrue", "ankerskrue", "isolering", "brandlukning", "gaggenau", "miele", "quooker", "liebherr", "køleskab", "vinskab", "ovn", "fryseskab", 
-                "opvaskemaskine", "kogeplade", "emhætte", "hanstholm", "køkken", "vask", "armatur", "ladestander", 
-                "ladeboks", "easee", "zaptec", "ladekabel", "solcelle", "inverter", "hybrid", "batteri", 
-                "varmepumpe", "elbil", "montagesystem", "ventilation", "ølund", "udsugning", "kanal", "aggregat", 
-                "emhætteaftræk", "solceller", "solcelle", "inverter", "batteri", "S750", "hybrid", "sol", "energi", 
-                "varmepumpe", "ladestander", "ladeboks", "easee", "zaptec"
+                "tromle", "loddekolbe", "rengøring", "støvsugning", "vinkel", "bolt", "møtrik", "gevind", "unbrakoskrue", 
+                "ankerskrue", "isolering", "brandlukning", "easee", "zaptec", "ladekabel", "solcelle", "inverter", "varmepumpe", "montagesystem", "ventilation", "ølund", "udsugning"
             } }
         };
 

@@ -8,7 +8,7 @@ public interface IHourRepository
 {
     // Metode til at tilføje en ProjectHour til databasen
     // Implementeringen skal oprette en SQL-INSERT og eksekvere den
-    void Add(ProjectHour hour);
+    void AddRange(List<ProjectHour> hours);
 
     // Metode til at hente alle ProjectHour for et bestemt projekt
     // Returnerer en liste med ProjectHour-objekter

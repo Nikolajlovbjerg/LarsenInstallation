@@ -1,0 +1,85 @@
+@page "/adduser/edit/{UserId:int}"
+@using Core
+@using Client.Service
+@inject HttpClient http
+@inject NavigationManager navMan
+
+<PageTitle>Opret Bruger</PageTitle>
+
+<div class="d-flex justify-content-center">
+    <div class="create-con">
+        <h3>Redigere bruger</h3>
+
+        <EditForm Model="@_user" OnValidSubmit="@HandleValidSubmit">
+            <DataAnnotationsValidator />
+            
+            @* Viser kun fejl hvis der er nogen *@
+            @if (context.GetValidationMessages().Any())
+            {
+                <div class="alert alert-danger">
+                    <ValidationSummary />
+                </div>
+            }
+
+            <div class="form-grid">
+                <div class="form-floating-group">
+                    <InputText id="UserName" @bind-Value="_user.UserName" class="form-control" placeholder=" " />
+                    <label for="UserName">Brugernavn</label>
+                </div>
+
+                <div class="form-floating-group">
+                    <InputText id="Password" type="password" @bind-Value="_user.Password" class="form-control" placeholder=" " />
+                    <label for="Password">Adgangskode</label>
+                </div>
+            </div>
+
+            <div class="form-floating-group">
+                <InputSelect id="Role" @bind-Value="_user.Role" class="form-control form-select-styled">
+                    @foreach (var r in roles)
+                    {
+                        <option value="@r">@r</option>
+                    }
+                </InputSelect>
+                <label for="Role">Rolle</label>
+            </div>
+
+            <div class="d-flex gap-3 mt-4">
+                <button type="submit" class="opretbtn">Gem ændringer</button>
+                <button type="button" class="cancelbtn" @onclick="Cancel">Annuller</button>
+            </div>
+        </EditForm>
+    </div>
+</div>
+
+@code {
+    [Parameter] public int UserId { get; set; }
+    
+    private Users _user = new(); 
+    private string[] roles = ["Bruger", "Admin"];
+
+    // Kører når komponenten initialiseres
+    protected override async Task OnInitializedAsync()
+    {
+        // Henter den specifikke bruger baseret på ID fra URL'en
+        var response = await http.GetFromJsonAsync<Users>($"{Server.Url}/api/user/{UserId}");
+        
+        if (response != null)
+        {
+            _user = response;
+        }
+    }
+
+    private async Task HandleValidSubmit()
+    {
+        var response = await http.PutAsJsonAsync($"{Server.Url}/api/user", _user);
+        if (response.IsSuccessStatusCode)
+        {
+            navMan.NavigateTo("adminuser");
+        }
+    }
+
+    private void Cancel()
+    {
+        navMan.NavigateTo("adminuser");
+    }
+}

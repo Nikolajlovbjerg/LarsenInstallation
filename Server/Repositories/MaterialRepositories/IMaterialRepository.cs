@@ -8,7 +8,7 @@ public interface IMaterialRepository
 {
     // Metode til at tilføje et ProjectMaterial til databasen
     // Implementeringen vil normalt oprette en SQL-INSERT og eksekvere den
-    void Add(ProjectMaterial material);
+    void AddRange(List<ProjectMaterial> materials);
 
     // Metode til at hente alle ProjectMaterialer for et specifikt projekt
     // Returnerer en liste med ProjectMaterial-objekter

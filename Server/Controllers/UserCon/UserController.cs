@@ -46,5 +46,21 @@ namespace ServerApp.Controllers
         {
             userRepo.Delete(id); // Sletter bruger via repository
         }
+        
+        [HttpGet("{id:int}")] 
+        public ActionResult<Users> Get(int id)
+        {
+            var user = userRepo.GetById(id);
+            if (user == null) return NotFound();
+            return Ok(user);
+        }
+
+
+        [HttpPut] 
+        public IActionResult Update([FromBody] Users user)
+        {
+            userRepo.Update(user);
+            return Ok();
+        }
     }
 }

@@ -79,6 +79,7 @@
 
     // A list to hold multiple files chosen by the user
     IReadOnlyList<IBrowserFile> selectedFiles = new List<IBrowserFile>();
+    private bool isSubmitting = false;
 
     // This runs when the user selects files
     public void UploadFiles(InputFileChangeEventArgs e)
@@ -89,36 +90,46 @@
 
     private async Task OnClickCreate()
     {
-        // 1. Send project data
-        var response = await http.PostAsJsonAsync($"{Server.Url}/api/project", aProject);
+        isSubmitting = true; // Show a spinner!
+        StateHasChanged(); // Force UI to show spinner
 
+        var response = await http.PostAsJsonAsync($"{Server.Url}/api/project", aProject);
         if (response.IsSuccessStatusCode)
         {
             var newProjectId = await response.Content.ReadFromJsonAsync<int>();
+            var uploadTasks = new List<Task>();
 
-            // 2. Iterate through each selected file
             foreach (var file in selectedFiles)
             {
                 var fileName = file.Name.ToLower();
+                string endpoint = "";
 
-                // 3. Determine file type by looking at its name
-                // "case_hours" contains "hour" and "case"
                 if (fileName.Contains("hour") || fileName.Contains("time") || fileName.Contains("case"))
                 {
-                    await UploadFileToApi(file, newProjectId, "api/projecthours/upload");
+                    endpoint = "api/projecthours/upload";
                 }
-                // "ordrematerialer" contains "ordre" and "material"
                 else if (fileName.Contains("material") || fileName.Contains("ordre"))
                 {
-                    await UploadFileToApi(file, newProjectId, "api/projectmaterials/upload");
+                    endpoint = "api/projectmaterials/upload";
+                }
+
+                if (!string.IsNullOrEmpty(endpoint))
+                {
+                    // Add the task without awaiting it yet
+                    uploadTasks.Add(UploadFileToApi(file, newProjectId, endpoint));
                 }
             }
+
+            // 3. Wait for all files to upload simultaneously
+            await Task.WhenAll(uploadTasks);
         }
 
-        // 4. Reset and navigate back
-        aProject = new();
-        selectedFiles = new List<IBrowserFile>();
-        Nav.NavigateTo("/");
+        // IMPORTANT: Add a tiny delay to let the server finish its DB transaction
+        // and let the Blazor UI thread finish the "IsSubmitting" state
+        await Task.Delay(100); 
+    
+        // Use forceLoad: true ONLY if your App.razor needs a hard refresh
+        Nav.NavigateTo("/", forceLoad: false); 
     }
 
     // Hjælpemetode til selve fil-uploaden 

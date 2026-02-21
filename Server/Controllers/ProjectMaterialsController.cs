@@ -24,31 +24,30 @@ namespace Server.Controllers
         [HttpPost("upload")]
         public IActionResult Upload(IFormFile? file, [FromQuery] int projectId)
         {
-            // Hvis der ikke er valgt en fil, fejlbesked
-            if (file == null || file.Length == 0) return BadRequest("No file");
-
+            if (file == null || file.Length == 0) return BadRequest("No file selected.");
             try
             {
-                // Opretter en midlertidig hukommelse (stream)
                 using Stream s = new MemoryStream();
-                file.CopyTo(s); // Kopierer filens indhold ind i hukommelsen
-                s.Position = 0; // starter løsningen fra begyndelsen af filen 
+                file.CopyTo(s);
+                s.Position = 0; 
 
-                // Konverterer excel filen til material objekter 
+                // Convert Excel rows to objects
                 var materials = MaterialConverter.Convert(s);
-
+        
+                // Assign ProjectId to all items
                 foreach (var m in materials)
                 {
-                    // Sætter materialer til projekter
                     m.ProjectId = projectId;
-                    // Gemmer materialet til db 
-                    _repo.Add(m);
                 }
-                return Ok($"Uploaded {materials.Count} materials."); // Succes besked 
+
+                // Bulk Save
+                _repo.AddRange(materials);
+
+                return Ok($"Successfully processed {materials.Count} materials.");
             }
             catch (Exception ex)
             {
-                return BadRequest("Error parsing file: " + ex.Message); // Fejlbesked 
+                return BadRequest("Error parsing material file: " + ex.Message);
             }
         }
     }

@@ -21,32 +21,26 @@ namespace Server.Controllers
         public IActionResult Upload(IFormFile? file, [FromQuery] int projectId)
         {
             if (file == null || file.Length == 0) return BadRequest("No file");
-
             try 
             {
-                // Opretter en midlertidig hukommelse (stream)
                 using Stream s = new MemoryStream();
-                file.CopyTo(s); // Kopierer filens indhold ind i hukommelsen
-                s.Position = 0; // starter løsningen fra begyndelsen af filen 
+                file.CopyTo(s);
+                s.Position = 0; 
 
-
-                // Konverterer excel filen til material objekter 
                 var hours = WorkerConverter.Convert(s);
-                
                 foreach (var h in hours)
                 {
-                    // Sætter materialer til projekter
                     h.ProjectId = projectId;
-                    // Gemmer materialet til db 
-                    _hourRepo.Add(h);
                 }
-                // Returnere et ok svar og antallet af hvor mange timer der bliver uploadet 
+
+                // ONE call to the database instead of many
+                _hourRepo.AddRange(hours); 
+
                 return Ok($"Uploaded {hours.Count} hours.");
             }
             catch (Exception ex)
             {
-                // Returneres en fejlbesked, hvis der sker en fejl 
-                return BadRequest("Error parsing file: " + ex.Message);
+                return BadRequest("Error: " + ex.Message);
             }
         }
     }
