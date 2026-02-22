@@ -18,6 +18,7 @@ PW5/
 .idea/
 .env
 .DS_Store
+.repository-pack-architecture
 
 # User-specific files (MonoDevelop/Xamarin Studio)
 *.userprefs
