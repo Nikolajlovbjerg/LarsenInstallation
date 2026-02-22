@@ -49,6 +49,7 @@ Client/
     Create project/
       CreateProjectComponent.razor
     ProjectDetails/
+      BarChart.razor
       PrisOverblik.razor
       RessourceOverblik.razor
     Projects/
@@ -174,6 +175,99 @@ public class Users
     }
   },
   "AllowedHosts": "*"
+}
+</file>
+
+<file path="Client/Components/ProjectDetails/BarChart.razor">
+@using Core
+@namespace Client.Components.ProjectDetails
+
+<div class="card shadow-sm mb-2" style="border-color: #071226;">
+    <div class="card-header bg-transparent fw-bold" style="border-color: #071226; color: #071226;">
+        Tidsforbrug over tid (Timer pr. måned)
+    </div>
+    <div class="card-body">
+        @if (ChartData == null || !ChartData.Any())
+        {
+            <p class="text-muted text-center">Ingen tids data tilgængelig for grafen.</p>
+        }
+        else
+        {
+            @* Removed overflow-x and fixed width to ensure it stays within bounds *@
+            <div class="chart-container" style="width: 100%; height: 250px;">
+                <svg width="100%" height="100%" viewBox="0 0 @TotalWidth 250" preserveAspectRatio="none">
+                    @{
+                        double chartHeight = 180;
+                        double maxVal = (double)ChartData.Max(x => x.TotalHours);
+                        if (maxVal == 0) maxVal = 1; 
+                        
+                        // Dynamically adjust bar width and spacing based on count to keep it small
+                        double barWidth = 30; 
+                        double spacing = 15;
+                        double startX = 40;
+                    }
+
+                    @for (int i = 0; i < ChartData.Count; i++)
+                    {
+                        var item = ChartData[i];
+                        double barHeight = ((double)item.TotalHours / maxVal) * chartHeight;
+                        double x = startX + (i * (barWidth + spacing));
+                        double y = chartHeight - barHeight + 30;
+
+                        <rect x="@x" y="@y" width="@barWidth" height="@barHeight" fill="#071226" rx="2">
+                            <title>@item.MonthLabel: @item.TotalHours.ToString("N1") t</title>
+                        </rect>
+
+                        @* Explicit namespace to avoid RZ1023 error *@
+                        <svg:text x="@(x + barWidth/2)" y="@(y - 5)" font-size="10" text-anchor="middle" fill="#071226" font-weight="bold">
+                            @item.TotalHours.ToString("N0")
+                        </svg:text>
+
+                        <svg:text x="@(x + barWidth/2)" y="@(chartHeight + 50)" font-size="9" text-anchor="middle" fill="gray">
+                            @item.MonthLabel
+                        </svg:text>
+                    }
+                    
+                    <line x1="20" y1="@(chartHeight + 30)" x2="@(TotalWidth - 20)" y2="@(chartHeight + 30)" stroke="#dee2e6" stroke-width="1" />
+                </svg>
+            </div>
+        }
+    </div>
+</div>
+
+@code {
+    [Parameter] public List<ProjectHour> Hours { get; set; } = new();
+
+    private List<MonthlySummary> ChartData = new();
+    private double TotalWidth => ChartData.Count > 0 ? (ChartData.Count * 45) + 80 : 500;
+
+    protected override void OnParametersSet()
+    {
+        if (Hours != null && Hours.Any())
+        {
+            ChartData = Hours
+                .Where(h => h.Dato.HasValue)
+                .GroupBy(h => new { h.Dato.Value.Year, h.Dato.Value.Month })
+                .Select(g => new MonthlySummary
+                {
+                    Year = g.Key.Year,
+                    Month = g.Key.Month,
+                    TotalHours = g.Sum(h => h.Timer),
+                    MonthLabel = new DateTime(g.Key.Year, g.Key.Month, 1).ToString("MMM yy")
+                })
+                .OrderBy(x => x.Year)
+                .ThenBy(x => x.Month)
+                .ToList();
+        }
+    }
+
+    private class MonthlySummary
+    {
+        public int Year { get; set; }
+        public int Month { get; set; }
+        public decimal TotalHours { get; set; }
+        public string MonthLabel { get; set; } = "";
+    }
 }
 </file>
 
@@ -1905,71 +1999,6 @@ namespace Server.Repositories.User
 }
 </file>
 
-<file path="Client/Components/ProjectDetails/RessourceOverblik.razor">
-@using Core
-@namespace Client.Components.ProjectDetails
-
-<div class="row mb-5">
-    <div class="col-md-6 mb-3">
-        <div class="card h-auto shadow-sm" style="border-color: #071226;">
-            <div class="card-header bg-transparent fw-bold" style="border-color: #071226; color: #071226;">
-                Timeoversigt
-            </div>
-            <ul class="list-group list-group-flush">
-                @foreach (var group in HourGroups)
-                {
-                    <li class="list-group-item d-flex justify-content-between align-items-center">
-                        <span>@group.Type</span>
-                        <span class="badge rounded-pill" style="background-color: #071226;">
-                            @group.Total.ToString("N2") t
-                        </span>
-                    </li>
-                }
-            </ul>
-        </div>
-    </div>
-
-    <div class="col-md-6 mb-3">
-        <div class="card h-auto shadow-sm" style="border-color: #071226; max-height: 500px; display:flex; flex-direction:column;">
-            <div class="card-header bg-transparent fw-bold" style="border-color: #071226; color: #071226;">
-                @(IsClientView ? "Materialer" : "Materialer")
-            </div>
-
-            <div style="overflow-y: auto; flex: 1;">
-                <ul class="list-group list-group-flush">
-                    @{
-                        // Choose which list to iterate over based on the view mode
-                        var displayList = IsClientView ? MaterialGroups : InternMaterialGroups;
-                    }
-
-                    @if (displayList != null && displayList.Any())
-                    {
-                        @foreach (var mat in displayList)
-                        {
-                            <li class="list-group-item d-flex justify-content-between align-items-center">
-                                <span>@mat.Beskrivelse</span>
-                                <span class="fw-bold">@mat.Total.ToString("N2") kr.</span>
-                            </li>
-                        }
-                    }
-                    else
-                    {
-                        <li class="list-group-item text-muted text-center">Ingen materialer registreret</li>
-                    }
-                </ul>
-            </div>
-        </div>
-    </div>
-</div>
-
-@code {
-    [Parameter] public List<HourGroupDto> HourGroups { get; set; } = new();
-    [Parameter] public List<ProjectMaterial> MaterialGroups { get; set; } = new();
-    [Parameter] public List<ProjectMaterial> InternMaterialGroups { get; set; } = new();
-    [Parameter] public bool IsClientView { get; set; }
-}
-</file>
-
 <file path="Client/Components/Projects/ProjectComponent.razor">
 @using Core
 @inject NavigationManager Nav
@@ -2070,6 +2099,71 @@ public abstract class BaseRepository
     {
         return new NpgsqlConnection(ConnectionString);
     }
+}
+</file>
+
+<file path="Client/Components/ProjectDetails/RessourceOverblik.razor">
+@using Core
+@namespace Client.Components.ProjectDetails
+
+<div class="row mb-2">
+    <div class="col-md-6 mb-3">
+        <div class="card h-auto shadow-sm" style="border-color: #071226;">
+            <div class="card-header bg-transparent fw-bold" style="border-color: #071226; color: #071226;">
+                Timeoversigt
+            </div>
+            <ul class="list-group list-group-flush">
+                @foreach (var group in HourGroups)
+                {
+                    <li class="list-group-item d-flex justify-content-between align-items-center">
+                        <span>@group.Type</span>
+                        <span class="badge rounded-pill" style="background-color: #071226;">
+                            @group.Total.ToString("N2") t
+                        </span>
+                    </li>
+                }
+            </ul>
+        </div>
+    </div>
+
+    <div class="col-md-6 mb-3">
+        <div class="card h-auto shadow-sm" style="border-color: #071226; max-height: 500px; display:flex; flex-direction:column;">
+            <div class="card-header bg-transparent fw-bold" style="border-color: #071226; color: #071226;">
+                @(IsClientView ? "Materialer" : "Materialer")
+            </div>
+
+            <div style="overflow-y: auto; flex: 1;">
+                <ul class="list-group list-group-flush">
+                    @{
+                        // Choose which list to iterate over based on the view mode
+                        var displayList = IsClientView ? MaterialGroups : InternMaterialGroups;
+                    }
+
+                    @if (displayList != null && displayList.Any())
+                    {
+                        @foreach (var mat in displayList)
+                        {
+                            <li class="list-group-item d-flex justify-content-between align-items-center">
+                                <span>@mat.Beskrivelse</span>
+                                <span class="fw-bold">@mat.Total.ToString("N2") kr.</span>
+                            </li>
+                        }
+                    }
+                    else
+                    {
+                        <li class="list-group-item text-muted text-center">Ingen materialer registreret</li>
+                    }
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+
+@code {
+    [Parameter] public List<HourGroupDto> HourGroups { get; set; } = new();
+    [Parameter] public List<ProjectMaterial> MaterialGroups { get; set; } = new();
+    [Parameter] public List<ProjectMaterial> InternMaterialGroups { get; set; } = new();
+    [Parameter] public bool IsClientView { get; set; }
 }
 </file>
 
@@ -2605,7 +2699,7 @@ public class ProjectCalculationsService
                 "forlængerkabel", "tilslutningstråd", "kobbertråd", "noikal", "caddy", "qaddy", "tromle",
                 "jordledning", "brandkabel", "pknm", "pvikly", "halogenfri", "kabelbakke", "gitterbakke", "stålør", "pariser"
             } },
-            { "Installation (alt fra køkken til bil lader & solceller)", new[] { 
+            { "Installation", new[] { 
                 "stikkontakt", "afbryder", "underlag", "dåse", "fuga", "opus", "ramme", "tangent", 
                 "wago", "muffe", "samlemuffe", "forfradåse", "indmuringsdåse", "loftdåse", "udtag", 
                 "roset", "stikprop", "schuko", "blinddæksel", "korrespondance", "krydsning", 
@@ -2700,6 +2794,7 @@ else
                            MaterialGroups="details.GroupedMaterialsClientView"
                            InternMaterialGroups="details.GroupedMaterialsInternView"
                            IsClientView="showClientView" />
+        <BarChart Hours="@details.Hours" />
 
     </div>
 }
