@@ -155,7 +155,7 @@ public class ProjectCalculationsService
                 "forlængerkabel", "tilslutningstråd", "kobbertråd", "noikal", "caddy", "qaddy", "tromle",
                 "jordledning", "brandkabel", "pknm", "pvikly", "halogenfri", "kabelbakke", "gitterbakke", "stålør", "pariser"
             } },
-            { "Installation (alt fra køkken til bil lader & solceller)", new[] { 
+            { "Installation", new[] { 
                 "stikkontakt", "afbryder", "underlag", "dåse", "fuga", "opus", "ramme", "tangent", 
                 "wago", "muffe", "samlemuffe", "forfradåse", "indmuringsdåse", "loftdåse", "udtag", 
                 "roset", "stikprop", "schuko", "blinddæksel", "korrespondance", "krydsning", 
