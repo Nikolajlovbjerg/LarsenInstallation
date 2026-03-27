@@ -2,12 +2,11 @@
 .create-con {
     background: white;
     width: 100%;
-    max-width: 800px; /* Justeret bredde så den passer til en user-form */
+    max-width: 1000px;
     padding: 35px 30px;
     border-radius: 14px;
-    box-shadow: 0 10px 30px rgba(0,0,0,0.15);
     animation: fadeIn 0.4s ease;
-    margin-top: 40px;
+    margin-top: 250px;
     margin-bottom: 40px;
 }
 

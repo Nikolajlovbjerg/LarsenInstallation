@@ -2,41 +2,47 @@
 @using Core
 @inject NavigationManager navManager
 @inherits LayoutComponentBase
-<div class="page">
-    
-        <div class="sidebar">
-            <NavMenu/>
-        </div>
 
-        <main>
-            <div class="top-row px-2 btn-primary" style="color: white">
-            <NavLink class="nav-link" href="logout" @onclick="Logout">
-                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" class="bi 
-                bi-door-closed" viewBox="0 0 16 16">
+@*
+<div class="page">
+    <div class="sidebar">
+        <NavMenu />
+    </div>
+
+    <main>
+        <div class="top-row px-4">
+            <button class="btn btn-link text-white" @onclick="Logout" style="text-decoration: none;">
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor" class="bi bi-door-closed" viewBox="0 0 16 16">
                     <path d="M3 2a1 1 0 0 1 1-1h8a1 1 0 0 1 1 1v13h1.5a.5.5 0 0 1 0 1h-13a.5.5 0 0 1 0-1H3zm1 13h8V2H4z"/>
                     <path d="M9 9a1 1 0 1 0 2 0 1 1 0 0 0-2 0"/>
                 </svg>
-            </NavLink>
-            </div>
-            <article class="content px-4">
-                @Body </article>
-        </main>
-    
+                <span class="ms-2">Log ud</span>
+            </button>
+        </div>
+
+        <article class="content px-4">
+            @Body
+        </article>
+    </main>
+</div>
+*@
+
+<div class="page">
+    <div class="sidebar">
+        <NavMenu />
+    </div>
+
+    <main>
+        @* The top row for Logout can be hidden or moved to the NavMenu for mobile *@
+        <article class="content px-4">
+            @Body
+        </article>
+    </main>
 </div>
 
-@code
-{
-    bool isLoggedIn = false;
-
-    protected override async Task OnInitializedAsync()
-    {
-        var user = await LocalStorage.GetItemAsync<Users>("user");
-        isLoggedIn = user != null;
-    }
-    // Metode der køres når man trykker log ud
+@code {
     private async Task Logout()
     { 
-        // Dataene slettes og man navigeres til login-siden
         await LocalStorage.RemoveItemAsync("user");
         navManager.NavigateTo("/", true);
     }

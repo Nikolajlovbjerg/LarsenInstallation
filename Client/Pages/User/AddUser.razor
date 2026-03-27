@@ -13,7 +13,6 @@
         <EditForm Model="@_user" OnValidSubmit="@HandleValidSubmit">
             <DataAnnotationsValidator />
             
-            @* Viser kun fejl hvis der er nogen *@
             @if (context.GetValidationMessages().Any())
             {
                 <div class="alert alert-danger">

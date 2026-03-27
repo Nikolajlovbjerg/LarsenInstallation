@@ -74,24 +74,22 @@
 
 
 @code {
-    // Initialiserer en ny instans af projekt-modellen
+    
     Project aProject = new();
-
-    // A list to hold multiple files chosen by the user
+    
     IReadOnlyList<IBrowserFile> selectedFiles = new List<IBrowserFile>();
     private bool isSubmitting = false;
 
-    // This runs when the user selects files
+    
     public void UploadFiles(InputFileChangeEventArgs e)
     {
-        // Fetches all the selected files. You can specify maximum allowed files as an argument if needed.
         selectedFiles = e.GetMultipleFiles(); 
     }
 
     private async Task OnClickCreate()
     {
-        isSubmitting = true; // Show a spinner!
-        StateHasChanged(); // Force UI to show spinner
+        isSubmitting = true; 
+        StateHasChanged(); 
 
         var response = await http.PostAsJsonAsync($"{Server.Url}/api/project", aProject);
         if (response.IsSuccessStatusCode)
@@ -115,20 +113,17 @@
 
                 if (!string.IsNullOrEmpty(endpoint))
                 {
-                    // Add the task without awaiting it yet
                     uploadTasks.Add(UploadFileToApi(file, newProjectId, endpoint));
                 }
             }
 
-            // 3. Wait for all files to upload simultaneously
+            
             await Task.WhenAll(uploadTasks);
         }
-
-        // IMPORTANT: Add a tiny delay to let the server finish its DB transaction
-        // and let the Blazor UI thread finish the "IsSubmitting" state
+        
         await Task.Delay(100); 
     
-        // Use forceLoad: true ONLY if your App.razor needs a hard refresh
+        
         Nav.NavigateTo("/", forceLoad: false); 
     }
 

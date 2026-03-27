@@ -40,7 +40,6 @@ namespace Server.Service
                 p.Leverandør = row[8].ToString();
                 p.Total = Decimal.Parse(row[17].ToString());
                 p.Avance = Decimal.Parse(row[19].ToString()); // Læser værdier fra valgte kolonner og gemmer dem i objektet
-
                 p.Dækningsgrad = string.IsNullOrEmpty(row[20].ToString()) ? 0 : decimal.Parse(row[20].ToString());
 
                 // Tilføjer materialet til listen

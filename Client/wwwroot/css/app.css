@@ -91,3 +91,166 @@ code {
 .form-floating > .form-control-plaintext:focus::placeholder, .form-floating > .form-control:focus::placeholder {
     text-align: start;
 }
+
+/* Container logic */
+.page {
+    display: flex;
+    flex-direction: column;
+}
+
+.sidebar {
+    background-color: #071226;
+    color: white;
+}
+
+.navbar-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 1rem;
+    height: 70px;
+}
+
+.logo-larsen { height: 40px; }
+
+.navbar-toggler-btn {
+    background: none;
+    border: none;
+    cursor: pointer;
+}
+
+/* Mobile Nav Items */
+.nav-items-container.collapse { display: none; }
+.nav-items-container.show { display: block; background-color: #0d1b35; }
+
+.nav-link {
+    color: white;
+    padding: 12px 20px;
+    display: block;
+    text-decoration: none;
+    border: none;
+    background: none;
+    font-size: 1rem;
+}
+
+.logout-btn { color: #ff6b6b; font-weight: bold; }
+
+/* Ensure the overall page fills the viewport */
+.page {
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+}
+
+.sidebar {
+    background-color: #071226;
+    width: 92%; /* Fill width on mobile */
+    margin: 0 0 2rem 1rem;
+    position: sticky;
+    z-index: 1000;
+}
+
+/* Header line - fills width */
+.navbar-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    /* Use padding-left and padding-right explicitly for clarity */
+    padding: 0 1.5rem;
+    height: 70px;
+    box-sizing: border-box;
+    width: 100%;
+}
+
+.brand-container a {
+    display: flex;
+    align-items: center;
+    text-decoration: none;
+}
+
+.navbar-toggler-btn {
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 0; /* Remove default button padding that shifts the icon */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+/* Nav links - fill width */
+.nav-items-container {
+    width: 100%;
+}
+
+.nav-link {
+    display: flex;
+    align-items: center;
+    color: rgba(255,255,255,0.85);
+    padding: 0.85rem 1.5rem; /* Increased horizontal padding */
+    text-decoration: none;
+    background: transparent;
+    border: none;
+    width: 100%;
+    transition: all 0.2s ease;
+}
+
+.nav-link:hover {
+    background-color: rgba(255,255,255,0.1);
+    color: white;
+}
+
+.nav-link.active {
+    background-color: rgba(255,255,255,0.15);
+    color: white;
+}
+
+/* Desktop Styles */
+@media (min-width: 641px) {
+    .page {
+        flex-direction: row;
+    }
+
+    .sidebar {
+        width: 90%; /* Slightly wider sidebar for better desktop feel */
+        height: 100vh;
+        position: sticky;
+        top: 0;
+        display: flex;
+        flex-direction: column;
+    }
+
+    .navbar-header {
+        justify-content: center;
+        padding: 3rem 0;
+        height: auto;
+    }
+
+    .navbar-toggler-btn {
+        display: none;
+    }
+
+    .nav-items-container.collapse {
+        display: flex;
+        flex-direction: column;
+        flex-grow: 1;
+    }
+
+    .nav-content {
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+        height: 100%;
+        flex-grow: 1;
+    }
+
+    .bottom-nav {
+        margin-bottom: 1.5rem;
+    }
+}
+
+/* Main Content Area */
+main {
+    flex-grow: 1;
+    overflow-x: hidden;
+}
