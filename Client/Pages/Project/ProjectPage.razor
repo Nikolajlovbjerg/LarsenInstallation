@@ -38,7 +38,7 @@
     {
         try 
         {
-            _projects = await Http.GetFromJsonAsync<List<Project>>($"{Server.Url}/api/project");
+            _projects = await Http.GetFromJsonAsync<List<Project>>("api/project");
         }
         catch (Exception ex)
         {
@@ -52,7 +52,7 @@
 
         if (response.IsSuccessStatusCode)
         {
-            _projects = await Http.GetFromJsonAsync<List<Project>>($"{Server.Url}/api/project");
+            _projects = await Http.GetFromJsonAsync<List<Project>>("api/project");
             _activeMenuId = null;
         }
     }
