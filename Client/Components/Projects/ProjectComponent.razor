@@ -2,7 +2,76 @@
 @inject NavigationManager Nav
 
 
+<tr>
+    <td>
+        <div class="project-info-cell">
+            <div class="img-wrapper">
+                <img src="@(string.IsNullOrWhiteSpace(Project?.ImageUrl) ? "placeholder.png" : Project.ImageUrl)" alt="Project billede" />
+            </div>
+            <span class="project-name">@Project?.Name</span>
+        </div>
+    </td>
+    
+    <td>
+        <span class="date-cell">@Project?.DateCreated.ToString("dd/MM/yyyy")</span>
+    </td>
+    
+    <td class="action-cell">
+        <button class="btn-details" @onclick="GotoDetailPage">Se detaljer</button>
+        
+        <div class="menu-wrapper">
+            <button class="dots-btn-table" @onclick="ToggleMenu" @onfocusout="CloseMenuDelayed">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-three-dots-vertical" viewBox="0 0 16 16">
+                    <path d="M9.5 13a1.5 1.5 0 1 1-3 0 1.5 1.5 0 0 1 3 0m0-5a1.5 1.5 0 1 1-3 0 1.5 1.5 0 0 1 3 0m0-5a1.5 1.5 0 1 1-3 0 1.5 1.5 0 0 1 3 0"/>
+                </svg>
+            </button>
+            
+            @if (_showMenu)
+            {
+                <div class="table-dropdown">
+                    <button class="dropdown-item" @onclick="GotoEditPage">Rediger</button>
+                    <button class="dropdown-item danger" @onclick="DeleteProject">Slet projekt</button>
+                </div>
+            }
+        </div>
+    </td>
+</tr>
 
+@code {
+    [Parameter] public Project? Project { get; set; }
+    [Parameter] public EventCallback<int> OnDelete { get; set; }
+
+    private bool _showMenu = false;
+
+    private void GotoDetailPage()
+    {
+        if (Project != null) Nav.NavigateTo($"project/{Project.ProjectId}");
+    }
+
+    private void GotoEditPage()
+    {
+        if (Project != null) Nav.NavigateTo($"project/edit/{Project.ProjectId}");
+    }
+
+    private void ToggleMenu() => _showMenu = !_showMenu;
+
+    private async Task CloseMenuDelayed()
+    {
+        await Task.Delay(200);
+        _showMenu = false;
+    }
+
+    private async Task DeleteProject()
+    {
+        if (Project != null && OnDelete.HasDelegate) 
+            await OnDelete.InvokeAsync(Project.ProjectId);
+    }
+}
+
+
+
+
+@*
 <article class="ad-card">
     <div class="ad-media">
         <img src="@Project?.ImageUrl" alt="Project billede" />
@@ -31,8 +100,9 @@
     <div class="ad-footer">
         <button class="MoreBtn" @onclick="() => GotoDetailPage()" >Se detaljer</button>
     </div>
-</article>
+</article>*@
 
+@*
 @code {
     [Parameter] public Project? Project { get; set; }
     [Parameter] public EventCallback<int> OnDelete { get; set; }
@@ -68,6 +138,7 @@
     {
         if (OnDelete.HasDelegate) await OnDelete.InvokeAsync(Project.ProjectId);
     }
+    *@
     
     
 }
