@@ -1,0 +1,195 @@
+.table-wrap {
+    max-width: 80%;
+    margin: 2rem auto 72px;
+    background: #fff;
+    border-radius: 12px;
+    box-shadow: 0 6px 18px rgba(19, 22, 33, 0.06);
+    overflow: hidden;            /* runde hjørner på tabellen */
+    overflow-x: auto;            /* vandret scroll på små skærme */
+}
+
+.proj-table {
+    width: 100%;
+    border-collapse: collapse;
+    min-width: 520px;
+    font-size: 14px;
+}
+
+/* Hoved */
+.proj-table thead th {
+    text-align: left;
+    padding: 14px 20px;
+    background: #f7f8fa;
+    color: #6b7280;
+    font-weight: 600;
+    font-size: 12px;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    border-bottom: 1px solid #eceef1;
+    white-space: nowrap;
+}
+
+.col-actions { text-align: right; }
+
+/* Rækker */
+.proj-table tbody td {
+    padding: 12px 20px;
+    border-bottom: 1px solid #f0f1f3;
+    vertical-align: middle;
+}
+
+.proj-table tbody tr:last-child td {
+    border-bottom: none;
+}
+
+.proj-table tbody tr {
+    transition: background 0.15s ease;
+}
+
+.proj-table tbody tr:hover {
+    background: #f9fafb;
+}
+
+/* Projekt-celle: thumbnail + navn */
+.project-cell {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+}
+
+.thumb {
+    position: relative;
+    width: 46px;
+    height: 46px;
+    flex-shrink: 0;
+    border-radius: 8px;
+    overflow: hidden;
+    background: #eef0f3;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+/* Billedet lægger sig oven på fallback-bogstavet; fjernes det (onerror), ses bogstavet */
+.thumb img {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+/* Pæn fallback når der ikke er et billede (eller det er blokeret) */
+.thumb-fallback {
+    font-weight: 700;
+    font-size: 18px;
+    color: #071226;
+}
+
+.project-name {
+    font-weight: 600;
+    color: #071226;
+}
+
+.date-cell {
+    color: #6b7280;
+    white-space: nowrap;
+}
+
+/* Handlinger */
+.actions-cell {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 10px;
+}
+
+.btn-details {
+    background: #1d1e3c;
+    color: #fff;
+    border: none;
+    padding: 7px 16px;
+    border-radius: 8px;
+    font-size: 14px;
+    cursor: pointer;
+    transition: background 0.2s ease, transform 0.15s ease;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.12);
+}
+
+.btn-details:hover {
+    background: #24264a;
+    transform: translateY(-1px);
+}
+
+/* Kebab-menu */
+.menu-wrap {
+    position: relative;
+}
+
+.dots-btn {
+    background: none;
+    border: none;
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #6b7280;
+    cursor: pointer;
+    transition: background 0.2s ease, color 0.2s ease;
+}
+
+.dots-btn:hover {
+    background: #eef0f3;
+    color: #111;
+}
+
+.dropdown {
+    position: absolute;
+    top: calc(100% + 6px);
+    right: 0;
+    background: #fff;
+    border-radius: 10px;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.14);
+    min-width: 160px;
+    padding: 6px 0;
+    z-index: 50;
+    animation: fadeIn 0.15s ease-out;
+}
+
+.dropdown-item {
+    display: block;
+    width: 100%;
+    text-align: left;
+    background: none;
+    border: none;
+    padding: 10px 16px;
+    font-size: 14px;
+    color: #333;
+    cursor: pointer;
+    transition: background 0.15s ease;
+}
+
+.dropdown-item:hover {
+    background: #f5f6f8;
+}
+
+.dropdown-item.danger {
+    color: #d32f2f;
+}
+
+.dropdown-item.danger:hover {
+    background: #fff0f0;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(-4px); }
+    to   { opacity: 1; transform: translateY(0); }
+}
+
+/* Mobil: skjul dato-kolonnen så tabellen ikke bliver for trang */
+@media (max-width: 640px) {
+    .col-date, .date-cell { display: none; }
+    .table-wrap { max-width: 100%; }
+}

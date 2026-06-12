@@ -4,10 +4,20 @@
 @using Client.Service
 @inject HttpClient Http
 @inject NavigationManager Nav
+@inject Blazored.LocalStorage.ILocalStorageService LocalStorage
 
 <div class="admin-container">
     <div class="header-section">
         <h3>Alle projekter</h3>
+
+        <div class="view-toggle" role="group" aria-label="Visning">
+            <button class="toggle-btn @(_tableView ? "" : "active")" @onclick="() => SetView(false)">
+                <i class="bi bi-grid-3x3-gap-fill"></i> Kort
+            </button>
+            <button class="toggle-btn @(_tableView ? "active" : "")" @onclick="() => SetView(true)">
+                <i class="bi bi-list-ul"></i> Tabel
+            </button>
+        </div>
     </div>
 
     @if (_projects == null)
@@ -23,6 +33,10 @@
             <p>Ingen projekter fundet.</p>
         </div>
     }
+    else if (_tableView)
+    {
+        <ProjectTable Projects="_projects" OnDelete="DeleteProject" />
+    }
     else
     {
         <ProjectGrid Projects="_projects" OnDelete="DeleteProject" />
@@ -32,11 +46,15 @@
 
 @code {
     private List<Project>? _projects;
-    private int? _activeMenuId = null;
+    private bool _tableView; // false = kort (standard), true = tabel
 
     protected override async Task OnInitializedAsync()
     {
-        try 
+        // Husk brugerens valgte visning på tværs af besøg
+        try { _tableView = await LocalStorage.GetItemAsync<bool>("projectView_table"); }
+        catch { /* ignorér — falder tilbage til kort-visning */ }
+
+        try
         {
             _projects = await Http.GetFromJsonAsync<List<Project>>("api/project");
         }
@@ -45,6 +63,13 @@
             Console.WriteLine($"Fejl: {ex.Message}");
         }
     }
+
+    private async Task SetView(bool tableView)
+    {
+        _tableView = tableView;
+        await LocalStorage.SetItemAsync("projectView_table", tableView);
+    }
+
     // Slet projekt
     private async Task DeleteProject(int id)
     {
@@ -53,7 +78,6 @@
         if (response.IsSuccessStatusCode)
         {
             _projects = await Http.GetFromJsonAsync<List<Project>>("api/project");
-            _activeMenuId = null;
         }
     }
 }
