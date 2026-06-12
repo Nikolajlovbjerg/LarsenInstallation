@@ -1,13 +1,12 @@
-
 @using Core
 
-<div class="table-container" style="max-width: 90%; margin: 2rem auto 72px;">
-    <table class="styled-table">
+<div class="table-container" style="width: 100%; max-width: 1200px; margin: 2rem auto; padding: 0 20px;">
+    <table class="styled-table" style="width: 100%;">
         <thead>
         <tr>
-            <th>Projekt</th>
-            <th>Oprettet</th>
-            <th style="text-align: right; padding-right: 40px;">Handlinger</th>
+            <th style="width: 50%;">Projekt</th>
+            <th style="width: 25%;">Oprettet</th>
+            <th style="width: 25%; text-align: right; padding-right: 24px;">Handlinger</th>
         </tr>
         </thead>
         <tbody>
@@ -27,8 +26,6 @@
     [Parameter] public IEnumerable<Project>? Projects { get; set; }
     [Parameter] public EventCallback<int> OnDelete { get; set; }
 }
-
-
 
 
 
