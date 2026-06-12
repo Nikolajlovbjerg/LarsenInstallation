@@ -3,9 +3,12 @@
 @using Client.Service
 @inject HttpClient http
 @inject NavigationManager navMan
+@inject Blazored.LocalStorage.ILocalStorageService LocalStorage
 
 <PageTitle>Opret Bruger</PageTitle>
 
+@if (_authorized)
+{
 <div class="d-flex justify-content-center">
     <div class="create-con">
         <h3>Redigere bruger</h3>
@@ -50,19 +53,32 @@
         </EditForm>
     </div>
 </div>
+}
 
 @code {
     [Parameter] public int UserId { get; set; }
-    
-    private Users _user = new(); 
+
+    private Users _user = new();
     private string[] roles = ["Bruger", "Admin"];
+
+    // Kun Admin-brugere må se denne side; ellers sendes man til forsiden.
+    // (Serveren afviser også selve opdateringen for ikke-admins — dette er ekstra UI-beskyttelse.)
+    private bool _authorized;
 
     // Kører når komponenten initialiseres
     protected override async Task OnInitializedAsync()
     {
+        var current = await LocalStorage.GetItemAsync<Users>("user");
+        if (current == null || !string.Equals(current.Role, "Admin", StringComparison.OrdinalIgnoreCase))
+        {
+            navMan.NavigateTo("/");
+            return;
+        }
+        _authorized = true;
+
         // Henter den specifikke bruger baseret på ID fra URL'en
         var response = await http.GetFromJsonAsync<Users>($"{Server.Url}/api/user/{UserId}");
-        
+
         if (response != null)
         {
             _user = response;

@@ -3,9 +3,12 @@
 @using Client.Service
 @inject HttpClient http
 @inject NavigationManager navMan
+@inject Blazored.LocalStorage.ILocalStorageService LocalStorage
 
 <PageTitle>Opret Bruger</PageTitle>
 
+@if (_authorized)
+{
 <div class="d-flex justify-content-center">
     <div class="create-con">
         <h3>Opret Ny Bruger</h3>
@@ -49,11 +52,29 @@
         </EditForm>
     </div>
 </div>
+}
 
 @code {
     // Initialiserer en ny bruger med standardrollen "Bruger"
-    private Users _user = new() { Role = "Bruger" }; 
+    private Users _user = new() { Role = "Bruger" };
     private string[] roles = ["Bruger", "Admin"];
+
+    // Kun Admin-brugere må se denne side; ellers sendes man til forsiden.
+    // (Serveren afviser også selve oprettelsen for ikke-admins — dette er ekstra UI-beskyttelse.)
+    private bool _authorized;
+
+    protected override async Task OnInitializedAsync()
+    {
+        var current = await LocalStorage.GetItemAsync<Users>("user");
+        if (current != null && string.Equals(current.Role, "Admin", StringComparison.OrdinalIgnoreCase))
+        {
+            _authorized = true;
+        }
+        else
+        {
+            navMan.NavigateTo("/");
+        }
+    }
 
     // Køres kun når formularen er gyldig (valideret ok)
     private async Task HandleValidSubmit()
