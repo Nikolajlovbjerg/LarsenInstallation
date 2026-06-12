@@ -1,3 +1,6 @@
+using System.Text;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.IdentityModel.Tokens;
 using Server.Repositories.User;
 using Server.Repositories.HourRepositories;
 using Server.Repositories.MaterialRepositories;
@@ -18,6 +21,27 @@ builder.Services.AddScoped<ProjectCalculationsService>();
 
 builder.Services.AddSingleton<ICreateUserRepo, CreateUserRepoSQL>();
 
+builder.Services.AddScoped<JwtTokenService>();
+
+// JWT-baseret authentication (minimal: symmetrisk nøgle, HS256, kun signatur + levetid valideres)
+var jwtKey = builder.Configuration["Jwt:Key"]
+    ?? throw new InvalidOperationException("Jwt:Key mangler. Sæt den via user-secrets eller Jwt__Key.");
+
+builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
+    .AddJwtBearer(options =>
+    {
+        options.TokenValidationParameters = new TokenValidationParameters
+        {
+            ValidateIssuerSigningKey = true,
+            IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtKey)),
+            ValidateIssuer = false,
+            ValidateAudience = false,
+            ValidateLifetime = true,
+            ClockSkew = TimeSpan.FromMinutes(1)
+        };
+    });
+
+builder.Services.AddAuthorization();
 
 builder.Services.AddControllers();
 
@@ -47,6 +71,7 @@ app.UseCors("policy");
 
 // app.UseHttpsRedirection();
 
+app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapControllers();

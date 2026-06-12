@@ -14,7 +14,7 @@ namespace Client.Service
             _http = http;
         }
         
-        public async Task<Users?> ValidLoginAsync(string name, string password)
+        public async Task<LoginResponse?> ValidLoginAsync(string name, string password)
         {
             // Pakker brugernavn og password ind i et objekt
             var login = new { UserName = name, Password = password };
@@ -33,11 +33,10 @@ namespace Client.Service
 
             if (response.IsSuccessStatusCode)
             {
-                // Hvis serveren godkender, laves det til et User-objekt.
-                var user = await response.Content.ReadFromJsonAsync<Users>();
-                return user;
+                // Serveren returnerer et token + brugerdata (uden password)
+                return await response.Content.ReadFromJsonAsync<LoginResponse>();
             }
-            
+
             return null;
         }
     }
