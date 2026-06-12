@@ -5,6 +5,8 @@ namespace Server.Repositories.MaterialRepositories;
 // Repository til håndtering af projectmaterials i databasen
 public class MaterialRepositorySQL : BaseRepository, IMaterialRepository
 {
+    public MaterialRepositorySQL(IConfiguration configuration) : base(configuration) { }
+
     // Tilføjer et nyt ProjectMaterial til databasen
     public void AddRange(List<ProjectMaterial> materials)
     {

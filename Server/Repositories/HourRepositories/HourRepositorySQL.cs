@@ -5,6 +5,8 @@ namespace Server.Repositories.HourRepositories;
 // Repository til håndtering af timer (ProjectHour) i databasen
 public class HourRepositorySQL : BaseRepository, IHourRepository
 {
+    public HourRepositorySQL(IConfiguration configuration) : base(configuration) { }
+
     // Tilføjer en ny ProjectHour til databasen
     public void AddRange(List<ProjectHour> hours)
     {
