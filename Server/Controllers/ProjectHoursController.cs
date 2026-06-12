@@ -1,12 +1,14 @@
 using Core;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Server.Repositories.HourRepositories;
-using Server.Service; 
+using Server.Service;
 
 namespace Server.Controllers
 {
     [ApiController]
     [Route("api/projecthours")]
+    [Authorize] // Kræver gyldigt JWT-token
     public class ProjectHoursController : ControllerBase
     {
         private readonly IHourRepository _hourRepo;

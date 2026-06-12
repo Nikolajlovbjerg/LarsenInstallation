@@ -77,9 +77,9 @@
         try
         {
             // Forsøg at logge ind via API'et (UserRepo sender data til serveren)
-            Users? userObject = await UserRepo.ValidLoginAsync(user.UserName, user.Password);
+            LoginResponse? result = await UserRepo.ValidLoginAsync(user.UserName, user.Password);
 
-            if (userObject == null)
+            if (result == null)
             {
                 // Hvis serveren returnerer null, var login ugyldigt
                 errorText = "Forkert brugernavn eller adgangskode — prøv igen.";
@@ -87,28 +87,12 @@
                 return;
             }
 
-            //Fjern adgangskoden fra objektet før vi gemmer det i browseren
-            // Vi vil aldrig have passwords liggende i LocalStorage
-            try
-            {
-                userObject.Password = string.Empty; 
-            }
-            catch 
-            {
-                // Hvis vi ikke kan tømme passwordet direkte, laver vi et nyt "sikkert" objekt
-                var safeUser = new
-                {
-                    userObject.UserName, userObject.Role
-                };
-                await LocalStorage.SetItemAsync("user", safeUser);
-                Nav.NavigateTo("/", forceLoad: true); 
-                return;
-            }
+            // Gem JWT-token og brugerdata (UserDto indeholder aldrig password)
+            await LocalStorage.SetItemAsync("token", result.Token);
+            await LocalStorage.SetItemAsync("user", result.User);
 
-            // Gem brugeren i LocalStorage så vi kan huske at de er logget ind
-            await LocalStorage.SetItemAsync("user", userObject);
-            
-            // Naviger til forsiden (forceLoad: true sikrer at App.razor genindlæses og tjekker login-status)
+            // Naviger til forsiden (forceLoad: true sikrer at App.razor genindlæses,
+            // og at Program.cs sætter Authorization-headeren ud fra det gemte token)
             Nav.NavigateTo("/", forceLoad: true);
         }
         catch (HttpRequestException)

@@ -1,4 +1,5 @@
 using Core;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Server.Repositories.MaterialRepositories;
 using Server.Service;
@@ -7,6 +8,7 @@ namespace Server.Controllers
 {
     [ApiController]
     [Route("api/projectmaterials")]
+    [Authorize] // Kræver gyldigt JWT-token
     public class ProjectMaterialsController : ControllerBase
     {
         // Repository som gemmer materialer i databasen

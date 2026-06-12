@@ -74,6 +74,7 @@
     private async Task Logout()
     {
         await LocalStorage.RemoveItemAsync("user");
+        await LocalStorage.RemoveItemAsync("token");
         navManager.NavigateTo("/", true);
     }
 }

@@ -1,4 +1,5 @@
 using Core;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Server.Repositories.ProjectRepositories;
 using Server.Service;
@@ -7,7 +8,8 @@ namespace Server.Controllers.ProjectController
 {
     [ApiController] // Gør klassen til en API-controller
     [Route("api/project")] // Base endpoint
-    public class ProjectController : ControllerBase 
+    [Authorize] // Kræver gyldigt JWT-token
+    public class ProjectController : ControllerBase
     {
         private readonly IProjectRepository _projectRepo;  // Adgang til projekter
         private readonly ProjectCalculationsService _calcService; // Projektberegninger

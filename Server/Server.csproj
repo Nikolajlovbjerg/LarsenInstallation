@@ -4,12 +4,14 @@
         <TargetFramework>net9.0</TargetFramework>
         <Nullable>enable</Nullable>
         <ImplicitUsings>enable</ImplicitUsings>
-    </PropertyGroup>
+      <UserSecretsId>6413e286-ba6c-4a04-811e-693608c16271</UserSecretsId>
+  </PropertyGroup>
 
     <ItemGroup>
         <PackageReference Include="Blazored.LocalStorage" Version="4.5.0" />
         <PackageReference Include="ExcelDataReader" Version="3.8.0" />
         <PackageReference Include="ExcelDataReader.DataSet" Version="3.8.0" />
+        <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="9.0.8" />
         <PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="9.0.8" />
         <PackageReference Include="Npgsql" Version="10.0.0" />
         <PackageReference Include="System.Text.Encoding.CodePages" Version="10.0.0" />

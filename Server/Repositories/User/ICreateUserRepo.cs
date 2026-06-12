@@ -12,5 +12,6 @@ namespace Server.Repositories.User
         void Update(Users user);
         void Delete(int id);    // Skal kunne slette en bruger ud fra ID
         Users? ValidateUser(string username, string password);  // Skal kunne validere login
+        int RehashLegacyPasswords(); // Engangs-migration af gamle klartekst-passwords til hash
     }
 }
