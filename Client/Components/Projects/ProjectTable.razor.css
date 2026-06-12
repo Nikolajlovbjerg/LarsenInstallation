@@ -158,6 +158,12 @@
     animation: fadeIn 0.15s ease-out;
 }
 
+/* Sidste række: åbn opad, så menuen ikke bliver klippet af tabellens nederste kant */
+.dropdown.up {
+    top: auto;
+    bottom: calc(100% + 6px);
+}
+
 .dropdown-item {
     display: block;
     width: 100%;
