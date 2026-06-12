@@ -75,6 +75,10 @@ if (app.Environment.IsDevelopment())
     app.MapOpenApi();
 }
 
+// Server hoster også Blazor WASM-klienten (samme origin → ingen CORS nødvendig)
+app.UseBlazorFrameworkFiles();
+app.UseStaticFiles();
+
 app.UseCors("policy");
 
 // app.UseHttpsRedirection();
@@ -83,5 +87,8 @@ app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapControllers();
+
+// Alle ruter der ikke er /api/... serverer Blazor-klientens index.html (SPA-routing)
+app.MapFallbackToFile("index.html");
 
 app.Run();

@@ -2,7 +2,8 @@
 {
     public class Server
     {
-        //public const string Url = "https://larsenserver.azurewebsites.net";
-        public const string Url = "http://localhost:5028";
+        // Tom = samme origin som klienten (Server-projektet hoster både API og klient).
+        // Pages bruger "{Server.Url}/api/..." → "/api/..." (relativt til den side appen ligger på).
+        public const string Url = "";
     }
 }
