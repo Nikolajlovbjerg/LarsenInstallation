@@ -103,8 +103,7 @@
     </div>
 </article>*@
 
-@*
-@code {
+@*@code {
     [Parameter] public Project? Project { get; set; }
     [Parameter] public EventCallback<int> OnDelete { get; set; }
     
@@ -139,7 +138,6 @@
     {
         if (OnDelete.HasDelegate) await OnDelete.InvokeAsync(Project.ProjectId);
     }
-    *@
     
     
-}
+}*@
