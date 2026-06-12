@@ -74,57 +74,51 @@
 
 
 @code {
-    
+    // Initialiserer en ny instans af projekt-modellen
     Project aProject = new();
-    
-    IReadOnlyList<IBrowserFile> selectedFiles = new List<IBrowserFile>();
-    private bool isSubmitting = false;
 
-    
+    // A list to hold multiple files chosen by the user
+    IReadOnlyList<IBrowserFile> selectedFiles = new List<IBrowserFile>();
+
+    // This runs when the user selects files
     public void UploadFiles(InputFileChangeEventArgs e)
     {
+        // Fetches all the selected files. You can specify maximum allowed files as an argument if needed.
         selectedFiles = e.GetMultipleFiles(); 
     }
 
     private async Task OnClickCreate()
     {
-        isSubmitting = true; 
-        StateHasChanged(); 
-
+        // 1. Send project data
         var response = await http.PostAsJsonAsync($"{Server.Url}/api/project", aProject);
+
         if (response.IsSuccessStatusCode)
         {
             var newProjectId = await response.Content.ReadFromJsonAsync<int>();
-            var uploadTasks = new List<Task>();
 
+            // 2. Iterate through each selected file
             foreach (var file in selectedFiles)
             {
                 var fileName = file.Name.ToLower();
-                string endpoint = "";
 
+                // 3. Determine file type by looking at its name
+                // "case_hours" contains "hour" and "case"
                 if (fileName.Contains("hour") || fileName.Contains("time") || fileName.Contains("case"))
                 {
-                    endpoint = "api/projecthours/upload";
+                    await UploadFileToApi(file, newProjectId, "api/projecthours/upload");
                 }
+                // "ordrematerialer" contains "ordre" and "material"
                 else if (fileName.Contains("material") || fileName.Contains("ordre"))
                 {
-                    endpoint = "api/projectmaterials/upload";
-                }
-
-                if (!string.IsNullOrEmpty(endpoint))
-                {
-                    uploadTasks.Add(UploadFileToApi(file, newProjectId, endpoint));
+                    await UploadFileToApi(file, newProjectId, "api/projectmaterials/upload");
                 }
             }
-
-            
-            await Task.WhenAll(uploadTasks);
         }
-        
-        await Task.Delay(100); 
-    
-        
-        Nav.NavigateTo("/", forceLoad: false); 
+
+        // 4. Reset and navigate back
+        aProject = new();
+        selectedFiles = new List<IBrowserFile>();
+        Nav.NavigateTo("/");
     }
 
     // Hjælpemetode til selve fil-uploaden 
