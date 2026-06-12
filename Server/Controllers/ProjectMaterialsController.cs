@@ -11,11 +11,13 @@ namespace Server.Controllers
     {
         // Repository som gemmer materialer i databasen
         private readonly IMaterialRepository _repo;
+        private readonly ILogger<ProjectMaterialsController> _logger;
 
         // Repository som gemmer materialer i databasen
-        public ProjectMaterialsController(IMaterialRepository repo)
+        public ProjectMaterialsController(IMaterialRepository repo, ILogger<ProjectMaterialsController> logger)
         {
             _repo = repo;
+            _logger = logger;
         }
 
 
@@ -47,7 +49,9 @@ namespace Server.Controllers
             }
             catch (Exception ex)
             {
-                return BadRequest("Error parsing material file: " + ex.Message);
+                // Logger den fulde fejl på serveren, men sender kun en generisk besked til klienten
+                _logger.LogError(ex, "Failed to process uploaded material file for project {ProjectId}", projectId);
+                return BadRequest("Could not process the uploaded material file. Please check the file and try again.");
             }
         }
     }

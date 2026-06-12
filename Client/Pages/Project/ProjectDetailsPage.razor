@@ -2,7 +2,6 @@
 @using Core
 @using Client.Components.ProjectDetails
 @using Client.Service
-@inject HttpClient Http
 @inject ProjectService ProjectService
 
 <PageTitle>Projekt Detaljer</PageTitle>
@@ -49,7 +48,6 @@ else
     protected override async Task OnInitializedAsync()
     {
         details = await ProjectService.GetProjectDetails(Id);
-        details = await Http.GetFromJsonAsync<Calculation>($"{Server.Url}/api/project/{Id}");
     }
 
    

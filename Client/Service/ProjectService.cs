@@ -7,7 +7,11 @@ namespace Client.Service
     {
         private readonly HttpClient _http;
 
-        
+        public ProjectService(HttpClient http)
+        {
+            _http = http;
+        }
+
         public async Task<Calculation?> GetProjectDetails(int id)
         {
             try

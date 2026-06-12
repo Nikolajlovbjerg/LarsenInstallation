@@ -56,8 +56,6 @@ namespace Server.Repositories.User
                 command.CommandText =
                     "INSERT INTO Users (username, password, role) VALUES (@username, @password, @role)";
 
-                Console.WriteLine(command.CommandText);
-
                 // Opretter parameter for @username
                 var paramName = command.CreateParameter();
                 paramName.ParameterName = "username"; // Navn der matcher @username
@@ -82,8 +80,31 @@ namespace Server.Repositories.User
 
         public Users? ValidateUser(string username, string password)
         {
-            // Finder første bruger der matcher username og password (efter GetAll har hentet alle)
-            return GetAll().FirstOrDefault(u => u.UserName == username && u.Password == password);
+            // Henter kun den ene bruger der matcher brugernavnet (i stedet for at hente alle)
+            using var mConnection = GetConnection();
+            mConnection.Open();
+
+            var command = mConnection.CreateCommand();
+            command.CommandText = "SELECT * FROM Users WHERE username = @username";
+
+            var paramName = command.CreateParameter();
+            paramName.ParameterName = "username";
+            paramName.Value = username;
+            command.Parameters.Add(paramName);
+
+            using var reader = command.ExecuteReader();
+            if (!reader.Read()) return null; // Ingen bruger med det brugernavn
+
+            var user = new Users
+            {
+                UserId = reader.GetInt32(0),
+                UserName = reader.GetString(1),
+                Password = reader.GetString(2),
+                Role = reader.GetString(3)
+            };
+
+            // Sammenligner password (bør hashes senere)
+            return user.Password == password ? user : null;
         }
 
         public void Delete(int id)
@@ -94,7 +115,13 @@ namespace Server.Repositories.User
             {
                 var command = mConnection.CreateCommand(); // Ny SQL-kommando
 
-                command.CommandText = $"DELETE FROM users WHERE userid={id}"; // SQL der sletter ud fra id
+                command.CommandText = "DELETE FROM users WHERE userid = @id"; // SQL der sletter ud fra id
+
+                // Sender id som parameter (undgår SQL injection)
+                var paramId = command.CreateParameter();
+                paramId.ParameterName = "id";
+                paramId.Value = id;
+                command.Parameters.Add(paramId);
 
                 command.ExecuteNonQuery();   // Kører DELETE-kommandoen
             }

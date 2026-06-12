@@ -10,11 +10,13 @@ namespace Server.Controllers
     public class ProjectHoursController : ControllerBase
     {
         private readonly IHourRepository _hourRepo;
+        private readonly ILogger<ProjectHoursController> _logger;
 
         // Repository som gemmer timer i databasen
-        public ProjectHoursController(IHourRepository hourRepo)
+        public ProjectHoursController(IHourRepository hourRepo, ILogger<ProjectHoursController> logger)
         {
             _hourRepo = hourRepo;
+            _logger = logger;
         }
         
         [HttpPost("upload")]
@@ -40,7 +42,9 @@ namespace Server.Controllers
             }
             catch (Exception ex)
             {
-                return BadRequest("Error: " + ex.Message);
+                // Logger den fulde fejl på serveren, men sender kun en generisk besked til klienten
+                _logger.LogError(ex, "Failed to process uploaded hours file for project {ProjectId}", projectId);
+                return BadRequest("Could not process the uploaded hours file. Please check the file and try again.");
             }
         }
     }
