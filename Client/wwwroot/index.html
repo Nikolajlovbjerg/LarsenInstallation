@@ -1,9 +1,12 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="da" translate="no">
 
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <!-- Appen er på dansk og bygget i Blazor. Browser-oversættelse ødelægger Blazors DOM
+         (forskudte kort, spredte graf-labels), så vi slår oversættelse fra. -->
+    <meta name="google" content="notranslate" />
     <title>Larsen Installation</title>
     <base href="/" />
     <link rel="stylesheet" href="lib/bootstrap/dist/css/bootstrap.min.css" />
