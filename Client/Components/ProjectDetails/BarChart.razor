@@ -26,10 +26,21 @@
                         double startX = 40;
                     }
 
+                    @* Lette vandrette hjælpelinjer så grafen er nemmere at aflæse *@
+                    @for (int g = 1; g <= 4; g++)
+                    {
+                        double gy = (chartHeight + 30) - (g / 4.0) * chartHeight;
+                        double gVal = (g / 4.0) * maxVal;
+                        <line x1="35" y1="@gy" x2="@(TotalWidth - 20)" y2="@gy" stroke="#eef0f3" stroke-width="1" />
+                        <svg:text x="30" y="@(gy + 3)" font-size="8" text-anchor="end" fill="#9ca3af">@gVal.ToString("N0")</svg:text>
+                    }
+
                     @for (int i = 0; i < ChartData.Count; i++)
                     {
                         var item = ChartData[i];
                         double barHeight = ((double)item.TotalHours / maxVal) * chartHeight;
+                        // Måneder med timer skal altid have en synlig søjle — også når én måned dominerer
+                        if (item.TotalHours > 0 && barHeight < 4) barHeight = 4;
                         double x = startX + (i * (barWidth + spacing));
                         double y = chartHeight - barHeight + 30;
 
