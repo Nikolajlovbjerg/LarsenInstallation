@@ -77,7 +77,19 @@ if (app.Environment.IsDevelopment())
 
 // Server hoster også Blazor WASM-klienten (samme origin → ingen CORS nødvendig)
 app.UseBlazorFrameworkFiles();
-app.UseStaticFiles();
+
+// index.html og den scoped CSS-bundle (Client.styles.css) er IKKE fingerprintede.
+// De må derfor ikke caches på tværs af deploys — ellers kan en browser holde en gammel
+// CSS-bundle, hvis scope-hashes (b-xxxx) ikke matcher det nye DOM, og komponent-styles forsvinder.
+app.UseStaticFiles(new StaticFileOptions
+{
+    OnPrepareResponse = ctx =>
+    {
+        var name = ctx.File.Name;
+        if (name == "index.html" || name.EndsWith(".styles.css", StringComparison.OrdinalIgnoreCase))
+            ctx.Context.Response.Headers.CacheControl = "no-cache, must-revalidate";
+    }
+});
 
 app.UseCors("policy");
 
@@ -88,7 +100,12 @@ app.UseAuthorization();
 
 app.MapControllers();
 
-// Alle ruter der ikke er /api/... serverer Blazor-klientens index.html (SPA-routing)
-app.MapFallbackToFile("index.html");
+// Alle ruter der ikke er /api/... serverer Blazor-klientens index.html (SPA-routing).
+// Samme no-cache som ovenfor, så fallback-leveret index.html heller ikke bliver stale.
+app.MapFallbackToFile("index.html", new StaticFileOptions
+{
+    OnPrepareResponse = ctx =>
+        ctx.Context.Response.Headers.CacheControl = "no-cache, must-revalidate"
+});
 
 app.Run();
