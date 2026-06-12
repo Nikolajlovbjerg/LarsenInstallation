@@ -1,39 +1,5 @@
 @using Core
 
-<div class="table-container" style="width: 100%; max-width: 1200px; margin: 2rem auto; padding: 0 20px;">
-    <table class="styled-table" style="width: 100%;">
-        <thead>
-        <tr>
-            <th style="width: 50%;">Projekt</th>
-            <th style="width: 25%;">Oprettet</th>
-            <th style="width: 25%; text-align: right; padding-right: 24px;">Handlinger</th>
-        </tr>
-        </thead>
-        <tbody>
-        @if (Projects != null && Projects.Any())
-        {
-            @foreach (var project in Projects)
-            {
-                <ProjectComponent Project="project" OnDelete="OnDelete" />
-            }
-        }
-        </tbody>
-    </table>
-</div>
-
-@code 
-{
-    [Parameter] public IEnumerable<Project>? Projects { get; set; }
-    [Parameter] public EventCallback<int> OnDelete { get; set; }
-}
-
-
-
-
-
-
-@*@using Core
-
 
 <div class="ads-grid">
     @if (Projects == null || !Projects.Any())
@@ -53,4 +19,4 @@
 {
     [Parameter] public IEnumerable<Project>? Projects { get; set; }
     [Parameter] public EventCallback<int> OnDelete { get; set; }
-}*@
+}
