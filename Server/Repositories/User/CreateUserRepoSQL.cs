@@ -11,15 +11,6 @@ namespace Server.Repositories.User
 
         public CreateUserRepoSQL(IConfiguration configuration) : base(configuration) { }
 
-        // Hjælpemetode: gætter om en gemt værdi allerede er et hash (i stedet for gammelt klartekst-password).
-        // Identity-hashes er lange base64-strenge; de gamle klartekst-passwords er korte.
-        private static bool LooksHashed(string? value)
-        {
-            if (string.IsNullOrEmpty(value) || value.Length < 40) return false;
-            Span<byte> buffer = stackalloc byte[value.Length];
-            return Convert.TryFromBase64String(value, buffer, out _);
-        }
-
     public List<Users> GetAll()
         {
 
@@ -210,34 +201,6 @@ namespace Server.Repositories.User
             }
 
             command.ExecuteNonQuery();
-        }
-
-        // Engangs-migration: erstatter gamle klartekst-passwords med hash.
-        // Beholder brugerens nuværende password (hasher bare den eksisterende klartekst-værdi).
-        // Idempotent: brugere der allerede har et hash springes over. Returnerer antal opdaterede.
-        public int RehashLegacyPasswords()
-        {
-            int updated = 0;
-            foreach (var user in GetAll())
-            {
-                if (LooksHashed(user.Password)) continue; // Allerede hashet — spring over
-
-                var hash = _hasher.HashPassword(user, user.Password);
-
-                using var mConnection = GetConnection();
-                mConnection.Open();
-                var command = mConnection.CreateCommand();
-                command.CommandText = "UPDATE Users SET password = @password WHERE userid = @id";
-
-                var pPass = command.CreateParameter(); pPass.ParameterName = "password"; pPass.Value = hash;
-                command.Parameters.Add(pPass);
-                var pId = command.CreateParameter(); pId.ParameterName = "id"; pId.Value = user.UserId;
-                command.Parameters.Add(pId);
-
-                command.ExecuteNonQuery();
-                updated++;
-            }
-            return updated;
         }
     }
 }

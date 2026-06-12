@@ -13,13 +13,11 @@ namespace ServerApp.Controllers
     {
 
         private ICreateUserRepo userRepo; // Interface til repository (controlleren afhænger kun af interfacet)
-        private readonly IWebHostEnvironment _env; // Bruges til at begrænse migrations-endpoint til Development
         private readonly JwtTokenService _tokenService; // Laver JWT-token ved login
 
-        public UserController(ICreateUserRepo userRepo, IWebHostEnvironment env, JwtTokenService tokenService)
+        public UserController(ICreateUserRepo userRepo, JwtTokenService tokenService)
         {
             this.userRepo = userRepo; // Dependency Injection: Systemet giver controlleren et repository
-            _env = env;
             _tokenService = tokenService;
         }
 
@@ -80,20 +78,6 @@ namespace ServerApp.Controllers
         {
             userRepo.Update(user);
             return Ok();
-        }
-
-        // Engangs-migration af gamle klartekst-passwords til hash.
-        // KUN tilgængelig i Development, så den ikke kan misbruges i produktion.
-        // Slet dette endpoint når migrationen er kørt.
-        [AllowAnonymous] // Bootstrap: skal kunne køres før man kan logge ind
-        [HttpPost("dev/rehash-passwords")]
-        public IActionResult RehashPasswords()
-        {
-            if (!_env.IsDevelopment())
-                return NotFound();
-
-            int updated = userRepo.RehashLegacyPasswords();
-            return Ok($"Rehashed {updated} user(s).");
         }
     }
 }

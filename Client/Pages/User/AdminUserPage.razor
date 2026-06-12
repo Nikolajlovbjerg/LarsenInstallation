@@ -13,7 +13,11 @@
         </button>
     </div>
 
-    @if (_users == null)
+    @if (_errorMessage != null)
+    {
+        <div class="alert alert-warning">@_errorMessage</div>
+    }
+    else if (_users == null)
     {
         <div class="loading-state">
             <div class="spinner-border text-primary" role="status"></div>
@@ -72,12 +76,25 @@
 </div>
 
 @code {
-    private List<Users>? _users = new();
+    private List<Users>? _users; // null = indlæser
+    private string? _errorMessage;
 
     // Henter listen af brugere når siden startes
     protected override async Task OnInitializedAsync()
     {
-        _users = await Http.GetFromJsonAsync<List<Users>>($"{Server.Url}/api/user");
+        try
+        {
+            _users = await Http.GetFromJsonAsync<List<Users>>($"{Server.Url}/api/user");
+        }
+        catch (HttpRequestException ex) when (ex.StatusCode == System.Net.HttpStatusCode.Forbidden)
+        {
+            // Brugeren er logget ind, men har ikke Admin-rettigheder
+            _errorMessage = "Du har ikke adgang til brugeradministration. Kontakt en administrator.";
+        }
+        catch (Exception)
+        {
+            _errorMessage = "Kunne ikke indlæse brugere. Prøv igen senere.";
+        }
     }
 
     private async Task DeleteUser(int id)
